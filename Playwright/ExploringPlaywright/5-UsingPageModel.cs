@@ -4,10 +4,11 @@ using NUnit.Framework;
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using ExploringPlaywright.Pages;
 
 namespace PlaywrightTests
 {
-    public class PlaywrightTest : PageTest
+    public class UsingPageModel : PageTest
     {
         private IBrowserContext _browserContext;
         private IPage _page;
@@ -34,7 +35,7 @@ namespace PlaywrightTests
             // Get the first page in the context
             _page = _browserContext.Pages[0];
             
-            await _page.GotoAsync("https://playwright.dev/",new PageGotoOptions()
+            await _page.GotoAsync("https://practicetestautomation.com/practice-test-login",new PageGotoOptions()
             {
                 WaitUntil = WaitUntilState.DOMContentLoaded,
                 Timeout = 0
@@ -43,52 +44,56 @@ namespace PlaywrightTests
         }
 
         [Test]
-        public async Task TestPlaywrightSite()
+        public async Task TestLoginPageModel()
         {
-            // Navigate to the Playwright site
+
+            var loginPage = new LoginPage(_page);
+            await loginPage.Login("student", "Password123");
             
-
-            // Navigate to "Community" link
-            await _page.ClickAsync("text=Community");
-            await _page.WaitForLoadStateAsync(LoadState.DOMContentLoaded); // Ensure the page fully loads
-
+            
             // Validate the canonical link
             var canonicalHref = await _page.Locator("link[rel='canonical']").GetAttributeAsync("href");
-            var expectedLink = "https://playwright.dev/community/welcome";
+            var expectedLink = "https://practicetestautomation.com/logged-in-successfully/";
 
             Console.WriteLine($"Canonical Link Found: {canonicalHref}");
             Assert.That(canonicalHref, Is.EqualTo(expectedLink), $"Expected canonical link '{expectedLink}' not found.");
 
-            //_page.SetDefaultTimeout(10000);
-            await Expect(_page.Locator("h1:has-text('Welcome')")).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions()
-            {
-                Timeout = 5000000
-            });
-            
-            // Interact with search
-            await _page.Keyboard.DownAsync("Meta"); // Press 'Command' (⌘) on macOS
-            await _page.Keyboard.PressAsync("k"); // Press 'K'
-            await _page.Keyboard.UpAsync("Meta"); // Release 'Command' (⌘)
-            await Task.Delay(1000);
-            
-            
-            // Fill the search input and press Enter
-            await _page.FillAsync("input[type='search']", "How to use Playwright!");
-            // Wait for the search box to reflect the input (optional if instant)
-            await _page.Locator("input[type='search']").WaitForAsync(new LocatorWaitForOptions
-            {
-                State = WaitForSelectorState.Attached // Ensure the input is attached to the DOM
-            });
-            
-            
-            // Wait for the search results
-            await Page.Keyboard.PressAsync("Enter");
-            await Task.Delay(1000);
-            await Page.Locator("input[type='search']").WaitForAsync(new LocatorWaitForOptions
-            {
-                State = WaitForSelectorState.Hidden // Ensure the input is attached to the DOM
-            });
+            var isLoggedIn = await loginPage.IsLoggedIn();
+            Assert.That(isLoggedIn, Is.True);
 
+            var response = await _page.RunAndWaitForResponseAsync(
+                async () => { await _page.ClickAsync("text=Logout"); },
+                redirectUrl => redirectUrl.Url.Contains("logged-out-successfully"));
+           
+            // Take a screenshot of the current state
+            var screenshotPath = Path.Combine("Data", "screenshot.png");
+            await _page.ScreenshotAsync(new PageScreenshotOptions { Path = screenshotPath });
+            Console.WriteLine($"Screenshot saved at: {screenshotPath}");
+
+            // Access the video file after context closure
+            var videoPath = await _page.Video.PathAsync();
+            Console.WriteLine($"Video saved at: {videoPath}");
+        }
+        
+        [Test]
+        public async Task TestLoginPageModel_2()
+        {
+
+            var loginPage = new LoginPage(_page);
+            await loginPage.LoginAndVerifyLink("student", "Password123");
+            
+
+            var isLoggedIn = await loginPage.IsLoggedIn();
+            Assert.That(isLoggedIn, Is.True);
+
+            //- Encapsulates the functionality of waiting for a page navigation event while performing an asynchronous
+            //action (e.g., clicking a button).
+            //Ensures that the action is executed and navigation is verified before continuing.
+            var response = await _page.RunAndWaitForResponseAsync(
+                async () => { await _page.ClickAsync("text=Log out"); },
+                redirectUrl => redirectUrl.Url.Contains("https://practicetestautomation.com/practice-test-login/"));
+           await response.FinishedAsync();
+           
             // Take a screenshot of the current state
             var screenshotPath = Path.Combine("Data", "screenshot.png");
             await _page.ScreenshotAsync(new PageScreenshotOptions { Path = screenshotPath });
