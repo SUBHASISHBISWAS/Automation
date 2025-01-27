@@ -33,7 +33,6 @@ public class LoginPage
     }
 
     public async Task<bool> IsLoggedIn() => await _loggedInSuccessfully.IsVisibleAsync();
-    
 }
 
 

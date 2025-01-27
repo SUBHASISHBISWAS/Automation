@@ -103,6 +103,29 @@ namespace PlaywrightTests
             var videoPath = await _page.Video.PathAsync();
             Console.WriteLine($"Video saved at: {videoPath}");
         }
+        
+        [Test]
+        public async Task FlipkartTest()
+        {
+            
+            /*await _page.RouteAsync("*#1#*", async route =>
+            {
+                if (route.Request.ResourceType == "image")
+                    await route.AbortAsync();
+                else
+                    route.ContinueAsync();
+            });*/
+            
+            _page.Request += (_, request) => Console.WriteLine(request.Method + "---" + request.Url);
+            _page.Response += (_, response) => Console.WriteLine(response.Status + "--_" + response.Url) ;
+            await _page.GotoAsync("https://www.flipkart.com",new PageGotoOptions()
+            {
+                WaitUntil = WaitUntilState.NetworkIdle,
+                Timeout = 0
+            });
+            
+            
+        }
 
         [TearDown]
         public async Task TearDown()
