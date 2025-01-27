@@ -91,7 +91,7 @@ namespace PlaywrightTests
             //Ensures that the action is executed and navigation is verified before continuing.
             var response = await _page.RunAndWaitForResponseAsync(
                 async () => { await _page.ClickAsync("text=Log out"); },
-                redirectUrl => redirectUrl.Url.Contains("https://practicetestautomation.com/practice-test-login/"));
+                redirectUrl => redirectUrl.Url.Contains("https://practicetestautomation.com/practice-test-login/") && redirectUrl.Status==200);
            await response.FinishedAsync();
            
             // Take a screenshot of the current state
