@@ -1,5 +1,9 @@
+using System.Runtime.InteropServices;
+
 using Microsoft.Playwright;
 using Microsoft.Playwright.NUnit;
+
+using static System.Net.Mime.MediaTypeNames;
 
 namespace ExploringPlaywright;
 
@@ -41,7 +45,7 @@ public class UsingNunitLearningBasics:PageTest
     }
    
     [Test]
-    public async Task Test2()
+    public async Task Test_UsingNunit()
     {
         
         await Page.BringToFrontAsync();
@@ -60,13 +64,15 @@ public class UsingNunitLearningBasics:PageTest
 
 
         // Interact with search
-        await Page.Keyboard.DownAsync("Meta"); // Press 'Command' (⌘) on macOS
+        var key = RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "Meta" : "Control";
+
+        await Page.Keyboard.DownAsync(key); // Press the appropriate key
         await Page.Keyboard.PressAsync("k"); // Press 'K'
-        await Page.Keyboard.UpAsync("Meta"); // Release 'Command' (⌘)
+        await Page.Keyboard.UpAsync(key);   // Release the appropriate key
         await Task.Delay(1000);
 
-        
-        
+
+
         // Fill the search input and press Enter
         await Page.FillAsync("input[type='search']", "How to use Playwright!");
         // Wait for the search box to reflect the input (optional if instant)
@@ -97,7 +103,7 @@ public class UsingNunitLearningBasics:PageTest
     }
     
     [Test]
-    public async Task MyTest()
+    public async Task Recorder_Test()
     {
         await Page.GotoAsync("https://playwright.dev/");
         await Page.GetByRole(AriaRole.Link, new() { Name = "Community" }).ClickAsync();

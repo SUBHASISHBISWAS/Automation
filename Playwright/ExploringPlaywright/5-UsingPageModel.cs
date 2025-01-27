@@ -6,7 +6,7 @@ using System.IO;
 using System.Threading.Tasks;
 using ExploringPlaywright.Pages;
 
-namespace PlaywrightTests
+namespace ExploringPlaywright
 {
     public class UsingPageModel : PageTest
     {
@@ -62,9 +62,9 @@ namespace PlaywrightTests
             Assert.That(isLoggedIn, Is.True);
 
             var response = await _page.RunAndWaitForResponseAsync(
-                async () => { await _page.ClickAsync("text=Logout"); },
-                redirectUrl => redirectUrl.Url.Contains("logged-out-successfully"));
-           
+                async () => { await _page.ClickAsync("text=Log out"); },
+                redirectUrl => redirectUrl.Url.Contains("https://practicetestautomation.com/practice-test-login"));
+            await response.FinishedAsync(); 
             // Take a screenshot of the current state
             var screenshotPath = Path.Combine("Data", "screenshot.png");
             await _page.ScreenshotAsync(new PageScreenshotOptions { Path = screenshotPath });

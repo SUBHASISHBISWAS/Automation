@@ -3,9 +3,10 @@ using Microsoft.Playwright.NUnit;
 using NUnit.Framework;
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
-namespace PlaywrightTests
+namespace ExploringPlaywright
 {
     public class PlaywrightTest : PageTest
     {
@@ -64,11 +65,13 @@ namespace PlaywrightTests
             {
                 Timeout = 5000000
             });
-            
+
             // Interact with search
-            await _page.Keyboard.DownAsync("Meta"); // Press 'Command' (⌘) on macOS
+            string key = RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "Meta" : "Control";
+
+            await _page.Keyboard.DownAsync(key); // Press the appropriate key
             await _page.Keyboard.PressAsync("k"); // Press 'K'
-            await _page.Keyboard.UpAsync("Meta"); // Release 'Command' (⌘)
+            await _page.Keyboard.UpAsync(key);   // Release the appropriate key
             await Task.Delay(1000);
             
             
