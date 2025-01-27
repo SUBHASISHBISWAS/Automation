@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Microsoft.Playwright;
 
 namespace ExploringPlaywright;
@@ -29,7 +30,7 @@ public class LearningBasics
 
    
     [Test]
-    public async Task Test2()
+    public async Task LaunchBrowserAndNavigate_Recording_video()
     {
         using var playwright = await Playwright.CreateAsync();
         const string userDataDir = "Data"; // Specify a folder for user data
@@ -63,9 +64,11 @@ public class LearningBasics
 
 
         // Interact with search
-        await page.Keyboard.DownAsync("Meta"); // Press 'Command' (⌘) on macOS
+        var key = RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "Meta" : "Control";
+
+        await page.Keyboard.DownAsync(key); // Press the appropriate key
         await page.Keyboard.PressAsync("k"); // Press 'K'
-        await page.Keyboard.UpAsync("Meta"); // Release 'Command' (⌘)
+        await page.Keyboard.UpAsync(key);   // Release the appropriate key
         await Task.Delay(1000);
 
         
