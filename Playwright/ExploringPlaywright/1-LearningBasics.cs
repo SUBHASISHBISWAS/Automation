@@ -1,7 +1,7 @@
 using Microsoft.Playwright;
 
 namespace ExploringPlaywright;
-/*
+
 public class LearningBasics
 {
     [SetUp]
@@ -10,7 +10,7 @@ public class LearningBasics
     }
 
     [Test]
-    public async Task Test1()
+    public async Task LaunchBrowserAndNavigate()
     {
         using var playwright = await Playwright.CreateAsync();
         await using var browser = await playwright.Webkit.LaunchAsync(new BrowserTypeLaunchOptions()
@@ -23,9 +23,8 @@ public class LearningBasics
         var page = await context.NewPageAsync();
         await page.GotoAsync("https://playwright.dev/");
         await page.ClickAsync("text=Doc");
-        Console.WriteLine("Press Enter to close the browser...");
-        Console.ReadLine();
-
+       
+        await context.CloseAsync();
     }
 
    
@@ -100,4 +99,3 @@ public class LearningBasics
         await browserContext.CloseAsync();
     }
 }
-*/

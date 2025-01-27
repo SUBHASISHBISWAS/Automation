@@ -12,7 +12,11 @@ public class UsingNunitLearningBasics:PageTest
         var headless = bool.Parse(TestContext.Parameters.Get("Headless", "true"));
         var slowMo = int.Parse(TestContext.Parameters.Get("SlowMo", "0"));
         
-        await Page.GotoAsync("https://playwright.dev/");
+        await Page.GotoAsync("https://playwright.dev/",new PageGotoOptions()
+        {
+            WaitUntil = WaitUntilState.DOMContentLoaded,
+            Timeout = 0
+        });
     }
     public override BrowserNewContextOptions ContextOptions()
     {
@@ -90,5 +94,15 @@ public class UsingNunitLearningBasics:PageTest
         Console.WriteLine($"Video saved at: {video}");
         
         await Page.CloseAsync();
+    }
+    
+    [Test]
+    public async Task MyTest()
+    {
+        await Page.GotoAsync("https://playwright.dev/");
+        await Page.GetByRole(AriaRole.Link, new() { Name = "Community" }).ClickAsync();
+        await Page.GetByLabel("Search (Command+K)").ClickAsync();
+        await Page.GetByPlaceholder("Search docs").FillAsync("Locator");
+        await Page.GetByRole(AriaRole.Link, new() { Name = "Locators", Exact = true }).ClickAsync();
     }
 }
