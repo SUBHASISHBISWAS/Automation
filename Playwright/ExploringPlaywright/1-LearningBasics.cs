@@ -1,7 +1,7 @@
 using Microsoft.Playwright;
 
 namespace ExploringPlaywright;
-
+/*
 public class LearningBasics
 {
     [SetUp]
@@ -100,3 +100,4 @@ public class LearningBasics
         await browserContext.CloseAsync();
     }
 }
+*/
