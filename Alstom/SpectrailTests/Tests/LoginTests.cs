@@ -17,12 +17,15 @@ public class LoginTests : TestHooks
     {
         ExtentReportManager.StartTest("Test_Login_And_Navigate_Parallel");
 
-        var openPage = new LoggingDecorator(new OpenPageHandler(Page, "https://example.com"));
-        var login = new ScreenshotDecorator(new VideoDecorator(new LoginHandler(LoginPage, "testuser", "password123"), Page), Page);
-        // Chain actions together
-        openPage.SetNext(login);
-        // Start execution from first handler
-        await openPage.HandleAsync();
+        // ✅ Retrieve LoginHandler from ActionFactory
+        var loginHandler = _actionFactory.Create<LoginHandler>()
+            .WithUsername("testuser")
+            .WithPassword("password123")
+            .VerifyNavigation(true);
+
+        // ✅ Now calls `RunAsync()` instead of `ExecuteAsync()`
+        await loginHandler.RunAsync();
+
         ExtentReportManager.LogStep("Test completed successfully.");
     }
 }

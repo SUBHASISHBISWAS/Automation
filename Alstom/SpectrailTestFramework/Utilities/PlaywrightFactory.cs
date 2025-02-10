@@ -1,8 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Playwright;
-
+using System;
 using System.Threading.Tasks;
 using Alstom.Spectrail.Framework.PageObjects;
+using Alstom.Spectrail.Framework.Utilities;
+using Alstom.Spectrail.Framework.Decorators;
 
 namespace Alstom.Spectrail.Framework.Utilities
 {
@@ -12,21 +14,29 @@ namespace Alstom.Spectrail.Framework.Utilities
         {
             var services = new ServiceCollection();
             var playwright = await Playwright.CreateAsync();
+
             var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
             {
-                Headless = false,  // Enable UI mode for debugging
-                Args = new[] { "--disable-dev-shm-usage", "--no-sandbox" } // Prevent crashes in CI
+                Headless = false,  // ✅ Set to true for CI/CD
+                SlowMo = 50        // ✅ Slows down execution for better debugging
             });
+
             var context = await browser.NewContextAsync(new BrowserNewContextOptions
             {
-                RecordVideoSize = new() { Width = 1280, Height = 720 },  // Set video resolution
-                RecordVideoDir = "Videos"  // Directory where videos will be stored
+                RecordVideoDir = "videos", // ✅ Enables video recording
+                RecordVideoSize = new RecordVideoSize { Width = 1280, Height = 720 }
             });
+
+            var page = await context.NewPageAsync();
+
+            // ✅ Register services in Dependency Injection
             services.AddSingleton(playwright);
             services.AddSingleton(browser);
             services.AddSingleton(context);
-            services.AddTransient<IPage>(sp => context.NewPageAsync().Result);
+            services.AddTransient<IPage>(_ => page);
             services.AddTransient<LoginPage>();
+            services.AddTransient<ActionFactory>();
+
             return services.BuildServiceProvider();
         }
     }

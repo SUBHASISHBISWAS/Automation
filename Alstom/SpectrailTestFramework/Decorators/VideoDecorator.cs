@@ -1,31 +1,71 @@
 ﻿using Microsoft.Playwright;
 using System;
+using System.IO;
 using System.Threading.Tasks;
-using Serilog;
 using Alstom.Spectrail.Framework.Actions;
-using Alstom.Spectrail.Framework.Decorators;
-public class VideoDecorator : BaseActionDecorator
+
+namespace Alstom.Spectrail.Framework.Decorators
 {
-    private readonly IPage _page;
-    public VideoDecorator(IActionHandler wrappedAction, IPage page) : base(wrappedAction)
+    public class VideoDecorator : BaseActionDecorator
     {
-        _page = page;
-    }
-    public override async Task HandleAsync()
-    {
-        try
+        private IBrowserContext? _context;
+        private string _videoPath = string.Empty;
+
+        public VideoDecorator(IActionHandler wrappedAction) : base(wrappedAction) { }
+
+        public override async Task HandleAsync()
         {
-            await _wrappedAction.HandleAsync();  // Execute the main action
+            try
+            {
+                // ✅ Ensure video recording is enabled before executing the action
+                await EnableVideoRecordingAsync();
+
+                await base.HandleAsync(); // ✅ Execute the wrapped action
+
+                // ✅ Capture and save video path after execution
+                _videoPath = await GetVideoPathAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Test failed, video saved at: {_videoPath}");
+                throw;
+            }
         }
-        catch (Exception ex)
+
+        private async Task EnableVideoRecordingAsync()
         {
-            Log.Error($"Test failed: {ex.Message}");
-            // Save the video path if test fails
-            var videoPath = await _page.Video.PathAsync();
-            var savedVideoPath = $"Videos/{Guid.NewGuid()}.webm";
-            System.IO.File.Move(videoPath, savedVideoPath);
-            Log.Information($"Test failure video saved at: {savedVideoPath}");
-            throw;  // Rethrow exception to ensure test failure is reported
+            if (Page?.Context != null)
+            {
+                await Page.Context.CloseAsync(); // Close the existing context
+
+                // ✅ Retrieve IBrowser from IPage.Context
+                var browser = Page.Context.Browser;
+
+                _context = await browser.NewContextAsync(new BrowserNewContextOptions
+                {
+                    RecordVideoDir = "videos/",
+                    RecordVideoSize = new RecordVideoSize { Width = 1280, Height = 720 }
+                });
+
+                await _context.NewPageAsync(); // ✅ Create a new page in the new context
+            }
         }
+
+        private async Task<string> GetVideoPathAsync()
+        {
+            try
+            {
+                return await Page?.Video.PathAsync() ?? string.Empty;
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// ✅ Properly forward Page from the wrapped action.
+        /// </summary>
+        public override IPage? Page => _wrappedAction.Page;
     }
 }
