@@ -2,6 +2,7 @@
 using Microsoft.Playwright;
 using System;
 using System.Threading.Tasks;
+using Alstom.Spectrail.Framework.Actions;
 using Alstom.Spectrail.Framework.PageObjects;
 using Alstom.Spectrail.Framework.Utilities;
 using Alstom.Spectrail.Framework.Decorators;
@@ -34,8 +35,8 @@ namespace Alstom.Spectrail.Framework.Utilities
             services.AddSingleton(browser);
             services.AddSingleton(context);
             services.AddTransient<IPage>(_ => page);
-            services.AddTransient<LoginPage>();
             services.AddTransient<ActionFactory>();
+            services.AddTransient<LoginHandler>();
 
             return services.BuildServiceProvider();
         }

@@ -49,8 +49,8 @@ namespace Alstom.Spectrail.Tests.Hooks
                 await Page.ScreenshotAsync(new PageScreenshotOptions { Path = screenshotPath });
 
                 // ✅ Attach screenshot to Allure & Extent Reports
-                AllureLifecycle.Instance.AddAttachment("Failure Screenshot", "image/png", screenshotPath);
-                ExtentReportManager.AttachScreenshot(screenshotPath);
+                //AllureLifecycle.Instance.AddAttachment("Failure Screenshot", "image/png", screenshotPath);
+                //ExtentReportManager.AttachScreenshot(screenshotPath);
 
                 // ✅ Capture video if enabled
                 if (Page.Video != null)

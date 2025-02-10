@@ -1,36 +1,32 @@
 ﻿using System.Threading.Tasks;
-
-using Alstom.Spectrail.Framework.PageObjects;
-using Alstom.Spectrail.Framework.Utilities;
-
 using Microsoft.Playwright;
+using Alstom.Spectrail.Framework.Actions;
+using Alstom.Spectrail.Framework.Utilities;
 
 namespace Alstom.Spectrail.Framework.Actions
 {
     public class OpenPageHandler : BaseActionHandler
     {
         private readonly IPage _page;
-        private readonly string _url;
+        private string _url;
 
-        public OpenPageHandler(ActionFactory actionFactory, string url)
-            : base(actionFactory)
+        public OpenPageHandler(ActionFactory actionFactory, IPage page) : base(actionFactory)
         {
-            _page = _actionFactory.CreatePage<BasePage>().Page; // ✅ Gets the Playwright page dynamically
+            _page = page;
+        }
+
+        public OpenPageHandler WithUrl(string url)
+        {
             _url = url;
+            return this; // ✅ Enables fluent chaining
         }
 
         protected override async Task ExecuteAsync()
         {
-            if (_page != null)
-            {
-                await _page.GotoAsync(_url);
-            }
-            else
-            {
-                throw new System.InvalidOperationException("Page instance is null. Cannot navigate.");
-            }
-        }
+            if (string.IsNullOrEmpty(_url))
+                throw new InvalidOperationException("URL must be set before executing OpenPageHandler.");
 
-        public override IPage? Page => _page; // ✅ Exposes Playwright Page for decorators
+            await _page.GotoAsync(_url);
+        }
     }
 }

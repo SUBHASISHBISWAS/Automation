@@ -26,5 +26,7 @@ namespace Alstom.Spectrail.Framework.Actions
         /// Exposes Playwright's Page object if available. Otherwise, returns null.
         /// </summary>
         IPage? Page { get; } // ✅ Now defined as a read-only property
+
+        Task RunAsync();
     }
 }

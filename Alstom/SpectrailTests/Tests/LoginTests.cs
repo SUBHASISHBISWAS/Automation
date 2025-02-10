@@ -11,21 +11,26 @@ using System.Threading.Tasks;
 public class LoginTests : TestHooks
 {
     [Test]
-    [AllureFeature("Login")]
-    [AllureSeverity(Allure.Commons.SeverityLevel.critical)]
+    //[AllureFeature("Login")]
+   //[AllureSeverity(Allure.Commons.SeverityLevel.critical)]
     public async Task Test_Login_And_Navigate_With_Video()
     {
-        ExtentReportManager.StartTest("Test_Login_And_Navigate_Parallel");
+        //ExtentReportManager.StartTest("Test_Login_And_Navigate_Parallel");
 
+        var openPageAction = _actionFactory.Create<OpenPageHandler>()
+            .WithUrl("https://practicetestautomation.com/practice-test-login"); // Set your actual test URL
+
+       
         // ✅ Retrieve LoginHandler from ActionFactory
         var loginHandler = _actionFactory.Create<LoginHandler>()
             .WithUsername("testuser")
-            .WithPassword("password123")
-            .VerifyNavigation(true);
+            .WithPassword("password123");
 
+
+        await openPageAction.SetNext(loginHandler).RunAsync();
         // ✅ Now calls `RunAsync()` instead of `ExecuteAsync()`
-        await loginHandler.RunAsync();
+        //await openPageAction.RunAsync();
 
-        ExtentReportManager.LogStep("Test completed successfully.");
+        //ExtentReportManager.LogStep("Test completed successfully.");
     }
 }

@@ -1,10 +1,12 @@
-﻿using Microsoft.Playwright;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+
 using Alstom.Spectrail.Framework.Decorators;
 using Alstom.Spectrail.Framework.Utilities;
+
+using Microsoft.Playwright;
 
 namespace Alstom.Spectrail.Framework.Actions
 {
@@ -33,38 +35,45 @@ namespace Alstom.Spectrail.Framework.Actions
 
         public async Task HandleAsync()
         {
-            if (_delayFunction != null)
-            {
-                await _delayFunction.Invoke();
-            }
-
-            await ExecuteAsync(); // ✅ Calls the actual `ExecuteAsync()` method
-
-            if (_nextHandler != null)
-            {
-                await _nextHandler.HandleAsync();
-            }
+            if (_delayFunction != null) await _delayFunction.Invoke();
+            await ExecuteAsync();
+            if (_nextHandler != null) await _nextHandler.HandleAsync();
         }
 
         /// <summary>
-        /// Applies decorators dynamically using reflection.
+        /// Applies decorators dynamically while ensuring type consistency.
         /// </summary>
-        public IActionHandler ApplyDecorators()
+        public T ApplyDecorators<T>() where T : BaseActionHandler
         {
-            IActionHandler action = this;
+            IActionHandler decoratedAction = this; // Start with the original action
 
-            var attributes = action.GetType()
+            var attributes = GetType()
                 .GetCustomAttributes(typeof(DecoratorAttribute), true)
                 .Cast<DecoratorAttribute>();
 
             foreach (var attribute in attributes)
             {
-                action = attribute.Apply(action);
+                decoratedAction = attribute.Apply(decoratedAction);
             }
 
-            return action;
+            // ✅ Retrieve the original action from the decorator
+            while (decoratedAction is BaseActionDecorator decorator)
+            {
+                decoratedAction = decorator.WrappedAction; // Unwrap the decorator
+            }
+
+            if (decoratedAction is T typedAction)
+            {
+                return typedAction;
+            }
+
+            throw new InvalidOperationException($"Decorator wrapping error: {decoratedAction.GetType().Name} cannot be cast to {typeof(T).Name}");
         }
 
+        public async Task RunAsync()
+        {
+            await ApplyDecorators<BaseActionHandler>().HandleAsync();
+        }
         /// <summary>
         /// Waits for a condition to be met within a timeout period.
         /// </summary>
@@ -82,23 +91,8 @@ namespace Alstom.Spectrail.Framework.Actions
             throw new TimeoutException("Condition not met within the specified timeout.");
         }
 
-        /// <summary>
-        /// New public method to execute the action, avoiding naming conflicts.
-        /// </summary>
-        public async Task RunAsync()
-        {
-            var decoratedAction = ApplyDecorators();
-            await decoratedAction.HandleAsync();
-        }
-
-        /// <summary>
-        /// Actual method each handler will implement.
-        /// </summary>
         protected abstract Task ExecuteAsync();
 
-        /// <summary>
-        /// Exposes Playwright Page object if available. Otherwise, returns null.
-        /// </summary>
-        public virtual IPage? Page => null; // ✅ Default is null (for non-Playwright handlers)
+        public virtual IPage? Page => null;
     }
 }

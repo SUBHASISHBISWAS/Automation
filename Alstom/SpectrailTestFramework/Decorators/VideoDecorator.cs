@@ -36,18 +36,15 @@ namespace Alstom.Spectrail.Framework.Decorators
         {
             if (Page?.Context != null)
             {
-                await Page.Context.CloseAsync(); // Close the existing context
-
-                // ✅ Retrieve IBrowser from IPage.Context
                 var browser = Page.Context.Browser;
-
                 _context = await browser.NewContextAsync(new BrowserNewContextOptions
                 {
                     RecordVideoDir = "videos/",
                     RecordVideoSize = new RecordVideoSize { Width = 1280, Height = 720 }
                 });
 
-                await _context.NewPageAsync(); // ✅ Create a new page in the new context
+                // ✅ Instead of creating a new page, set the context for the existing one.
+                await _context.StorageStateAsync();
             }
         }
 

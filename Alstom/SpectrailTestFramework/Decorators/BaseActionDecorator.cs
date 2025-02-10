@@ -45,8 +45,21 @@ namespace Alstom.Spectrail.Framework.Decorators
         }
 
         /// <summary>
+        /// ✅ Ensures that `RunAsync()` is executed on the wrapped action.
+        /// </summary>
+        public async Task RunAsync()
+        {
+            await _wrappedAction.RunAsync();
+        }
+
+        /// <summary>
         /// Exposes the Playwright Page if available from the wrapped action.
         /// </summary>
         public virtual IPage? Page => _wrappedAction.Page; // ✅ Forwards `Page` property dynamically
+
+        /// <summary>
+        /// ✅ Expose the original wrapped action for unwrapping.
+        /// </summary>
+        public IActionHandler WrappedAction => _wrappedAction;
     }
 }
