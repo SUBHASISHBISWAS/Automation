@@ -17,16 +17,16 @@ namespace Alstom.Spectrail.Tests.Hooks
     [AllureSuite("Playwright Tests")]
     public class TestHooks
     {
-        public ServiceProvider ServiceProvider { get; private set; }
-        public IPage Page { get; private set; }
-        protected ActionFactory _actionFactory;
+        public ServiceProvider? ServiceProvider { get; private set; }
+        public IPage? Page { get; private set; }
+        public ActionFactory? ActionFactory { get; private set; }
 
         [OneTimeSetUp]
         public async Task Setup()
         {
             ServiceProvider = await PlaywrightFactory.SetupDependencies();
             Page = ServiceProvider.GetRequiredService<IPage>();
-            _actionFactory = ServiceProvider.GetRequiredService<ActionFactory>();
+            ActionFactory = ServiceProvider.GetRequiredService<ActionFactory>();
 
             AllureLifecycle.Instance.CleanupResultDirectory();
             Log.Information("Test setup completed.");

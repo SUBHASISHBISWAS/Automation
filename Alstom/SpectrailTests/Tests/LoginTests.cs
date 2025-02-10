@@ -17,12 +17,12 @@ public class LoginTests : TestHooks
     {
         //ExtentReportManager.StartTest("Test_Login_And_Navigate_Parallel");
 
-        var openPageAction = _actionFactory.Create<OpenPageHandler>()
+        var openPageAction = ActionFactory?.Create<OpenPageHandler>()
             .WithUrl("https://practicetestautomation.com/practice-test-login"); // Set your actual test URL
 
        
         // ✅ Retrieve LoginHandler from ActionFactory
-        var loginHandler = _actionFactory.Create<LoginHandler>()
+        var loginHandler = ActionFactory?.Create<LoginHandler>()
             .WithUsername("testuser")
             .WithPassword("password123");
 
