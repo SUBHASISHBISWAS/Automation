@@ -1,72 +1,65 @@
 ﻿using AventStack.ExtentReports;
 using AventStack.ExtentReports.Reporter;
+using AventStack.ExtentReports.Reporter.Config;
 
-public static class ExtentReportManager
+namespace SpectrailTestFramework.Utilities
 {
-    private static readonly string ReportPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TestResults");
-    private static ExtentReports _extentReports;
-    private static readonly ThreadLocal<ExtentTest> _currentTest = new();
-
-    public static void InitializeReport()
+    public static class ExtentReportManager
     {
-        try
-        {
-            if (!Directory.Exists(ReportPath))
-            {
-                Directory.CreateDirectory(ReportPath);
-            }
+        private static readonly string ParentDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SpectrailArtifacts", "Reports");
+        private static ExtentReports? _extentReports;
+        private static readonly AsyncLocal<ExtentTest?> _extentTest = new();
 
-            ExtentSparkReporter sparkReporter = new(Path.Combine(ReportPath, "ExtentReport.html"));
+        private static void EnsureInitialized()
+        {
+            if (_extentReports != null) return; // ✅ Avoid multiple initialization
+
+            Directory.CreateDirectory(ParentDirectory);
+            string reportPath = Path.Combine(ParentDirectory, "ExtentReport.html");
+            ExtentSparkReporter sparkReporter = new(reportPath);
+
+            // ✅ **Manually Apply Configurations in Code (No XML)**
+            sparkReporter.Config.DocumentTitle = "Spectrail Test Report";
+            sparkReporter.Config.ReportName = "Automated Test Execution Report";
+            sparkReporter.Config.Theme = Theme.Dark;
+            sparkReporter.Config.Encoding = "UTF-8";
+            sparkReporter.Config.OfflineMode = true; // ✅ Ensures the report works offline
+
             _extentReports = new ExtentReports();
             _extentReports.AttachReporter(sparkReporter);
+
+            Console.WriteLine("✅ ExtentReports Initialized and Configured in Code.");
         }
-        catch (Exception ex)
+
+        /// ✅ **Starts a new test case report**
+        public static void StartTest(string testName)
         {
-            Console.WriteLine($"Error initializing report: {ex.Message}");
+            EnsureInitialized();
+            _extentTest.Value = _extentReports?.CreateTest(testName);
+            _extentReports?.Flush();
         }
-    }
 
-    public static void StartTest(string testName)
-    {
-        if (_extentReports == null)
+        /// ✅ **Logs test status**
+        public static void LogTestInfo(string message) => _extentTest.Value?.Info(message);
+        public static void LogTestPass(string message) => _extentTest.Value?.Pass(message);
+        public static void LogTestFail(string message, Exception? exception = null)
         {
-            throw new InvalidOperationException(
-                "ExtentReports has not been initialized. Call InitializeReport() first.");
+            EnsureInitialized();
+            if (exception != null)
+            {
+                _extentTest.Value?.Fail($"{message}<br><pre>{exception}</pre>");
+            }
+            else
+            {
+                _extentTest.Value?.Fail(message);
+            }
         }
 
-        _currentTest.Value = _extentReports.CreateTest(testName);
-    }
-
-    public static void LogStep(string stepDescription, Status status = Status.Info)
-    {
-        ExtentTest? test = _currentTest.Value;
-        if (test == null)
+        /// ✅ **Saves and flushes the report**
+        public static void FlushReport()
         {
-            throw new InvalidOperationException("Test has not been started. Call StartTest() first.");
+            EnsureInitialized();
+            _extentReports?.Flush();
         }
-
-        test.Log(status, stepDescription);
-    }
-
-    public static void AttachScreenshot(string filePath)
-    {
-        ExtentTest? test = _currentTest.Value;
-        if (test == null)
-        {
-            throw new InvalidOperationException("Test has not been started. Call StartTest() first.");
-        }
-
-        if (!File.Exists(filePath))
-        {
-            test.Log(Status.Warning, $"Screenshot file not found: {filePath}");
-            return;
-        }
-
-        test.AddScreenCaptureFromPath(filePath);
-    }
-
-    public static void FinalizeReport()
-    {
-        _extentReports?.Flush();
     }
 }

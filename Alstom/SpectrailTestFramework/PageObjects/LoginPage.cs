@@ -16,8 +16,7 @@ public class LoginPage(IPage page) : BasePage(page)
     /// </summary>
     public async Task WaitForSubmitButton()
     {
-        await _submitButton.WaitForAsync(new LocatorWaitForOptions
-        { State = WaitForSelectorState.Visible, Timeout = 5000 });
+        await IsSubmitButtonVisible();
     }
 
     /// <summary>
@@ -25,6 +24,7 @@ public class LoginPage(IPage page) : BasePage(page)
     /// </summary>
     public async Task Login(string userName, string password)
     {
+        
         await _userName.FillAsync(userName);
         await _password.FillAsync(password);
         await _submitButton.ClickAsync();
@@ -40,7 +40,7 @@ public class LoginPage(IPage page) : BasePage(page)
         await Page.RunAndWaitForNavigationAsync(async () => { await _submitButton.ClickAsync(); },
             new PageRunAndWaitForNavigationOptions
             {
-                UrlString = "https://practicetestautomation.com/logged-in-successfully/"
+                UrlString = "https://practicetestautomation.com/logged-in-fail/"
             });
     }
 

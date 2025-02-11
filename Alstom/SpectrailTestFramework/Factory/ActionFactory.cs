@@ -3,6 +3,8 @@
 using Serilog;
 
 using SpectrailTestFramework.Actions;
+using SpectrailTestFramework.Decorators;
+using SpectrailTestFramework.Interfaces;
 using SpectrailTestFramework.PageObjects;
 
 namespace SpectrailTestFramework.Factory;
@@ -13,20 +15,17 @@ public class ActionFactory(IServiceProvider serviceProvider)
         serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
 
     /// <summary>
-    ///     Create an instance of a Page that inherits BasePage dynamically.
-    ///     Ensures Playwright dependencies are properly injected.
+    /// ✅ **Create an instance of a Page that inherits BasePage dynamically.**
     /// </summary>
     public T CreatePage<T>() where T : BasePage
     {
         try
         {
-            // ✅ Ensure Playwright services are registered
             T pageInstance = (T)ActivatorUtilities.CreateInstance(_serviceProvider, typeof(T));
 
             if (pageInstance.Page == null)
             {
-                Log.Error(
-                    $"[ActionFactory] Page instance for {typeof(T).Name} is null. Ensure Playwright is correctly initialized.");
+                Log.Error($"[ActionFactory] Page instance for {typeof(T).Name} is null.");
                 throw new InvalidOperationException($"Page instance for {typeof(T).Name} is null.");
             }
 
@@ -36,13 +35,12 @@ public class ActionFactory(IServiceProvider serviceProvider)
         catch (Exception ex)
         {
             Log.Error($"[ActionFactory] Failed to create Page instance of {typeof(T).Name}: {ex.Message}");
-            throw new InvalidOperationException(
-                $"Unable to create instance of {typeof(T).Name}. Ensure it is registered in DI.", ex);
+            throw new InvalidOperationException($"Unable to create instance of {typeof(T).Name}.", ex);
         }
     }
 
     /// <summary>
-    ///     Create an action instance with decorators automatically applied.
+    /// ✅ **Create an action instance with decorators automatically applied.**
     /// </summary>
     public T Create<T>() where T : BaseActionHandler
     {
@@ -50,14 +48,22 @@ public class ActionFactory(IServiceProvider serviceProvider)
         {
             T actionInstance = (T)ActivatorUtilities.CreateInstance(_serviceProvider, typeof(T));
 
-            // ✅ Apply decorators while ensuring type safety
-            return actionInstance.ApplyDecorators<T>();
+            // ✅ Apply decorators dynamically
+            IActionHandler decoratedAction = actionInstance.ApplyDecorators();
+
+            // ✅ Unwrap the action if needed
+            while (decoratedAction is BaseActionDecorator decorator)
+            {
+                decoratedAction = decorator.WrappedAction;
+            }
+
+            return decoratedAction as T ?? throw new InvalidOperationException(
+                $"❌ Decorator wrapping error: {decoratedAction.GetType().Name} cannot be cast to {typeof(T).Name}");
         }
         catch (Exception ex)
         {
             Log.Error($"[ActionFactory] Failed to create instance of {typeof(T).Name}: {ex.Message}");
-            throw new InvalidOperationException(
-                $"Unable to create instance of {typeof(T).Name}. Ensure it is registered in DI.", ex);
+            throw new InvalidOperationException($"Unable to create instance of {typeof(T).Name}.", ex);
         }
     }
 }

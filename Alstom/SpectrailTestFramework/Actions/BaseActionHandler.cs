@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 using Microsoft.Playwright;
 
@@ -17,7 +19,14 @@ public abstract class BaseActionHandler(ActionFactory actionFactory) : IActionHa
 
     public IActionHandler SetNext(IActionHandler nextHandler)
     {
-        _nextHandler = nextHandler;
+        if (_nextHandler == null)
+        {
+            _nextHandler = nextHandler; // ✅ Ensure chaining is correct
+        }
+        else
+        {
+            _nextHandler.SetNext(nextHandler); // ✅ Chain properly if already set
+        }
         return this;
     }
 
@@ -34,7 +43,8 @@ public abstract class BaseActionHandler(ActionFactory actionFactory) : IActionHa
             await _delayFunction.Invoke();
         }
 
-        await ExecuteAsync();
+        await ExecuteAsync(); // ✅ Calls actual execution
+
         if (_nextHandler != null)
         {
             await _nextHandler.HandleAsync();
@@ -43,46 +53,37 @@ public abstract class BaseActionHandler(ActionFactory actionFactory) : IActionHa
 
     public async Task RunAsync()
     {
-        await ApplyDecorators<BaseActionHandler>().HandleAsync();
+        await HandleAsync(); // ✅ Directly executes the already decorated action
     }
 
-    public virtual IPage? Page => null;
+    public virtual IPage? Page => null; // ✅ Default Page is null for non-Playwright handlers
 
     /// <summary>
-    ///     Applies decorators dynamically while ensuring type consistency.
+    /// ✅ **Applies decorators dynamically while ensuring correct type safety.**
     /// </summary>
-    public T ApplyDecorators<T>() where T : BaseActionHandler
+    public IActionHandler ApplyDecorators()
     {
-        IActionHandler decoratedAction = this; // Start with the original action
+        IActionHandler decoratedAction = this;
 
-        IEnumerable<DecoratorAttribute> attributes = GetType()
+        var attributes = GetType()
             .GetCustomAttributes(typeof(DecoratorAttribute), true)
             .Cast<DecoratorAttribute>();
 
-        foreach (DecoratorAttribute attribute in attributes)
+        foreach (var attribute in attributes)
         {
-            decoratedAction = attribute.Apply(decoratedAction);
+            decoratedAction = attribute.Apply(decoratedAction); // ✅ Apply each decorator
         }
 
-        // ✅ Retrieve the original action from the decorator
-        while (decoratedAction is BaseActionDecorator decorator)
-        {
-            decoratedAction = decorator.WrappedAction; // Unwrap the decorator
-        }
-
-        return decoratedAction is T typedAction
-            ? typedAction
-            : throw new InvalidOperationException(
-                $"Decorator wrapping error: {decoratedAction.GetType().Name} cannot be cast to {typeof(T).Name}");
+        return decoratedAction; // ✅ Return wrapped action (ensuring type safety)
     }
 
     /// <summary>
-    ///     Waits for a condition to be met within a timeout period.
+    /// ✅ **Waits for a condition to be met within a timeout period.**
     /// </summary>
     protected async Task WaitForConditionAsync(Func<Task<bool>> condition, int timeoutMilliseconds = 5000,
         int pollingInterval = 100)
     {
-        Stopwatch stopwatch = Stopwatch.StartNew();
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
         while (stopwatch.ElapsedMilliseconds < timeoutMilliseconds)
         {
             if (await condition())

@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<extentreports>
+  <configuration>
+    <!-- Report theme: standard, dark -->
+    <theme>standard</theme>
+
+    <!-- Document encoding -->
+    <encoding>UTF-8</encoding>
+
+    <!-- Protocol for script and stylesheets -->
+    <protocol>https</protocol>
+
+    <!-- Title of the document -->
+    <documentTitle>ExtentReports</documentTitle>
+
+    <!-- Name of the report -->
+    <reportName>Automation Report</reportName>
+
+    <!-- Custom JavaScript -->
+    <scripts>
+      <![CDATA[
+                $(document).ready(function() {
+                    // Custom JavaScript code
+                });
+            ]]>
+    </scripts>
+
+    <!-- Custom styles -->
+    <styles>
+      <![CDATA[
+                .custom-class {
+                    color: #ff0000;
+                }
+            ]]>
+    </styles>
+  </configuration>
+</extentreports>

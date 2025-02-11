@@ -1,36 +1,35 @@
-﻿using NUnit.Framework;
-
+﻿using NUnit.Allure.Attributes;
+using NUnit.Framework;
 using SpectrailTestFramework.Actions;
-
+using SpectrailTestFramework.Utilities;
 using SpectrailTests.Hooks;
+using TestContext = NUnit.Framework.TestContext;
 
 namespace SpectrailTests.Tests;
 
 [TestFixture]
-[Parallelizable(ParallelScope.Self)]
+[Parallelizable(ParallelScope.All)]
 public class LoginTests : TestHooks
 {
     [Test]
-    //[AllureFeature("Login")]
-    //[AllureSeverity(Allure.Commons.SeverityLevel.critical)]
-    public async Task Test_Login_And_Navigate_With_Video()
+    [AllureFeature("Login")]
+    public async Task Test_Login_And_Navigate_With_Logging()
     {
-        //ExtentReportManager.StartTest("Test_Login_And_Navigate_Parallel");
+        var testName = TestContext.CurrentContext.Test.Name;
+        ExtentReportManager.StartTest(testName);
+        ExtentReportManager.LogTestInfo("🚀 Starting Login Test...");
 
-        OpenPageHandler? openPageAction = ActionFactory?.Create<OpenPageHandler>()
-            .WithUrl("https://practicetestautomation.com/practice-test-login"); // Set your actual test URL
+        var openPageAction = ActionFactory?.Create<OpenPageHandler>()
+            .WithUrl("https://practicetestautomation.com/practice-test-login");
 
+        var loginHandler = ActionFactory?.Create<LoginHandler>()
+            .WithUsername("student")
+            .WithPassword("Password123");
 
-        // ✅ Retrieve LoginHandler from ActionFactory
-        LoginHandler? loginHandler = ActionFactory?.Create<LoginHandler>()
-            .WithUsername("testuser")
-            .WithPassword("password123");
+        //loginHandler.RunAsync();
+        if (openPageAction != null && loginHandler != null) await openPageAction.SetNext(loginHandler).RunAsync();
 
-
-        await openPageAction.SetNext(loginHandler).RunAsync();
-        // ✅ Now calls `RunAsync()` instead of `ExecuteAsync()`
-        //await openPageAction.RunAsync();
-
-        //ExtentReportManager.LogStep("Test completed successfully.");
+        ExtentReportManager.LogTestPass("✅ Login Test Passed.");
+        ExtentReportManager.FlushReport();
     }
 }

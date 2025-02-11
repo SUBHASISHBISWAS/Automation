@@ -46,33 +46,22 @@ public class LoginHandler : BaseActionHandler
 
     protected override async Task ExecuteAsync()
     {
-        await WaitForSubmitButton();
-        await ThenLogin();
+        await LoginAndVerifyLink();
     }
 
-    /// <summary>
-    ///     Waits for the submit button to become visible using Playwright’s built-in waiting.
-    /// </summary>
-    private async Task<LoginHandler> WaitForSubmitButton()
+    
+    private async Task<LoginHandler?> Login()
     {
-        await _loginPage
-            .WaitForSubmitButton(); // ✅ Uses Playwright's built-in wait instead of `WaitForConditionAsync()`
-        return this;
-    }
-
-    private async Task<LoginHandler> ThenLogin()
-    {
+        if (!await _loginPage.IsSubmitButtonVisible()) return null;
         await _loginPage.Login(_username, _password);
         return this;
+
     }
 
-    private async Task<LoginHandler> ThenVerifyIfRequired()
+    private async Task<LoginHandler?> LoginAndVerifyLink()
     {
-        if (_verifyLink)
-        {
-            await _loginPage.LoginAndVerifyLink(_username, _password);
-        }
-
+        if (!await _loginPage.IsSubmitButtonVisible()) return null;
+        await _loginPage.LoginAndVerifyLink(_username, _password);
         return this;
     }
 }

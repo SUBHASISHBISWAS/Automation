@@ -1,9 +1,11 @@
 ﻿using Microsoft.Playwright;
 
+using SpectrailTestFramework.Attributes;
 using SpectrailTestFramework.Factory;
 
 namespace SpectrailTestFramework.Actions;
 
+[ApplyLogging]
 public class OpenPageHandler(ActionFactory actionFactory, IPage page) : BaseActionHandler(actionFactory)
 {
     private readonly IPage _page = page;
