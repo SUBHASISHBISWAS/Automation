@@ -4,11 +4,9 @@ using Microsoft.Playwright;
 
 namespace Alstom.Spectrail.Framework.PageObjects
 {
-    public abstract class BasePage
+    public abstract class BasePage(IPage page)
     {
-        public readonly IPage Page;
-
-        protected BasePage(IPage page) => Page = page;
+        public readonly IPage Page = page;
 
         /// <summary>
         /// Navigate to a URL

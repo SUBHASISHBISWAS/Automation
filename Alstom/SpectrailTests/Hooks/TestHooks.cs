@@ -75,7 +75,7 @@ namespace Alstom.Spectrail.Tests.Hooks
             {
                 await Page.CloseAsync();
             }
-            ServiceProvider.Dispose();
+            ServiceProvider?.Dispose();
         }
     }
 }

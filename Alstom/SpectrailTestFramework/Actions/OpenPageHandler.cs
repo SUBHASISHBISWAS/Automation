@@ -5,15 +5,10 @@ using Alstom.Spectrail.Framework.Utilities;
 
 namespace Alstom.Spectrail.Framework.Actions
 {
-    public class OpenPageHandler : BaseActionHandler
+    public class OpenPageHandler(ActionFactory actionFactory, IPage page) : BaseActionHandler(actionFactory)
     {
-        private readonly IPage _page;
-        private string _url;
-
-        public OpenPageHandler(ActionFactory actionFactory, IPage page) : base(actionFactory)
-        {
-            _page = page;
-        }
+        private readonly IPage _page = page;
+        private string? _url;
 
         public OpenPageHandler WithUrl(string url)
         {

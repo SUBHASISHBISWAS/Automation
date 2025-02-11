@@ -7,14 +7,9 @@ using Alstom.Spectrail.Framework.PageObjects;
 
 namespace Alstom.Spectrail.Framework.Utilities
 {
-    public class ActionFactory
+    public class ActionFactory(IServiceProvider serviceProvider)
     {
-        private readonly IServiceProvider _serviceProvider;
-
-        public ActionFactory(IServiceProvider serviceProvider)
-        {
-            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-        }
+        private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
 
         /// <summary>
         /// Create an instance of a Page that inherits BasePage dynamically.

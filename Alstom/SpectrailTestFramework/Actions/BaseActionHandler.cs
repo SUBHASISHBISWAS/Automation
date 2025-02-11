@@ -10,16 +10,11 @@ using Microsoft.Playwright;
 
 namespace Alstom.Spectrail.Framework.Actions
 {
-    public abstract class BaseActionHandler : IActionHandler
+    public abstract class BaseActionHandler(ActionFactory actionFactory) : IActionHandler
     {
         private IActionHandler? _nextHandler;
         private Func<Task>? _delayFunction = null;
-        protected readonly ActionFactory _actionFactory;
-
-        public BaseActionHandler(ActionFactory actionFactory)
-        {
-            _actionFactory = actionFactory;
-        }
+        protected readonly ActionFactory _actionFactory = actionFactory;
 
         public IActionHandler SetNext(IActionHandler nextHandler)
         {

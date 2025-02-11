@@ -4,10 +4,8 @@ using Microsoft.Playwright;
 
 namespace Alstom.Spectrail.Framework.PageObjects
 {
-    public class LoginPage : BasePage
+    public class LoginPage(IPage page) : BasePage(page)
     {
-        public LoginPage(IPage page) : base(page) { }
-
         private ILocator _userName => Page.GetByLabel("Username");
         private ILocator _password => Page.GetByLabel("Password");
         private ILocator _submitButton => Page.GetByRole(AriaRole.Button, new() { Name = "Submit" });

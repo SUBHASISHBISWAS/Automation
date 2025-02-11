@@ -12,8 +12,8 @@ namespace Alstom.Spectrail.Framework.Actions
     public class LoginHandler : BaseActionHandler
     {
         private readonly LoginPage _loginPage;
-        private string _username;
-        private string _password;
+        private string _username = string.Empty;
+        private string _password = string.Empty;
         private bool _verifyLink;
 
         /// <summary>

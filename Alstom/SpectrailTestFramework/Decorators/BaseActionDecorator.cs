@@ -9,14 +9,9 @@ namespace Alstom.Spectrail.Framework.Decorators
     /// <summary>
     /// Base class for action decorators that extend functionalities dynamically.
     /// </summary>
-    public abstract class BaseActionDecorator : IActionHandler
+    public abstract class BaseActionDecorator(IActionHandler wrappedAction) : IActionHandler
     {
-        protected readonly IActionHandler _wrappedAction;
-
-        protected BaseActionDecorator(IActionHandler wrappedAction)
-        {
-            _wrappedAction = wrappedAction;
-        }
+        protected readonly IActionHandler _wrappedAction = wrappedAction;
 
         /// <summary>
         /// Executes the decorated action.

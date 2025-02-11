@@ -8,15 +8,9 @@ using Microsoft.Playwright;
 
 namespace Alstom.Spectrail.Framework.Decorators
 {
-    public class ScreenshotDecorator : BaseActionDecorator
+    public class ScreenshotDecorator(IActionHandler wrappedAction, string screenshotPath) : BaseActionDecorator(wrappedAction)
     {
-        private readonly string _screenshotPath;
-
-        public ScreenshotDecorator(IActionHandler wrappedAction, string screenshotPath)
-            : base(wrappedAction)
-        {
-            _screenshotPath = screenshotPath;
-        }
+        private readonly string _screenshotPath = screenshotPath;
 
         public override async Task HandleAsync()
         {

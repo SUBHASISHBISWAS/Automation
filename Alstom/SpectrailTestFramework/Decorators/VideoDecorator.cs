@@ -6,12 +6,10 @@ using Alstom.Spectrail.Framework.Actions;
 
 namespace Alstom.Spectrail.Framework.Decorators
 {
-    public class VideoDecorator : BaseActionDecorator
+    public class VideoDecorator(IActionHandler wrappedAction) : BaseActionDecorator(wrappedAction)
     {
         private IBrowserContext? _context;
         private string _videoPath = string.Empty;
-
-        public VideoDecorator(IActionHandler wrappedAction) : base(wrappedAction) { }
 
         public override async Task HandleAsync()
         {
