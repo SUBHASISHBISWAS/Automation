@@ -17,13 +17,14 @@ public class TestHooks : IAsyncDisposable
     private static readonly string ParentDirectory =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SpectrailArtifacts");
 
-    private static IPlaywright _playwright;
-    private static IBrowser _browser;
-    private static IBrowserContext _context;
-    private static IPage _page;
-    private static ServiceProvider _serviceProvider;
-    private string _testName;
-    public static ActionFactory ActionFactory { get; private set; } // ✅ Ensure ActionFactory is accessible
+
+    private static IPlaywright? _playwright;
+    private static IBrowser? _browser;
+    private static IBrowserContext? _context;
+    private static IPage? _page;
+    private static ServiceProvider? _serviceProvider;
+    private string? _testName;
+    public static ActionFactory? ActionFactory { get; private set; } // ✅ Ensure ActionFactory is accessible
 
     /// ✅ Asynchronously flush logs and dispose of resources
     public async ValueTask DisposeAsync()
