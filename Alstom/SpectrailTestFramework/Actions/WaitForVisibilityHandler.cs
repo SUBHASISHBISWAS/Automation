@@ -1,29 +1,27 @@
-﻿using System.Threading.Tasks;
+﻿using Microsoft.Playwright;
 
-using Alstom.Spectrail.Framework.PageObjects;
-using Alstom.Spectrail.Framework.Utilities;
+using SpectrailTestFramework.Factory;
+using SpectrailTestFramework.PageObjects;
 
-using Microsoft.Playwright;
+namespace SpectrailTestFramework.Actions;
 
-namespace Alstom.Spectrail.Framework.Actions
+public class WaitForVisibilityHandler : BaseActionHandler
 {
-    public class WaitForVisibilityHandler : BaseActionHandler
+    private readonly IPage _page;
+    private readonly string _selector;
+
+    public WaitForVisibilityHandler(ActionFactory actionFactory, string selector)
+        : base(actionFactory)
     {
-        private readonly IPage _page;
-        private readonly string _selector;
+        _page = _actionFactory.CreatePage<BasePage>().Page; // ✅ Dynamically retrieves the Playwright page
+        _selector = selector;
+    }
 
-        public WaitForVisibilityHandler(ActionFactory actionFactory, string selector)
-            : base(actionFactory)
-        {
-            _page = _actionFactory.CreatePage<BasePage>().Page; // ✅ Dynamically retrieves the Playwright page
-            _selector = selector;
-        }
+    public override IPage? Page => _page; // ✅ Exposes Playwright Page for decorators
 
-        protected override async Task ExecuteAsync()
-        {
-            await _page.WaitForSelectorAsync(_selector, new PageWaitForSelectorOptions { State = WaitForSelectorState.Visible });
-        }
-
-        public override IPage? Page => _page; // ✅ Exposes Playwright Page for decorators
+    protected override async Task ExecuteAsync()
+    {
+        await _page.WaitForSelectorAsync(_selector,
+            new PageWaitForSelectorOptions { State = WaitForSelectorState.Visible });
     }
 }

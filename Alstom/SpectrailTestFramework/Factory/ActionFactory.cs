@@ -1,59 +1,63 @@
-﻿using System;
-using Microsoft.Extensions.DependencyInjection;
-using Alstom.Spectrail.Framework.Actions;
-using Alstom.Spectrail.Framework.Decorators;
+﻿using Microsoft.Extensions.DependencyInjection;
+
 using Serilog;
-using Alstom.Spectrail.Framework.PageObjects;
 
-namespace Alstom.Spectrail.Framework.Utilities
+using SpectrailTestFramework.Actions;
+using SpectrailTestFramework.PageObjects;
+
+namespace SpectrailTestFramework.Factory;
+
+public class ActionFactory(IServiceProvider serviceProvider)
 {
-    public class ActionFactory(IServiceProvider serviceProvider)
+    private readonly IServiceProvider _serviceProvider =
+        serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+
+    /// <summary>
+    ///     Create an instance of a Page that inherits BasePage dynamically.
+    ///     Ensures Playwright dependencies are properly injected.
+    /// </summary>
+    public T CreatePage<T>() where T : BasePage
     {
-        private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-
-        /// <summary>
-        /// Create an instance of a Page that inherits BasePage dynamically.
-        /// Ensures Playwright dependencies are properly injected.
-        /// </summary>
-        public T CreatePage<T>() where T : BasePage
+        try
         {
-            try
-            {
-                // ✅ Ensure Playwright services are registered
-                var pageInstance = (T)ActivatorUtilities.CreateInstance(_serviceProvider, typeof(T));
+            // ✅ Ensure Playwright services are registered
+            T pageInstance = (T)ActivatorUtilities.CreateInstance(_serviceProvider, typeof(T));
 
-                if (pageInstance.Page == null)
-                {
-                    Log.Error($"[ActionFactory] Page instance for {typeof(T).Name} is null. Ensure Playwright is correctly initialized.");
-                    throw new InvalidOperationException($"Page instance for {typeof(T).Name} is null.");
-                }
-
-                Log.Information($"[ActionFactory] Successfully created page instance of {typeof(T).Name}");
-                return pageInstance;
-            }
-            catch (Exception ex)
+            if (pageInstance.Page == null)
             {
-                Log.Error($"[ActionFactory] Failed to create Page instance of {typeof(T).Name}: {ex.Message}");
-                throw new InvalidOperationException($"Unable to create instance of {typeof(T).Name}. Ensure it is registered in DI.", ex);
+                Log.Error(
+                    $"[ActionFactory] Page instance for {typeof(T).Name} is null. Ensure Playwright is correctly initialized.");
+                throw new InvalidOperationException($"Page instance for {typeof(T).Name} is null.");
             }
+
+            Log.Information($"[ActionFactory] Successfully created page instance of {typeof(T).Name}");
+            return pageInstance;
         }
-        /// <summary>
-        /// Create an action instance with decorators automatically applied.
-        /// </summary>
-        public T Create<T>() where T : BaseActionHandler
+        catch (Exception ex)
         {
-            try
-            {
-                var actionInstance = (T)ActivatorUtilities.CreateInstance(_serviceProvider, typeof(T));
+            Log.Error($"[ActionFactory] Failed to create Page instance of {typeof(T).Name}: {ex.Message}");
+            throw new InvalidOperationException(
+                $"Unable to create instance of {typeof(T).Name}. Ensure it is registered in DI.", ex);
+        }
+    }
 
-                // ✅ Apply decorators while ensuring type safety
-                return actionInstance.ApplyDecorators<T>();
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"[ActionFactory] Failed to create instance of {typeof(T).Name}: {ex.Message}");
-                throw new InvalidOperationException($"Unable to create instance of {typeof(T).Name}. Ensure it is registered in DI.", ex);
-            }
+    /// <summary>
+    ///     Create an action instance with decorators automatically applied.
+    /// </summary>
+    public T Create<T>() where T : BaseActionHandler
+    {
+        try
+        {
+            T actionInstance = (T)ActivatorUtilities.CreateInstance(_serviceProvider, typeof(T));
+
+            // ✅ Apply decorators while ensuring type safety
+            return actionInstance.ApplyDecorators<T>();
+        }
+        catch (Exception ex)
+        {
+            Log.Error($"[ActionFactory] Failed to create instance of {typeof(T).Name}: {ex.Message}");
+            throw new InvalidOperationException(
+                $"Unable to create instance of {typeof(T).Name}. Ensure it is registered in DI.", ex);
         }
     }
 }

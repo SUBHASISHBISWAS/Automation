@@ -1,32 +1,28 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using Microsoft.Playwright;
 
-using Microsoft.Playwright;
+namespace SpectrailTestFramework.Interfaces;
 
-namespace Alstom.Spectrail.Framework.Actions
+public interface IActionHandler
 {
-    public interface IActionHandler
-    {
-        /// <summary>
-        /// Executes the action asynchronously.
-        /// </summary>
-        Task HandleAsync();
+    /// <summary>
+    ///     Exposes Playwright's Page object if available. Otherwise, returns null.
+    /// </summary>
+    IPage? Page { get; } // ✅ Now defined as a read-only property
 
-        /// <summary>
-        /// Sets the next action in the chain and returns the updated handler for fluent chaining.
-        /// </summary>
-        IActionHandler SetNext(IActionHandler nextHandler);
+    /// <summary>
+    ///     Executes the action asynchronously.
+    /// </summary>
+    Task HandleAsync();
 
-        /// <summary>
-        /// Adds an optional delay before execution.
-        /// </summary>
-        IActionHandler WithDelay(Func<Task> delayFunction);
+    /// <summary>
+    ///     Sets the next action in the chain and returns the updated handler for fluent chaining.
+    /// </summary>
+    IActionHandler SetNext(IActionHandler nextHandler);
 
-        /// <summary>
-        /// Exposes Playwright's Page object if available. Otherwise, returns null.
-        /// </summary>
-        IPage? Page { get; } // ✅ Now defined as a read-only property
+    /// <summary>
+    ///     Adds an optional delay before execution.
+    /// </summary>
+    IActionHandler WithDelay(Func<Task> delayFunction);
 
-        Task RunAsync();
-    }
+    Task RunAsync();
 }

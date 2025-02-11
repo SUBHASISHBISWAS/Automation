@@ -1,29 +1,25 @@
-﻿using System;
-using System.IO;
-using System.Threading.Tasks;
+﻿using Microsoft.Playwright;
 
-using Alstom.Spectrail.Framework.Actions;
+using SpectrailTestFramework.Interfaces;
 
-using Microsoft.Playwright;
+namespace SpectrailTestFramework.Decorators;
 
-namespace Alstom.Spectrail.Framework.Decorators
+public class ScreenshotDecorator(IActionHandler wrappedAction, string screenshotPath)
+    : BaseActionDecorator(wrappedAction)
 {
-    public class ScreenshotDecorator(IActionHandler wrappedAction, string screenshotPath) : BaseActionDecorator(wrappedAction)
+    private readonly string _screenshotPath = screenshotPath;
+
+    public override IPage? Page => _wrappedAction.Page; // ✅ Forward Page property
+
+    public override async Task HandleAsync()
     {
-        private readonly string _screenshotPath = screenshotPath;
+        await base.HandleAsync();
 
-        public override async Task HandleAsync()
+        // ✅ Now uses Page property instead of `_wrappedAction.Page`
+        if (Page != null)
         {
-            await base.HandleAsync();
-
-            // ✅ Now uses Page property instead of `_wrappedAction.Page`
-            if (Page != null)
-            {
-                var screenshotFile = Path.Combine(_screenshotPath, $"{Guid.NewGuid()}.png");
-                await Page.ScreenshotAsync(new PageScreenshotOptions { Path = screenshotFile });
-            }
+            string screenshotFile = Path.Combine(_screenshotPath, $"{Guid.NewGuid()}.png");
+            await Page.ScreenshotAsync(new PageScreenshotOptions { Path = screenshotFile });
         }
-
-        public override IPage? Page => _wrappedAction.Page; // ✅ Forward Page property
     }
 }

@@ -1,12 +1,13 @@
-﻿using Alstom.Spectrail.Framework.Actions;
-using Alstom.Spectrail.Framework.Decorators;
-using Serilog;
+﻿using Serilog;
 
-
+using SpectrailTestFramework.Decorators;
+using SpectrailTestFramework.Interfaces;
 
 public class LoggingDecorator : BaseActionDecorator
 {
-    public LoggingDecorator(IActionHandler wrappedAction) : base(wrappedAction) { }
+    public LoggingDecorator(IActionHandler wrappedAction) : base(wrappedAction)
+    {
+    }
 
     public override async Task HandleAsync()
     {

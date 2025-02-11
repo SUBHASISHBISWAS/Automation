@@ -1,15 +1,11 @@
-﻿using Alstom.Spectrail.Framework.Actions;
-using Microsoft.Playwright;
+﻿using SpectrailTestFramework.Interfaces;
 
+namespace SpectrailTestFramework.Attributes;
 
-
-namespace Alstom.Spectrail.Framework.Decorators
+public class ApplyLoggingAttribute : DecoratorAttribute
 {
-    public class ApplyLoggingAttribute : DecoratorAttribute
+    public override IActionHandler Apply(IActionHandler action)
     {
-        public override IActionHandler Apply(IActionHandler action)
-        {
-            return new LoggingDecorator(action); // ✅ Ensure this returns IActionHandler
-        }
+        return new LoggingDecorator(action); // ✅ Ensure this returns IActionHandler
     }
 }

@@ -1,16 +1,12 @@
-﻿using Microsoft.Playwright;
+﻿using SpectrailTestFramework.Decorators;
+using SpectrailTestFramework.Interfaces;
 
-using System;
-using System.Threading.Tasks;
-using Alstom.Spectrail.Framework.Actions;
+namespace SpectrailTestFramework.Attributes;
 
-namespace Alstom.Spectrail.Framework.Decorators
+public class ApplyVideoAttribute : DecoratorAttribute
 {
-    public class ApplyVideoAttribute : DecoratorAttribute
+    public override IActionHandler Apply(IActionHandler action)
     {
-        public override IActionHandler Apply(IActionHandler action)
-        {
-            return new VideoDecorator(action);
-        }
+        return new VideoDecorator(action);
     }
 }

@@ -1,18 +1,16 @@
-﻿using System;
+﻿using SpectrailTestFramework.Decorators;
+using SpectrailTestFramework.Interfaces;
 
-using Alstom.Spectrail.Framework.Actions;
+namespace SpectrailTestFramework.Attributes;
 
-namespace Alstom.Spectrail.Framework.Decorators
+/// <summary>
+///     Attribute that applies a ScreenshotDecorator automatically.
+/// </summary>
+[AttributeUsage(AttributeTargets.Class)]
+public class ApplyScreenshotAttribute : DecoratorAttribute
 {
-    /// <summary>
-    /// Attribute that applies a ScreenshotDecorator automatically.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
-    public class ApplyScreenshotAttribute : DecoratorAttribute
+    public override IActionHandler Apply(IActionHandler action)
     {
-        public override IActionHandler Apply(IActionHandler action)
-        {
-            return new ScreenshotDecorator(action, "screenshots/"); // ✅ Screenshot path can be configured
-        }
+        return new ScreenshotDecorator(action, "screenshots/"); // ✅ Screenshot path can be configured
     }
 }

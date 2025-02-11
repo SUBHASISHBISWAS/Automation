@@ -1,27 +1,28 @@
-﻿using System.Threading.Tasks;
-using Microsoft.Playwright;
-using Alstom.Spectrail.Framework.Actions;
-using Alstom.Spectrail.Framework.Utilities;
+﻿using Microsoft.Playwright;
 
-namespace Alstom.Spectrail.Framework.Actions
+using SpectrailTestFramework.Factory;
+
+namespace SpectrailTestFramework.Actions;
+
+public class OpenPageHandler(ActionFactory actionFactory, IPage page) : BaseActionHandler(actionFactory)
 {
-    public class OpenPageHandler(ActionFactory actionFactory, IPage page) : BaseActionHandler(actionFactory)
+    private readonly IPage _page = page;
+    private string? _url;
+
+
+    public OpenPageHandler WithUrl(string url)
     {
-        private readonly IPage _page = page;
-        private string? _url;
+        _url = url;
+        return this; // ✅ Enables fluent chaining
+    }
 
-        public OpenPageHandler WithUrl(string url)
+    protected override async Task ExecuteAsync()
+    {
+        if (string.IsNullOrEmpty(_url))
         {
-            _url = url;
-            return this; // ✅ Enables fluent chaining
+            throw new InvalidOperationException("URL must be set before executing OpenPageHandler.");
         }
 
-        protected override async Task ExecuteAsync()
-        {
-            if (string.IsNullOrEmpty(_url))
-                throw new InvalidOperationException("URL must be set before executing OpenPageHandler.");
-
-            await _page.GotoAsync(_url);
-        }
+        await _page.GotoAsync(_url);
     }
 }

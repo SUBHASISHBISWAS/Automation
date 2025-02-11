@@ -1,18 +1,14 @@
-﻿using Alstom.Spectrail.Framework.Actions;
-using Alstom.Spectrail.Framework.Decorators;
-using Alstom.Spectrail.Framework.PageObjects;
-using Alstom.Spectrail.Tests.Hooks;
+﻿using NUnit.Framework;
 
-using NUnit.Allure.Attributes;
-using NUnit.Framework;
+using SpectrailTestFramework.Actions;
 
-using System.Threading.Tasks;
+using SpectrailTests.Hooks;
 [TestFixture, Parallelizable(ParallelScope.Self)]
 public class LoginTests : TestHooks
 {
     [Test]
     //[AllureFeature("Login")]
-   //[AllureSeverity(Allure.Commons.SeverityLevel.critical)]
+    //[AllureSeverity(Allure.Commons.SeverityLevel.critical)]
     public async Task Test_Login_And_Navigate_With_Video()
     {
         //ExtentReportManager.StartTest("Test_Login_And_Navigate_Parallel");
@@ -20,7 +16,7 @@ public class LoginTests : TestHooks
         var openPageAction = ActionFactory?.Create<OpenPageHandler>()
             .WithUrl("https://practicetestautomation.com/practice-test-login"); // Set your actual test URL
 
-       
+
         // ✅ Retrieve LoginHandler from ActionFactory
         var loginHandler = ActionFactory?.Create<LoginHandler>()
             .WithUsername("testuser")
