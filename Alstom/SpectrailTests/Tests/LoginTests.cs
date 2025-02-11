@@ -3,7 +3,11 @@
 using SpectrailTestFramework.Actions;
 
 using SpectrailTests.Hooks;
-[TestFixture, Parallelizable(ParallelScope.Self)]
+
+namespace SpectrailTests.Tests;
+
+[TestFixture]
+[Parallelizable(ParallelScope.Self)]
 public class LoginTests : TestHooks
 {
     [Test]
@@ -13,12 +17,12 @@ public class LoginTests : TestHooks
     {
         //ExtentReportManager.StartTest("Test_Login_And_Navigate_Parallel");
 
-        var openPageAction = ActionFactory?.Create<OpenPageHandler>()
+        OpenPageHandler? openPageAction = ActionFactory?.Create<OpenPageHandler>()
             .WithUrl("https://practicetestautomation.com/practice-test-login"); // Set your actual test URL
 
 
         // ✅ Retrieve LoginHandler from ActionFactory
-        var loginHandler = ActionFactory?.Create<LoginHandler>()
+        LoginHandler? loginHandler = ActionFactory?.Create<LoginHandler>()
             .WithUsername("testuser")
             .WithPassword("password123");
 

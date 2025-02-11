@@ -21,8 +21,8 @@ public static class PlaywrightFactory
 
         IBrowserContext context = await browser.NewContextAsync(new BrowserNewContextOptions
         {
-            RecordVideoDir = "videos", // ✅ Enables video recording
-            RecordVideoSize = new RecordVideoSize { Width = 1280, Height = 720 }
+            RecordVideoDir = null
+
         });
 
         IPage page = await context.NewPageAsync();

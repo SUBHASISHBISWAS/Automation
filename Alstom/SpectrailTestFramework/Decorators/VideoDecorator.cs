@@ -1,63 +1,74 @@
 ﻿using Microsoft.Playwright;
 
+using NUnit.Framework;
+using NUnit.Framework.Interfaces;
+
+using Serilog;
+
 using SpectrailTestFramework.Interfaces;
 
 namespace SpectrailTestFramework.Decorators;
 
 public class VideoDecorator(IActionHandler wrappedAction) : BaseActionDecorator(wrappedAction)
 {
-    private IBrowserContext? _context;
-    private string _videoPath = string.Empty;
+    private readonly string _testName = TestContext.CurrentContext.Test.Name;
 
-    /// <summary>
-    ///     ✅ Properly forward Page from the wrapped action.
-    /// </summary>
-    public override IPage? Page => _wrappedAction.Page;
+    private readonly string _videoDirectory =
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SpectrailArtifacts",
+            "Videos");
+
+    private IBrowserContext? _context;
+    private IPage? _videoPage;
+    private string? _videoPath;
 
     public override async Task HandleAsync()
     {
-        try
+        await StartVideoRecordingAsync();
+        await base.HandleAsync();
+        if (TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Failed)
         {
-            // ✅ Ensure video recording is enabled before executing the action
-            await EnableVideoRecordingAsync();
-
-            await base.HandleAsync(); // ✅ Execute the wrapped action
-
-            // ✅ Capture and save video path after execution
-            _videoPath = await GetVideoPathAsync();
+            await SaveVideoAsync();
         }
-        catch (Exception)
+        else
         {
-            Console.WriteLine($"Test failed, video saved at: {_videoPath}");
-            throw;
+            await DeleteVideoAsync();
         }
     }
 
-    private async Task EnableVideoRecordingAsync()
+    private async Task StartVideoRecordingAsync()
     {
-        if (Page?.Context != null)
+        IPage? page = Page;
+        if (page != null)
         {
-            IBrowser? browser = Page.Context.Browser;
-            _context = await browser.NewContextAsync(new BrowserNewContextOptions
+            BrowserNewContextOptions options = new()
             {
-                RecordVideoDir = "videos/",
+                RecordVideoDir = _videoDirectory,
                 RecordVideoSize = new RecordVideoSize { Width = 1280, Height = 720 }
-            });
-
-            // ✅ Instead of creating a new page, set the context for the existing one.
-            await _context.StorageStateAsync();
+            };
+            _context = await page.Context.Browser.NewContextAsync(options);
+            _videoPage = await _context.NewPageAsync();
+            _videoPath = await _videoPage.Video.PathAsync();
+            Log.Information($"📹 Video recording started for {_testName}");
         }
     }
 
-    private async Task<string> GetVideoPathAsync()
+    private async Task SaveVideoAsync()
     {
-        try
+        if (!string.IsNullOrEmpty(_videoPath) && File.Exists(_videoPath))
         {
-            return await Page?.Video.PathAsync() ?? string.Empty;
+            string savedVideoPath = Path.Combine(_videoDirectory, _testName, "video.webm");
+            Directory.CreateDirectory(Path.GetDirectoryName(savedVideoPath)!);
+            File.Move(_videoPath, savedVideoPath, true);
+            Log.Error($"❌ Test failed: Video saved at {savedVideoPath}");
         }
-        catch
+    }
+
+    private async Task DeleteVideoAsync()
+    {
+        if (!string.IsNullOrEmpty(_videoPath) && File.Exists(_videoPath))
         {
-            return string.Empty;
+            File.Delete(_videoPath);
+            Log.Information($"✅ Test passed: Video deleted for {_testName}");
         }
     }
 }
