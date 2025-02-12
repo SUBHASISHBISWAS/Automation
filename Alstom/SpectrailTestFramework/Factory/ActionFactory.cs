@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System;
+
+using Microsoft.Extensions.DependencyInjection;
 
 using Serilog;
 
@@ -9,13 +11,21 @@ using SpectrailTestFramework.PageObjects;
 
 namespace SpectrailTestFramework.Factory;
 
-public class ActionFactory(IServiceProvider serviceProvider)
+/// <summary>
+/// ✅ **Factory for creating actions and pages with dependency injection.**
+/// ✅ **Applies middleware decorators dynamically using Fluent API.**
+/// </summary>
+public class ActionFactory
 {
-    private readonly IServiceProvider _serviceProvider =
-        serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+    private readonly IServiceProvider _serviceProvider;
+
+    public ActionFactory(IServiceProvider serviceProvider)
+    {
+        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+    }
 
     /// <summary>
-    /// ✅ **Create an instance of a Page that inherits BasePage dynamically.**
+    /// ✅ **Creates an instance of a Page that inherits `BasePage` dynamically.**
     /// </summary>
     public T CreatePage<T>() where T : BasePage
     {
@@ -25,22 +35,22 @@ public class ActionFactory(IServiceProvider serviceProvider)
 
             if (pageInstance.Page == null)
             {
-                Log.Error($"[ActionFactory] Page instance for {typeof(T).Name} is null.");
+                Log.Error($"[ActionFactory] ❌ Page instance for {typeof(T).Name} is null.");
                 throw new InvalidOperationException($"Page instance for {typeof(T).Name} is null.");
             }
 
-            Log.Information($"[ActionFactory] Successfully created page instance of {typeof(T).Name}");
+            Log.Information($"[ActionFactory] ✅ Successfully created page instance of {typeof(T).Name}");
             return pageInstance;
         }
         catch (Exception ex)
         {
-            Log.Error($"[ActionFactory] Failed to create Page instance of {typeof(T).Name}: {ex.Message}");
+            Log.Error($"[ActionFactory] ❌ Failed to create Page instance of {typeof(T).Name}: {ex.Message}");
             throw new InvalidOperationException($"Unable to create instance of {typeof(T).Name}.", ex);
         }
     }
 
     /// <summary>
-    /// ✅ **Create an action instance with decorators automatically applied.**
+    /// ✅ **Creates an action instance and applies middleware decorators dynamically.**
     /// </summary>
     public T Create<T>() where T : BaseActionHandler
     {
@@ -48,21 +58,20 @@ public class ActionFactory(IServiceProvider serviceProvider)
         {
             T actionInstance = (T)ActivatorUtilities.CreateInstance(_serviceProvider, typeof(T));
 
-            // ✅ Apply decorators dynamically
-            IActionHandler decoratedAction = actionInstance.ApplyDecorators();
+            // ✅ Wrap with explicit decorator instances
+            IActionHandler decoratedAction = new LoggingDecorator(actionInstance);
+            decoratedAction = new ScreenshotDecorator(decoratedAction);
 
-            // ✅ Unwrap the action if needed
-            while (decoratedAction is BaseActionDecorator decorator)
-            {
-                decoratedAction = decorator.WrappedAction;
-            }
+            // ✅ Apply middleware at **BaseActionHandler** level, ensuring execution
+            actionInstance.Use(LoggingDecorator.Middleware())
+                          .Use(ScreenshotDecorator.Middleware());
 
-            return decoratedAction as T ?? throw new InvalidOperationException(
-                $"❌ Decorator wrapping error: {decoratedAction.GetType().Name} cannot be cast to {typeof(T).Name}");
+            Serilog.Log.Information($"[ActionFactory] ✅ Successfully created action instance of {typeof(T).Name}");
+            return actionInstance;
         }
         catch (Exception ex)
         {
-            Log.Error($"[ActionFactory] Failed to create instance of {typeof(T).Name}: {ex.Message}");
+            Serilog.Log.Error($"[ActionFactory] ❌ Failed to create instance of {typeof(T).Name}: {ex.Message}");
             throw new InvalidOperationException($"Unable to create instance of {typeof(T).Name}.", ex);
         }
     }

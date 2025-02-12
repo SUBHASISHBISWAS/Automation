@@ -1,4 +1,8 @@
-﻿using NUnit.Framework;
+﻿using System;
+using System.IO;
+using System.Threading.Tasks;
+
+using NUnit.Framework;
 
 using Serilog;
 
@@ -8,35 +12,43 @@ namespace SpectrailTestFramework.Decorators;
 
 public class LoggingDecorator : BaseActionDecorator
 {
-    private readonly string _logDirectory =
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SpectrailArtifacts",
-            "Logs");
+    private static readonly string ParentLogDirectory = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SpectrailArtifacts", "Logs");
 
     private readonly string _testName = TestContext.CurrentContext.Test.Name;
+    private readonly string _logFilePath;
 
     public LoggingDecorator(IActionHandler wrappedAction) : base(wrappedAction)
     {
-        Directory.CreateDirectory(Path.Combine(_logDirectory, _testName));
-        string logFilePath = Path.Combine(_logDirectory, _testName, "test.log");
+        string testLogDirectory = Path.Combine(ParentLogDirectory, _testName);
+        Directory.CreateDirectory(testLogDirectory);
+        _logFilePath = Path.Combine(testLogDirectory, "test.log");
+
         Log.Logger = new LoggerConfiguration()
             .WriteTo.Console()
-            .WriteTo.File(logFilePath, rollingInterval: RollingInterval.Infinite)
+            .WriteTo.File(_logFilePath, rollingInterval: RollingInterval.Infinite)
             .MinimumLevel.Debug()
             .CreateLogger();
+
+        // ✅ Register middleware at the time of instantiation
+        Use(Middleware());
     }
 
-    public override async Task HandleAsync()
+    public static Func<IActionHandler, Func<Task>, Task> Middleware()
     {
-        try
+        return async (handler, next) =>
         {
-            Log.Information($"🔹 Starting action: {_wrappedAction.GetType().Name}");
-            await _wrappedAction.HandleAsync();
-            Log.Information($"✅ Completed action: {_wrappedAction.GetType().Name}");
-        }
-        catch (Exception ex)
-        {
-            Log.Error($"❌ Error in action {_wrappedAction.GetType().Name}: {ex.Message}");
-            throw;
-        }
+            Log.Information($"🔹 Starting action: {handler.GetType().Name}");
+            try
+            {
+                await next();
+                Log.Information($"✅ Completed action: {handler.GetType().Name}");
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"❌ Error in action {handler.GetType().Name}: {ex.Message}");
+                throw;
+            }
+        };
     }
 }

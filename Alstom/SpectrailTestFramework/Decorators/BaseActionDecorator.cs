@@ -1,40 +1,74 @@
-﻿using Microsoft.Playwright;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+using Microsoft.Playwright;
 
 using SpectrailTestFramework.Interfaces;
 
 namespace SpectrailTestFramework.Decorators;
 
-/// <summary>
-///     Base class for action decorators that extend functionalities dynamically.
-/// </summary>
-public abstract class BaseActionDecorator(IActionHandler wrappedAction) : IActionHandler
+public abstract class BaseActionDecorator : IActionHandler
 {
-    protected readonly IActionHandler _wrappedAction = wrappedAction;
+    protected readonly IActionHandler _wrappedAction;
+    private readonly List<Func<IActionHandler, Func<Task>, Task>> _middlewares = new(); // ✅ Middleware pipeline
+
+    protected BaseActionDecorator(IActionHandler wrappedAction)
+    {
+        _wrappedAction = wrappedAction ?? throw new ArgumentNullException(nameof(wrappedAction));
+
+        // ✅ Register decorator-specific middleware dynamically
+        Use(Middleware());
+    }
 
     /// <summary>
-    ///     ✅ Expose the original wrapped action for unwrapping.
+    /// ✅ **Exposes the original wrapped action for unwrapping.**
     /// </summary>
     public IActionHandler WrappedAction => _wrappedAction;
 
     /// <summary>
-    ///     Executes the decorated action.
+    /// ✅ **Adds middleware (decorator logic) dynamically.**
     /// </summary>
-    public virtual async Task HandleAsync()
+    public IActionHandler Use(Func<IActionHandler, Func<Task>, Task> middleware)
     {
-        await _wrappedAction.HandleAsync();
-    }
-
-    /// <summary>
-    ///     Supports chaining by passing the next handler to the wrapped action.
-    /// </summary>
-    public IActionHandler SetNext(IActionHandler nextHandler)
-    {
-        _wrappedAction.SetNext(nextHandler);
+        _middlewares.Add(middleware);
         return this;
     }
 
     /// <summary>
-    ///     Supports applying delays before execution.
+    /// ✅ **Executes the decorated action within the middleware pipeline.**
+    /// </summary>
+    public async Task HandleAsync()
+    {
+        int index = -1;
+
+        async Task Next()
+        {
+            index++;
+            if (index < _middlewares.Count)
+            {
+                await _middlewares[index](this, Next); // ✅ Executes each middleware in order
+            }
+            else
+            {
+                await _wrappedAction.HandleAsync(); // ✅ Calls the actual action
+            }
+        }
+
+        await Next(); // ✅ Start the middleware execution pipeline
+    }
+
+    /// <summary>
+    /// ✅ **Supports chaining by passing the next handler to the wrapped action.**
+    /// </summary>
+    public IActionHandler SetNextAction(IActionHandler nextHandler)
+    {
+        _wrappedAction.SetNextAction(nextHandler);
+        return this;
+    }
+
+    /// <summary>
+    /// ✅ **Supports applying delays before execution.**
     /// </summary>
     public IActionHandler WithDelay(Func<Task> delayFunction)
     {
@@ -43,15 +77,26 @@ public abstract class BaseActionDecorator(IActionHandler wrappedAction) : IActio
     }
 
     /// <summary>
-    ///     ✅ Ensures that `RunAsync()` is executed on the wrapped action.
+    /// ✅ **Ensures that `RunAsync()` is executed with middleware-based execution.**
     /// </summary>
     public async Task RunAsync()
     {
-        await _wrappedAction.RunAsync();
+        await HandleAsync(); // ✅ Runs the pipeline with decorators
     }
 
     /// <summary>
-    ///     Exposes the Playwright Page if available from the wrapped action.
+    /// ✅ **Exposes the Playwright Page if available from the wrapped action.**
     /// </summary>
     public virtual IPage? Page => _wrappedAction.Page; // ✅ Forwards `Page` property dynamically
+
+    /// <summary>
+    /// ✅ **Provides default middleware behavior (to be overridden).**
+    /// </summary>
+    protected virtual Func<IActionHandler, Func<Task>, Task> Middleware()
+    {
+        return async (handler, next) =>
+        {
+            await next(); // ✅ Default middleware just calls the next action
+        };
+    }
 }

@@ -27,7 +27,7 @@ public class LoginTests : TestHooks
             .WithPassword("Password123");
 
         //loginHandler.RunAsync();
-        if (openPageAction != null && loginHandler != null) await openPageAction.SetNext(loginHandler).RunAsync();
+        if (openPageAction != null && loginHandler != null) await openPageAction.SetNextAction(loginHandler).RunAsync();
 
         ExtentReportManager.LogTestPass("✅ Login Test Passed.");
         ExtentReportManager.FlushReport();

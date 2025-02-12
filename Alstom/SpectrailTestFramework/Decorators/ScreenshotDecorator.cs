@@ -1,56 +1,49 @@
-﻿using Microsoft.Playwright;
-
+﻿using System;
+using System.IO;
+using System.Threading.Tasks;
 using NUnit.Framework;
-using NUnit.Framework.Interfaces;
-
 using Serilog;
-
+using Microsoft.Playwright;
 using SpectrailTestFramework.Interfaces;
 
 namespace SpectrailTestFramework.Decorators;
 
 public class ScreenshotDecorator : BaseActionDecorator
 {
-    private readonly string _screenshotDirectory =
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SpectrailArtifacts",
-            "Screenshots");
+    private static readonly string ScreenshotDirectory = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SpectrailArtifacts", "Screenshots");
 
     private readonly string _testName = TestContext.CurrentContext.Test.Name;
 
     public ScreenshotDecorator(IActionHandler wrappedAction) : base(wrappedAction)
     {
-        Directory.CreateDirectory(Path.Combine(_screenshotDirectory, _testName));
+        string testScreenshotDirectory = Path.Combine(ScreenshotDirectory, _testName);
+        Directory.CreateDirectory(testScreenshotDirectory);
+
+        // ✅ Register middleware at the time of instantiation
+        Use(Middleware());
     }
 
-    public override async Task HandleAsync()
+    public static Func<IActionHandler, Func<Task>, Task> Middleware()
     {
-        try
+        return async (handler, next) =>
         {
-            await base.HandleAsync();
-            if (TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Failed)
+            try
             {
-                await CaptureScreenshotAsync();
+                await next();
+                IPage? page = handler.Page;
+                if (page != null && TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Inconclusive)
+                {
+                    string screenshotPath = Path.Combine(ScreenshotDirectory, TestContext.CurrentContext.Test.Name, "failure.png");
+                    await page.ScreenshotAsync(new PageScreenshotOptions { Path = screenshotPath });
+                    Log.Information($"📸 Screenshot saved: {screenshotPath}");
+                }
             }
-        }
-        catch (Exception ex)
-        {
-            Log.Error($"❌ ScreenshotDecorator encountered an error: {ex.Message}");
-            throw;
-        }
-    }
-
-    private async Task CaptureScreenshotAsync()
-    {
-        IPage? page = Page;
-        if (page != null)
-        {
-            string screenshotPath = Path.Combine(_screenshotDirectory, _testName, "failure.png");
-            await page.ScreenshotAsync(new PageScreenshotOptions { Path = screenshotPath });
-            Log.Information($"📸 Screenshot saved: {screenshotPath}");
-        }
-        else
-        {
-            Log.Warning("⚠️ Unable to capture screenshot: No Playwright page found.");
-        }
+            catch (Exception ex)
+            {
+                Log.Error($"❌ ScreenshotDecorator encountered an error: {ex.Message}");
+                throw;
+            }
+        };
     }
 }

@@ -1,12 +1,14 @@
-﻿using Allure.Commons;
+﻿using System;
+using System.IO;
+using System.Threading.Tasks;
+using System.Threading;
 
+using Allure.Commons;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Playwright;
 
 using NUnit.Framework;
-
 using Serilog;
-
 using SpectrailTestFramework.Factory;
 using SpectrailTestFramework.Utilities;
 
@@ -17,17 +19,18 @@ namespace SpectrailTests.Hooks
     [SetUpFixture]
     public class TestHooks : IAsyncDisposable
     {
-        private static readonly string ParentDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SpectrailArtifacts");
+        private static readonly string ParentDirectory =
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SpectrailArtifacts");
 
         private static readonly AsyncLocal<IPlaywright?> _playwright = new();
         private static readonly AsyncLocal<IBrowser?> _browser = new();
         private static readonly AsyncLocal<IBrowserContext?> _context = new();
         private static readonly AsyncLocal<IPage?> _page = new();
-        private static ServiceProvider? _serviceProvider;
+        private static readonly AsyncLocal<ServiceProvider?> _serviceProvider = new();
         public static ActionFactory? ActionFactory { get; private set; }
 
         /// <summary>
-        /// ✅ Global Test Setup - Initializes Reporting & Playwright.
+        /// ✅ Global Test Setup - Initializes Logging, Reporting & Playwright.
         /// </summary>
         [OneTimeSetUp]
         public async Task GlobalSetup()
@@ -41,7 +44,7 @@ namespace SpectrailTests.Hooks
 
             Log.Information("🚀 Global Test Setup Started...");
 
-            // ✅ Initialize ExtentReports using ExtentSparkReporter
+            // ✅ Initialize ExtentReports for structured logging
             ExtentReportManager.FlushReport();
 
             // ✅ Initialize Allure Reporting
@@ -57,24 +60,27 @@ namespace SpectrailTests.Hooks
             string testName = TestContext.CurrentContext.Test.Name;
             ExtentReportManager.StartTest(testName);
             ExtentReportManager.LogTestInfo($"🚀 Test {testName} Started...");
-
-            Log.Information($"🚀 Test {testName} Started...");
+            Serilog.Log.Information($"🚀 Test {testName} Started...");
 
             // ✅ Initialize Playwright & Isolated Browser Context Per Test
             _playwright.Value = await Playwright.CreateAsync();
-            _browser.Value = await _playwright.Value.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = false });
+            _browser.Value = await _playwright.Value.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+            {
+                Headless = false
+            });
+
             _context.Value = await _browser.Value.NewContextAsync();
             _page.Value = await _context.Value.NewPageAsync();
 
             // ✅ Setup Dependency Injection (DI) container
-            ServiceCollection serviceCollection = new();
+            var serviceCollection = new ServiceCollection();
             serviceCollection.AddSingleton(_page.Value);
             serviceCollection.AddSingleton<ActionFactory>();
 
-            _serviceProvider = serviceCollection.BuildServiceProvider();
-            ActionFactory = _serviceProvider.GetRequiredService<ActionFactory>();
+            _serviceProvider.Value = serviceCollection.BuildServiceProvider();
+            ActionFactory = _serviceProvider.Value.GetRequiredService<ActionFactory>();
 
-            Log.Information("✅ Playwright & ActionFactory Initialized.");
+            Serilog.Log.Information("✅ Playwright & ActionFactory Initialized.");
         }
 
         /// <summary>
@@ -89,15 +95,22 @@ namespace SpectrailTests.Hooks
             if (testStatus == NUnit.Framework.Interfaces.TestStatus.Failed)
             {
                 ExtentReportManager.LogTestFail($"❌ Test {testName} Failed.");
-                Log.Error($"❌ Test {testName} Failed.");
+                Serilog.Log.Error($"❌ Test {testName} Failed.");
             }
             else
             {
                 ExtentReportManager.LogTestPass($"✅ Test {testName} Passed.");
-                Log.Information($"✅ Test {testName} Passed.");
+                Serilog.Log.Information($"✅ Test {testName} Passed.");
             }
 
             ExtentReportManager.FlushReport();
+
+            // ✅ Cleanup Playwright context to avoid memory leaks
+            if (_context.Value != null)
+            {
+                await _context.Value.CloseAsync();
+            }
+
             await Task.Delay(100);
         }
 
@@ -107,7 +120,7 @@ namespace SpectrailTests.Hooks
         [OneTimeTearDown]
         public async Task GlobalCleanup()
         {
-            Log.Information("✅ Global Test Cleanup Started.");
+            Serilog.Log.Information("✅ Global Test Cleanup Started.");
             ExtentReportManager.FlushReport();
 
             if (_browser.Value != null)
@@ -115,12 +128,12 @@ namespace SpectrailTests.Hooks
                 await _browser.Value.CloseAsync();
             }
 
-            if (_serviceProvider != null)
+            if (_serviceProvider.Value != null)
             {
                 await DisposeAsync();
             }
 
-            Log.Information("✅ Global Test Cleanup Completed.");
+            Serilog.Log.Information("✅ Global Test Cleanup Completed.");
         }
 
         /// <summary>
@@ -128,8 +141,8 @@ namespace SpectrailTests.Hooks
         /// </summary>
         public async ValueTask DisposeAsync()
         {
-            await Task.Run(Log.CloseAndFlush);
-            _serviceProvider?.Dispose();
+            await Task.Run(Serilog.Log.CloseAndFlush);
+            _serviceProvider.Value?.Dispose();
         }
     }
 }

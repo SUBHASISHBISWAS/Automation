@@ -1,24 +1,63 @@
-﻿using Microsoft.Playwright;
+﻿using System;
+using System.Threading.Tasks;
+
+using Microsoft.Playwright;
 
 namespace SpectrailTestFramework.PageObjects;
 
-public abstract class BasePage(IPage page)
+/// <summary>
+/// ✅ **Base class for Playwright pages.**
+/// ✅ **Encapsulates common navigation and page interactions.**
+/// ✅ **Ensures elements are loaded before interactions.**
+/// </summary>
+public abstract class BasePage
 {
-    public readonly IPage Page = page;
+    public readonly IPage Page;
 
-    /// <summary>
-    ///     Navigate to a URL
-    /// </summary>
-    public async Task GoToUrl(string url)
+    public BasePage(IPage page)
     {
-        await Page.GotoAsync(url);
+        Page = page ?? throw new ArgumentNullException(nameof(page));
     }
 
     /// <summary>
-    ///     Wait until the page has fully loaded
+    /// ✅ **Navigates to a URL using Fluent API.**
     /// </summary>
-    public async Task WaitForPageLoad()
+    public async Task<BasePage> GoToUrl(string url)
+    {
+        if (string.IsNullOrEmpty(url))
+        {
+            throw new ArgumentException("❌ URL must not be null or empty.", nameof(url));
+        }
+
+        await Page.GotoAsync(url);
+        return this;
+    }
+
+    /// <summary>
+    /// ✅ **Waits until the page has fully loaded.**
+    /// </summary>
+    public async Task<BasePage> WaitForPageLoad()
     {
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        return this;
+    }
+
+    /// <summary>
+    /// ✅ **Waits for a specific selector to become visible.**
+    /// </summary>
+    public async Task<BasePage> WaitForElement(string selector, int timeoutMilliseconds = 5000)
+    {
+        if (string.IsNullOrEmpty(selector))
+        {
+            throw new ArgumentException("❌ Selector must not be null or empty.", nameof(selector));
+        }
+
+        await Page.WaitForSelectorAsync(selector, new PageWaitForSelectorOptions
+        {
+            State = WaitForSelectorState.Visible,
+            Timeout = timeoutMilliseconds
+        });
+
+        return this;
     }
 }

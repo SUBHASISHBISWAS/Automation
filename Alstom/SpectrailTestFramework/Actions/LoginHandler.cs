@@ -1,14 +1,19 @@
-﻿using Microsoft.Playwright;
+﻿using System;
+using System.Threading.Tasks;
 
-using SpectrailTestFramework.Attributes;
+using Microsoft.Playwright;
+
+using SpectrailTestFramework.Decorators;
 using SpectrailTestFramework.Factory;
 using SpectrailTestFramework.PageObjects;
 
 namespace SpectrailTestFramework.Actions;
 
-[ApplyLogging]
-[ApplyScreenshot]
-[ApplyVideo] // ✅ Automatically enables video recording for failures
+/// <summary>
+/// ✅ **Handles login action logic.**  
+/// ✅ **Ensures user input validation.**  
+/// ✅ **Applies middleware decorators dynamically.**  
+/// </summary>
 public class LoginHandler : BaseActionHandler
 {
     private readonly LoginPage _loginPage;
@@ -17,51 +22,86 @@ public class LoginHandler : BaseActionHandler
     private bool _verifyLink;
 
     /// <summary>
-    ///     Constructor for LoginHandler.
+    /// ✅ **Constructor for LoginHandler.**
     /// </summary>
     public LoginHandler(ActionFactory actionFactory) : base(actionFactory)
     {
-        _loginPage = _actionFactory.CreatePage<LoginPage>(); // ✅ Automatically retrieves LoginPage
+        _loginPage = _actionFactory.CreatePage<LoginPage>(); // ✅ Retrieves `LoginPage` instance
     }
 
-    public override IPage? Page => _loginPage.Page; // ✅ Now properly exposes Playwright Page
+    /// ✅ **Expose Playwright Page to allow decorators to access it**
+    public override IPage? Page => _loginPage.Page;
 
+    /// <summary>
+    /// ✅ **Sets the username (Fluent API).**
+    /// </summary>
     public LoginHandler WithUsername(string username)
     {
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            throw new ArgumentException("❌ Username must not be empty.", nameof(username));
+        }
+
         _username = username;
         return this;
     }
 
+    /// <summary>
+    /// ✅ **Sets the password (Fluent API).**
+    /// </summary>
     public LoginHandler WithPassword(string password)
     {
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            throw new ArgumentException("❌ Password must not be empty.", nameof(password));
+        }
+
         _password = password;
         return this;
     }
 
+    /// <summary>
+    /// ✅ **Toggles verification of navigation after login.**
+    /// </summary>
     public LoginHandler VerifyNavigation(bool verify = true)
     {
         _verifyLink = verify;
         return this;
     }
 
+    /// <summary>
+    /// ✅ **Executes the login process.**
+    /// </summary>
     protected override async Task ExecuteAsync()
     {
-        await LoginAndVerifyLink();
+        if (string.IsNullOrEmpty(_username) || string.IsNullOrEmpty(_password))
+        {
+            throw new InvalidOperationException("❌ Username and Password must be set before execution.");
+        }
+
+        if (_verifyLink)
+        {
+            await LoginAndVerifyLink();
+        }
+        else
+        {
+            await Login();
+        }
     }
 
-    
-    private async Task<LoginHandler?> Login()
+    /// <summary>
+    /// ✅ **Handles simple login action.**
+    /// </summary>
+    private async Task Login()
     {
-        if (!await _loginPage.IsSubmitButtonVisible()) return null;
         await _loginPage.Login(_username, _password);
-        return this;
-
     }
 
-    private async Task<LoginHandler?> LoginAndVerifyLink()
+    /// <summary>
+    /// ✅ **Handles login and ensures post-login navigation.**
+    /// </summary>
+    private async Task LoginAndVerifyLink()
     {
-        if (!await _loginPage.IsSubmitButtonVisible()) return null;
         await _loginPage.LoginAndVerifyLink(_username, _password);
-        return this;
     }
 }
