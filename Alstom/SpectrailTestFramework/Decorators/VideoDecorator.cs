@@ -13,11 +13,11 @@ using SpectrailTestFramework.Interfaces;
 
 namespace SpectrailTestFramework.Decorators;
 
-/ <summary>
-/ ✅ ** Video Decorator for actions.**
-/ ✅ ** Ensures video is recorded only when the test fails.**
-/ ✅ **Uses middleware for proper execution.**
-/ </summary>
+/// <summary>
+/// ✅ **Video Decorator for actions.**
+/// ✅ **Ensures video is recorded only when the test fails.**
+/// ✅ **Uses middleware for proper execution.**
+/// </summary>
 public class VideoDecorator : BaseActionDecorator
 {
     private static readonly string ParentVideoDirectory = Path.Combine(
