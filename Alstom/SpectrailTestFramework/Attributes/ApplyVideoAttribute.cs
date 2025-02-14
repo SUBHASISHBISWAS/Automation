@@ -1,12 +1,12 @@
-﻿using SpectrailTestFramework.Decorators;
-using SpectrailTestFramework.Interfaces;
+﻿//using SpectrailTestFramework.Decorators;
+//using SpectrailTestFramework.Interfaces;
 
-namespace SpectrailTestFramework.Attributes;
+//namespace SpectrailTestFramework.Attributes;
 
-public class ApplyVideoAttribute : DecoratorAttribute
-{
-    public override IActionHandler Apply(IActionHandler action)
-    {
-        return new VideoDecorator(action);
-    }
-}
+//public class ApplyVideoAttribute : DecoratorAttribute
+//{
+//    public override IActionHandler Apply(IActionHandler action)
+//    {
+//        return new VideoDecorator(action);
+//    }
+//}

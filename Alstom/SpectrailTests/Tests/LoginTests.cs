@@ -19,15 +19,13 @@ public class LoginTests : TestHooks
         ExtentReportManager.StartTest(testName);
         ExtentReportManager.LogTestInfo("🚀 Starting Login Test...");
 
-        var openPageAction = ActionFactory?.Create<OpenPageHandler>()
-            .WithUrl("https://practicetestautomation.com/practice-test-login");
+        var openPageHandler = ActionFactory?.GetAction<OpenPageHandler>()
+            .WithUrl("https://spectrail-dev.alstom.hub/spectrailvalid");
 
-        var loginHandler = ActionFactory?.Create<LoginHandler>()
-            .WithUsername("student")
-            .WithPassword("Password123");
+        var spectrailPageHandler = ActionFactory?.GetAction<SpectrailPageHandler>();
+           
 
-        //loginHandler.RunAsync();
-        if (openPageAction != null && loginHandler != null) await openPageAction.SetNextAction(loginHandler).RunAsync();
+        await openPageHandler?.SetNextAction(spectrailPageHandler).RunAsync();
 
         ExtentReportManager.LogTestPass("✅ Login Test Passed.");
         ExtentReportManager.FlushReport();

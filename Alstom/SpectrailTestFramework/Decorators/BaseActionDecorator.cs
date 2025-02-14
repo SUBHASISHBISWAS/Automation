@@ -89,6 +89,8 @@ public abstract class BaseActionDecorator : IActionHandler
     /// </summary>
     public virtual IPage? Page => _wrappedAction.Page; // ✅ Forwards `Page` property dynamically
 
+    public IActionHandler? DecoratedInstance { get; set; }
+
     /// <summary>
     /// ✅ **Provides default middleware behavior (to be overridden).**
     /// </summary>

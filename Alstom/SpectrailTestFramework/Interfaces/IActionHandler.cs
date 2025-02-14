@@ -37,6 +37,8 @@ public interface IActionHandler
     /// </summary>
     IActionHandler Use(Func<IActionHandler, Func<Task>, Task> middleware);
 
+    IActionHandler? DecoratedInstance { get; set; }
+
     /// <summary>
     /// ✅ Runs the action pipeline, ensuring middleware executes in the correct order.
     /// </summary>
