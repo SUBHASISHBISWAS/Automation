@@ -26,9 +26,17 @@ namespace SpectrailTests.Utilities
             {
                 Headless = false,
                 SlowMo = 50
+
             });
 
-            IBrowserContext context = await browser.NewContextAsync();
+
+
+            IBrowserContext context = await browser.NewContextAsync(new BrowserNewContextOptions
+            {
+                RecordVideoDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SpectrailArtifacts", "Videos"),
+                RecordVideoSize = new RecordVideoSize { Width = 1280, Height = 720 }
+            }); ;
+
             IPage page = await context.NewPageAsync();
 
             // ✅ Register Playwright components

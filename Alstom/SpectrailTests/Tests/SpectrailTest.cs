@@ -13,7 +13,7 @@ public class LoginTests : TestHooks
 {
     [Test]
     [AllureFeature("Login")]
-    public async Task Test_Login_And_Navigate_With_Logging()
+    public async Task Open_Spectrail_Goto_Project()
     {
         var testName = TestContext.CurrentContext.Test.Name;
         ExtentReportManager.StartTest(testName);
@@ -30,4 +30,6 @@ public class LoginTests : TestHooks
         ExtentReportManager.LogTestPass("✅ Login Test Passed.");
         ExtentReportManager.FlushReport();
     }
+
+    
 }

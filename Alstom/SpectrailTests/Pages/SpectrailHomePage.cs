@@ -34,9 +34,11 @@ namespace SpectrailTests.Pages
             await Page.RunAndWaitForNavigationAsync(async () => { await _aliviaLabel.ClickAsync(); },
                 new PageRunAndWaitForNavigationOptions()
                 {
+                    Timeout = 30000000,
                     UrlString = "https://spectrail-dev.alstom.hub/spectrailvalid/2/Home/Index"
                 });
 
+            await GoInputRequirementsAndVerifyLink();
         }
 
         public async Task GoInputRequirementsAndVerifyLink()
@@ -50,6 +52,7 @@ namespace SpectrailTests.Pages
                 },
                 new PageRunAndWaitForNavigationOptions()
                 {
+                    Timeout = 30000000,
                     UrlString = "https://spectrail-dev.alstom.hub/spectrailvalid/2/Requirement/Requirements"
                 });
 

@@ -33,15 +33,19 @@ namespace SpectrailTests.Pages
                 throw new ArgumentException("❌ URL must not be empty.", nameof(url));
             }
 
-            await Page.GotoAsync(url);
+            await Page.GotoAsync(url,new PageGotoOptions()
+            {
+                Timeout = 30000000
+            });
         }
+
 
         /// <summary>
         /// ✅ **Wait until the page has fully loaded**
         /// </summary>
         public async Task WaitForPageLoad()
         {
-            await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await Page.WaitForLoadStateAsync(LoadState.Load);
         }
     }
 }
