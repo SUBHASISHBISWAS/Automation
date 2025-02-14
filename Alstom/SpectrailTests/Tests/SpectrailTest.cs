@@ -9,7 +9,7 @@ namespace SpectrailTests.Tests;
 
 [TestFixture]
 [Parallelizable(ParallelScope.All)]
-public class LoginTests : TestHooks
+public class SpectrailTest : TestHooks
 {
     [Test]
     [AllureFeature("Login")]
