@@ -18,8 +18,8 @@ namespace SpectrailTests.Pages
 
         public async Task OpenInstantitionAndEditVariable()
         {
-            ConfigHelper config = new();
-            string spectrailUrl = config.GetUrl("SpectrailValid");
+            string spectrailUrl = Config.GetUrl("SpectrailValid");
+
 
             Log.Information("🚀 Test Started... Opening AVELIA project");
             await Page.GotoAsync(spectrailUrl, new()

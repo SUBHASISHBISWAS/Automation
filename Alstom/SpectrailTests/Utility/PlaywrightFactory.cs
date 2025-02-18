@@ -7,6 +7,7 @@ using SpectrailTestFramework.Attributes;
 using SpectrailTestFramework.Decorators;
 using SpectrailTestFramework.Factory;
 using SpectrailTestFramework.Interfaces;
+using SpectrailTestFramework.Utilities;
 
 using SpectrailTests.Pages;
 
@@ -17,31 +18,46 @@ namespace SpectrailTests.Utility
         public static async Task<ServiceProvider> SetupDependencies()
         {
             ServiceCollection services = new();
+
+            // ✅ Load Configuration
+            ConfigHelper configHelper = new();
+            services.AddSingleton(configHelper);
+
             IPlaywright playwright = await Playwright.CreateAsync();
 
             IBrowser browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
             {
-                Headless = false,
-                SlowMo = 50,
-                Timeout = 6000000
+                Headless = bool.Parse(configHelper.GetSetting("Headless")),
+                SlowMo = int.Parse(configHelper.GetSetting("SlowMo"))
             });
-
-
-            IBrowserContext context = await browser.NewContextAsync(new BrowserNewContextOptions
-            {
-                RecordVideoDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                    "SpectrailArtifacts", "Videos"),
-                RecordVideoSize = new RecordVideoSize { Width = 1280, Height = 720 }
-            });
-            ;
-
-            IPage page = await context.NewPageAsync();
 
             // ✅ Register Playwright components
             services.AddSingleton(playwright);
             services.AddSingleton(browser);
-            services.AddSingleton(context);
-            services.AddScoped(_ => page);
+
+            // ✅ Register `IBrowserContext` (Recording enabled)
+            services.AddSingleton(provider =>
+                provider.GetRequiredService<IBrowser>().NewContextAsync(new BrowserNewContextOptions
+                {
+                    RecordVideoDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                        "SpectrailArtifacts", provider.GetRequiredService<ConfigHelper>().GetSetting("RecordVideoDir")),
+                    RecordVideoSize = new RecordVideoSize { Width = 1280, Height = 720 }
+                }).GetAwaiter().GetResult()
+            );
+
+            // ✅ Register `IPage` with Global Timeout
+            services.AddScoped(provider =>
+            {
+                IBrowserContext context = provider.GetRequiredService<IBrowserContext>();
+                ConfigHelper config = provider.GetRequiredService<ConfigHelper>();
+
+                IPage page = context.NewPageAsync().GetAwaiter().GetResult();
+
+                // ✅ Apply timeout at the **Page** level
+                page.SetDefaultTimeout(config.GetIntSetting("Timeout"));
+
+                return page;
+            });
 
             // ✅ Register Factories for Handlers & Pages
             services.AddSingleton<IHandlerFactory, HandlerFactory>();
@@ -71,7 +87,9 @@ namespace SpectrailTests.Utility
             // ✅ Ensure Handlers & Pages are Resolved at Runtime
             RegisterDynamicHandlerResolution(services);
 
-            return services.BuildServiceProvider();
+            ServiceProvider serviceProvider = services.BuildServiceProvider();
+            ServiceLocator.Initialize(serviceProvider); // ✅ Store reference globally
+            return serviceProvider;
         }
 
         /// <summary>

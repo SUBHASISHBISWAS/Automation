@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 
 using Microsoft.Playwright;
 
 using Serilog;
 
 using SpectrailTestFramework.Interfaces;
+using SpectrailTestFramework.Utilities;
 
 namespace SpectrailTestFramework.Actions
 {
@@ -22,7 +20,10 @@ namespace SpectrailTestFramework.Actions
         private Func<Task>? _delayFunction;
         private readonly List<Func<IActionHandler, Func<Task>, Task>> _middlewares = new(); // ✅ Middleware pipeline
         public IActionHandler? DecoratedInstance { get; set; } // ✅ Exposes decorated instance as a property
-        protected BaseActionHandler() { }
+
+        protected BaseActionHandler()
+        {
+        }
 
         /// <summary>
         /// ✅ **Supports Fluent API for chaining actions.**
@@ -38,6 +39,7 @@ namespace SpectrailTestFramework.Actions
             {
                 _nextHandler.SetNextAction(nextHandler);
             }
+
             return this;
         }
 
@@ -123,9 +125,10 @@ namespace SpectrailTestFramework.Actions
         /// <summary>
         /// ✅ **Waits for a condition to be met within a timeout period.**
         /// </summary>
-        protected async Task WaitForConditionAsync(Func<Task<bool>> condition, int timeoutMilliseconds = 5000, int pollingInterval = 100)
+        protected async Task WaitForConditionAsync(Func<Task<bool>> condition, int timeoutMilliseconds = 5000,
+            int pollingInterval = 100)
         {
-            var stopwatch = Stopwatch.StartNew();
+            Stopwatch stopwatch = Stopwatch.StartNew();
             while (stopwatch.ElapsedMilliseconds < timeoutMilliseconds)
             {
                 if (await condition())
@@ -144,6 +147,17 @@ namespace SpectrailTestFramework.Actions
         /// </summary>
         protected abstract Task ExecuteAsync();
 
+        /// <summary>
+        /// ✅ **Generic Property for Resolving Any Service from ServiceLocator**
+        /// </summary>
+        protected T GetService<T>() where T : notnull
+        {
+            return ServiceLocator.GetService<T>();
+        }
 
+        /// <summary>
+        /// ✅ **Predefined Property to Get ConfigHelper Easily**
+        /// </summary>
+        protected ConfigHelper Config => GetService<ConfigHelper>();
     }
 }

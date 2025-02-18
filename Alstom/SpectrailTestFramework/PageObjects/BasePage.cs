@@ -1,6 +1,7 @@
 ﻿using Microsoft.Playwright;
 
 using SpectrailTestFramework.Interfaces;
+using SpectrailTestFramework.Utilities;
 
 namespace SpectrailTestFramework.PageObjects;
 
@@ -18,4 +19,17 @@ public abstract class BasePage : IPageObject
     {
         Page = page ?? throw new ArgumentNullException(nameof(page));
     }
+
+    /// <summary>
+    /// ✅ **Generic Property for Resolving Any Service from ServiceLocator**
+    /// </summary>
+    protected T GetService<T>() where T : notnull
+    {
+        return ServiceLocator.GetService<T>();
+    }
+
+    /// <summary>
+    /// ✅ **Predefined Property to Get ConfigHelper Easily**
+    /// </summary>
+    protected ConfigHelper Config => GetService<ConfigHelper>();
 }
