@@ -1,17 +1,17 @@
-﻿using System;
-using System.IO;
-using System.Threading.Tasks;
-using System.Threading;
-using Allure.Commons;
+﻿using Allure.Commons;
+
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Playwright;
+
 using NUnit.Framework;
+
 using Serilog;
+
 using SpectrailTestFramework.Factory;
-using SpectrailTests.Utilities;
+using SpectrailTestFramework.Utilities;
+
+using SpectrailTests.Utility;
 
 using TestContext = NUnit.Framework.TestContext;
-using SpectrailTestFramework.Utilities;
 
 namespace SpectrailTests.Hooks
 {
@@ -70,7 +70,7 @@ namespace SpectrailTests.Hooks
         public async Task Cleanup()
         {
             string testName = TestContext.CurrentContext.Test.Name;
-            var testStatus = TestContext.CurrentContext.Result.Outcome.Status;
+            NUnit.Framework.Interfaces.TestStatus testStatus = TestContext.CurrentContext.Result.Outcome.Status;
 
             if (testStatus == NUnit.Framework.Interfaces.TestStatus.Failed)
             {

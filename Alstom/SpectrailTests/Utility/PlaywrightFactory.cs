@@ -1,19 +1,16 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Reflection;
+
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Playwright;
-using Scrutor;
-using SpectrailTestFramework.Actions;
+
 using SpectrailTestFramework.Attributes;
+using SpectrailTestFramework.Decorators;
 using SpectrailTestFramework.Factory;
 using SpectrailTestFramework.Interfaces;
-using SpectrailTestFramework.PageObjects;
-using SpectrailTestFramework.Decorators;
-using System;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
+
 using SpectrailTests.Pages;
 
-namespace SpectrailTests.Utilities
+namespace SpectrailTests.Utility
 {
     public static class PlaywrightFactory
     {
@@ -25,17 +22,18 @@ namespace SpectrailTests.Utilities
             IBrowser browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
             {
                 Headless = false,
-                SlowMo = 50
-
+                SlowMo = 50,
+                Timeout = 6000000
             });
-
 
 
             IBrowserContext context = await browser.NewContextAsync(new BrowserNewContextOptions
             {
-                RecordVideoDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SpectrailArtifacts", "Videos"),
+                RecordVideoDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                    "SpectrailArtifacts", "Videos"),
                 RecordVideoSize = new RecordVideoSize { Width = 1280, Height = 720 }
-            }); ;
+            });
+            ;
 
             IPage page = await context.NewPageAsync();
 
@@ -43,7 +41,7 @@ namespace SpectrailTests.Utilities
             services.AddSingleton(playwright);
             services.AddSingleton(browser);
             services.AddSingleton(context);
-            services.AddScoped<IPage>(_ => page);
+            services.AddScoped(_ => page);
 
             // ✅ Register Factories for Handlers & Pages
             services.AddSingleton<IHandlerFactory, HandlerFactory>();
@@ -81,7 +79,7 @@ namespace SpectrailTests.Utilities
         /// </summary>
         private static void RegisterDynamicHandlerResolution(ServiceCollection services)
         {
-            var testAssembly = AppDomain.CurrentDomain.GetAssemblies()
+            Assembly? testAssembly = AppDomain.CurrentDomain.GetAssemblies()
                 .FirstOrDefault(a => a.FullName!.StartsWith("SpectrailTests"));
 
             if (testAssembly == null)
@@ -89,28 +87,31 @@ namespace SpectrailTests.Utilities
                 throw new InvalidOperationException("Test assembly 'SpectrailTests' not found.");
             }
 
-            var handlerTypes = testAssembly.GetTypes()
+            IEnumerable<Type> handlerTypes = testAssembly.GetTypes()
                 .Where(t => typeof(IActionHandler).IsAssignableFrom(t) && !t.IsAbstract);
 
-            foreach (var handlerType in handlerTypes)
+            foreach (Type? handlerType in handlerTypes)
             {
-                var mapsToPageAttr = handlerType.GetCustomAttribute<MapsToPageAttribute>();
+                MapsToPageAttribute? mapsToPageAttr = handlerType.GetCustomAttribute<MapsToPageAttribute>();
                 if (mapsToPageAttr != null)
                 {
                     services.AddTransient(handlerType, provider =>
                     {
                         // ✅ Dynamically Resolve Page Instance
-                        var pageInstance = provider.GetRequiredService(mapsToPageAttr.PageType) as IPageObject;
+                        IPageObject? pageInstance = provider.GetRequiredService(mapsToPageAttr.PageType) as IPageObject;
                         if (pageInstance == null)
                         {
-                            throw new InvalidOperationException($"❌ Unable to resolve page object: {mapsToPageAttr.PageType.Name}");
+                            throw new InvalidOperationException(
+                                $"❌ Unable to resolve page object: {mapsToPageAttr.PageType.Name}");
                         }
 
                         // ✅ Dynamically Resolve Handler
-                        var handlerInstance = ActivatorUtilities.CreateInstance(provider, handlerType, pageInstance) as IActionHandler;
+                        IActionHandler? handlerInstance =
+                            ActivatorUtilities.CreateInstance(provider, handlerType, pageInstance) as IActionHandler;
                         if (handlerInstance == null)
                         {
-                            throw new InvalidOperationException($"❌ Unable to create handler instance: {handlerType.Name}");
+                            throw new InvalidOperationException(
+                                $"❌ Unable to create handler instance: {handlerType.Name}");
                         }
 
                         // ✅ Apply Decorators at Runtime
@@ -127,9 +128,7 @@ namespace SpectrailTests.Utilities
         {
             try
             {
-
-
-                var decoratedAction = new LoggingDecorator(new ScreenshotDecorator(actionHandler));
+                LoggingDecorator decoratedAction = new(new ScreenshotDecorator(actionHandler));
                 actionHandler.DecoratedInstance = decoratedAction;
                 Serilog.Log.Information($"✅ Creating and Applying decorators");
                 return actionHandler;
