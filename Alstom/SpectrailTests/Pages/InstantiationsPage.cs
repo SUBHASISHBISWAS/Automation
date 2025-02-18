@@ -44,6 +44,11 @@ namespace SpectrailTests.Pages
             await Page.GetByRole(AriaRole.Link, new() { Name = " Instantiations" }).ClickAsync();
             await Task.Delay(2000);
 
+            await Page.Locator("#ListInstanciation_DXFREditorcol0_I").ClickAsync();
+            await Page.Locator("#ListInstanciation_DXFREditorcol0_I").FillAsync("Axlei");
+            await Page.Locator("#ListInstanciation_DXFREditorcol0_I").PressAsync("Enter");
+            await Task.Delay(2000);
+
             Log.Information("🖱️ Selecting 'Axlei'...");
             await Page.GetByRole(AriaRole.Cell, new() { Name = "<Axlei>", Exact = true }).ClickAsync();
             await Task.Delay(2000);
