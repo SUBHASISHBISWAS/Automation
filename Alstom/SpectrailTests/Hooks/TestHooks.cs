@@ -24,6 +24,8 @@ namespace SpectrailTests.Hooks
         private static AsyncLocal<ServiceProvider?> _serviceProvider = new();
         public static ActionFactory? ActionFactory { get; private set; }
 
+        public static ConfigHelper? Config { get; private set; }
+
         /// <summary>
         /// ✅ **Global Setup - Initializes Logging, Reporting & Playwright.**
         /// </summary>
@@ -46,6 +48,7 @@ namespace SpectrailTests.Hooks
 
             // ✅ Setup Playwright & DI for test cases
             _serviceProvider.Value = await PlaywrightFactory.SetupDependencies();
+            Config = _serviceProvider.Value.GetRequiredService<ConfigHelper>();
             ActionFactory = _serviceProvider.Value.GetRequiredService<ActionFactory>();
 
             Log.Information("✅ Playwright & Dependency Injection Initialized.");
