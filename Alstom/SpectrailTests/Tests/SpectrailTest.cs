@@ -42,10 +42,9 @@ public class SpectrailTest : TestHooks
         ExtentReportManager.StartTest(testName);
         ExtentReportManager.LogTestInfo("🚀 Starting Login Test...");
 
-        InstantiationsPageHandler instantiationPageHandler = ActionFactory.GetAction<InstantiationsPageHandler>();
+        InstantiationsPageHandler instantiationPageHandler = ActionFactory!.GetAction<InstantiationsPageHandler>();
 
-
-        //Config?.GetUrl("SpectrailValid");
+        //Config?.GetUrl("SpectrailValid")
         await instantiationPageHandler.RunAsync();
 
         ExtentReportManager.LogTestPass("✅ Login Test Passed.");
