@@ -1,15 +1,12 @@
-﻿using System;
+﻿namespace SpectrailTestFramework.Attributes;
 
-namespace SpectrailTestFramework.Attributes
+[AttributeUsage(AttributeTargets.Class, Inherited = false)]
+public class MapsToPageAttribute : Attribute
 {
-    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
-    public class MapsToPageAttribute : Attribute
+    public MapsToPageAttribute(Type pageType)
     {
-        public Type PageType { get; }
-
-        public MapsToPageAttribute(Type pageType)
-        {
-            PageType = pageType ?? throw new ArgumentNullException(nameof(pageType));
-        }
+        PageType = pageType ?? throw new ArgumentNullException(nameof(pageType));
     }
+
+    public Type PageType { get; }
 }

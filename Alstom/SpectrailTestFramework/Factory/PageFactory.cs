@@ -1,25 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
+
 using SpectrailTestFramework.Interfaces;
 
-namespace SpectrailTestFramework.Factory
+namespace SpectrailTestFramework.Factory;
+
+public class PageFactory(IServiceProvider serviceProvider) : IPageFactory
 {
-    public class PageFactory : IPageFactory
+    public T CreatePage<T>() where T : IPageObject
     {
-        private readonly IServiceProvider _serviceProvider;
-
-        public PageFactory(IServiceProvider serviceProvider)
-        {
-            _serviceProvider = serviceProvider;
-        }
-
-        public T CreatePage<T>() where T : IPageObject
-        {
-            return _serviceProvider.GetRequiredService<T>();
-        }
+        return serviceProvider.GetRequiredService<T>();
     }
 }

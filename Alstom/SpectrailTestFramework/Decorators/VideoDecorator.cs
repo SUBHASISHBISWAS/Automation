@@ -1,8 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Threading.Tasks;
-
-using Microsoft.Playwright;
+﻿using Microsoft.Playwright;
 
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
@@ -14,9 +10,9 @@ using SpectrailTestFramework.Interfaces;
 namespace SpectrailTestFramework.Decorators;
 
 /// <summary>
-/// ✅ **Video Decorator for actions.**
-/// ✅ **Ensures video is recorded only when the test fails.**
-/// ✅ **Uses middleware for proper execution.**
+///     ✅ **Video Decorator for actions.**
+///     ✅ **Ensures video is recorded only when the test fails.**
+///     ✅ **Uses middleware for proper execution.**
 /// </summary>
 public class VideoDecorator : BaseActionDecorator
 {
@@ -24,9 +20,9 @@ public class VideoDecorator : BaseActionDecorator
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SpectrailArtifacts", "Videos");
 
     private readonly string _testName = TestContext.CurrentContext.Test.Name;
-    private string? _videoPath;
-    private IBrowserContext? _videoContext;
-    private IPage? _videoPage;
+    private protected IBrowserContext? _videoContext;
+    private protected IPage? _videoPage;
+    private protected string? _videoPath;
 
     public VideoDecorator(IActionHandler wrappedAction) : base(wrappedAction)
     {
@@ -34,7 +30,7 @@ public class VideoDecorator : BaseActionDecorator
     }
 
     /// <summary>
-    /// ✅ **Middleware for dynamically handling video recording.**
+    ///     ✅ **Middleware for dynamically handling video recording.**
     /// </summary>
     public static Func<IActionHandler, Func<Task>, Task> Middleware()
     {
@@ -66,7 +62,7 @@ public class VideoDecorator : BaseActionDecorator
     }
 
     /// <summary>
-    /// ✅ **Starts video recording.**
+    ///     ✅ **Starts video recording.**
     /// </summary>
     private static async Task StartVideoRecordingAsync(IActionHandler handler)
     {
@@ -86,14 +82,14 @@ public class VideoDecorator : BaseActionDecorator
             RecordVideoSize = new RecordVideoSize { Width = 1280, Height = 720 }
         };
 
-        IBrowserContext videoContext = await page.Context.Browser.NewContextAsync(options);
+        IBrowserContext videoContext = await page?.Context?.Browser?.NewContextAsync(options);
         IPage videoPage = await videoContext.NewPageAsync();
         await videoPage.GotoAsync(page.Url); // ✅ Sync video page with test execution
         handler.Use(async (_, next) => { await next(); }); // ✅ Ensure video context is properly closed
     }
 
     /// <summary>
-    /// ✅ **Saves video if the test fails.**
+    ///     ✅ **Saves video if the test fails.**
     /// </summary>
     private static async Task SaveVideoAsync(IActionHandler handler)
     {
@@ -111,7 +107,8 @@ public class VideoDecorator : BaseActionDecorator
             return;
         }
 
-        string savedVideoPath = Path.Combine(ParentVideoDirectory, TestContext.CurrentContext.Test.Name, "test-failure.webm");
+        string savedVideoPath =
+            Path.Combine(ParentVideoDirectory, TestContext.CurrentContext.Test.Name, "test-failure.webm");
         Directory.CreateDirectory(Path.GetDirectoryName(savedVideoPath)!);
 
         File.Move(videoPath, savedVideoPath, true);
@@ -119,7 +116,7 @@ public class VideoDecorator : BaseActionDecorator
     }
 
     /// <summary>
-    /// ✅ **Deletes video if the test passes.**
+    ///     ✅ **Deletes video if the test passes.**
     /// </summary>
     private static async Task DeleteVideoAsync(IActionHandler handler)
     {

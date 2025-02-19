@@ -1,8 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Threading.Tasks;
-
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
 using Serilog;
 
@@ -15,8 +11,9 @@ public class LoggingDecorator : BaseActionDecorator
     private static readonly string ParentLogDirectory = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SpectrailArtifacts", "Logs");
 
+    private protected readonly string _logFilePath;
+
     private readonly string _testName = TestContext.CurrentContext.Test.Name;
-    private readonly string _logFilePath;
 
     public LoggingDecorator(IActionHandler wrappedAction) : base(wrappedAction)
     {

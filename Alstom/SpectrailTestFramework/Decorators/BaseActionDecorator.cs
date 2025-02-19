@@ -1,17 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
-using Microsoft.Playwright;
-
+﻿using Microsoft.Playwright;
 using SpectrailTestFramework.Interfaces;
 
 namespace SpectrailTestFramework.Decorators;
 
 public abstract class BaseActionDecorator : IActionHandler
 {
-    protected readonly IActionHandler _wrappedAction;
     private readonly List<Func<IActionHandler, Func<Task>, Task>> _middlewares = new(); // ✅ Middleware pipeline
+    protected readonly IActionHandler _wrappedAction;
 
     protected BaseActionDecorator(IActionHandler wrappedAction)
     {
@@ -22,12 +17,12 @@ public abstract class BaseActionDecorator : IActionHandler
     }
 
     /// <summary>
-    /// ✅ **Exposes the original wrapped action for unwrapping.**
+    ///     ✅ **Exposes the original wrapped action for unwrapping.**
     /// </summary>
     public IActionHandler WrappedAction => _wrappedAction;
 
     /// <summary>
-    /// ✅ **Adds middleware (decorator logic) dynamically.**
+    ///     ✅ **Adds middleware (decorator logic) dynamically.**
     /// </summary>
     public IActionHandler Use(Func<IActionHandler, Func<Task>, Task> middleware)
     {
@@ -36,7 +31,7 @@ public abstract class BaseActionDecorator : IActionHandler
     }
 
     /// <summary>
-    /// ✅ **Executes the decorated action within the middleware pipeline.**
+    ///     ✅ **Executes the decorated action within the middleware pipeline.**
     /// </summary>
     public async Task HandleAsync()
     {
@@ -46,20 +41,16 @@ public abstract class BaseActionDecorator : IActionHandler
         {
             index++;
             if (index < _middlewares.Count)
-            {
                 await _middlewares[index](this, Next); // ✅ Executes each middleware in order
-            }
             else
-            {
                 await _wrappedAction.HandleAsync(); // ✅ Calls the actual action
-            }
         }
 
         await Next(); // ✅ Start the middleware execution pipeline
     }
 
     /// <summary>
-    /// ✅ **Supports chaining by passing the next handler to the wrapped action.**
+    ///     ✅ **Supports chaining by passing the next handler to the wrapped action.**
     /// </summary>
     public IActionHandler SetNextAction(IActionHandler nextHandler)
     {
@@ -68,7 +59,7 @@ public abstract class BaseActionDecorator : IActionHandler
     }
 
     /// <summary>
-    /// ✅ **Supports applying delays before execution.**
+    ///     ✅ **Supports applying delays before execution.**
     /// </summary>
     public IActionHandler WithDelay(Func<Task> delayFunction)
     {
@@ -77,7 +68,7 @@ public abstract class BaseActionDecorator : IActionHandler
     }
 
     /// <summary>
-    /// ✅ **Ensures that `RunAsync()` is executed with middleware-based execution.**
+    ///     ✅ **Ensures that `RunAsync()` is executed with middleware-based execution.**
     /// </summary>
     public async Task RunAsync()
     {
@@ -85,14 +76,14 @@ public abstract class BaseActionDecorator : IActionHandler
     }
 
     /// <summary>
-    /// ✅ **Exposes the Playwright Page if available from the wrapped action.**
+    ///     ✅ **Exposes the Playwright Page if available from the wrapped action.**
     /// </summary>
     public virtual IPage? Page => _wrappedAction.Page; // ✅ Forwards `Page` property dynamically
 
     public IActionHandler? DecoratedInstance { get; set; }
 
     /// <summary>
-    /// ✅ **Provides default middleware behavior (to be overridden).**
+    ///     ✅ **Provides default middleware behavior (to be overridden).**
     /// </summary>
     protected virtual Func<IActionHandler, Func<Task>, Task> Middleware()
     {

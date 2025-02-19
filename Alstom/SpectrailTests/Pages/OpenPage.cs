@@ -1,51 +1,37 @@
-﻿using System;
-using System.Threading.Tasks;
-
-using Microsoft.Playwright;
-
+﻿using Microsoft.Playwright;
 using SpectrailTestFramework.Interfaces;
 using SpectrailTestFramework.PageObjects;
 
-namespace SpectrailTests.Pages
+namespace SpectrailTests.Pages;
+
+/// <summary>
+///     ✅ **Handles generic page navigation in Playwright.**
+///     ✅ **Supports navigation & waiting for page load.**
+/// </summary>
+public class OpenPage(IPage page, IPageFactory pageFactory) : BasePage(page)
 {
+    private readonly IPageFactory _pageFactory = pageFactory;
+
+
     /// <summary>
-    /// ✅ **Handles generic page navigation in Playwright.**
-    /// ✅ **Supports navigation & waiting for page load.**
+    ///     ✅ **Navigate to a URL**
     /// </summary>
-    public class OpenPage : BasePage
+    public async Task GoToUrl(string url)
     {
+        if (string.IsNullOrWhiteSpace(url)) throw new ArgumentException("❌ URL must not be empty.", nameof(url));
 
-
-        private readonly IPageFactory _pageFactory;
-        public OpenPage(IPage page, IPageFactory pageFactory) : base(page)
+        await Page.GotoAsync(url, new PageGotoOptions
         {
-            _pageFactory = pageFactory;
-        }
-        
-
-        /// <summary>
-        /// ✅ **Navigate to a URL**
-        /// </summary>
-        public async Task GoToUrl(string url)
-        {
-            if (string.IsNullOrWhiteSpace(url))
-            {
-                throw new ArgumentException("❌ URL must not be empty.", nameof(url));
-            }
-
-            await Page.GotoAsync(url,new PageGotoOptions()
-            {
-                Timeout = 30000000
-            });
-        }
+            Timeout = 30000000
+        });
+    }
 
 
-        /// <summary>
-        /// ✅ **Wait until the page has fully loaded**
-        /// </summary>
-        public async Task WaitForPageLoad()
-        {
-            await Page.WaitForLoadStateAsync(LoadState.Load);
-        }
+    /// <summary>
+    ///     ✅ **Wait until the page has fully loaded**
+    /// </summary>
+    public async Task WaitForPageLoad()
+    {
+        await Page.WaitForLoadStateAsync(LoadState.Load);
     }
 }

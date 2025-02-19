@@ -6,27 +6,25 @@ using SpectrailTestFramework.PageObjects;
 namespace SpectrailTests.Pages;
 
 /// <summary>
-/// ✅ **Page Object Model for Login Page.**
-/// ✅ **Ensures elements are loaded before interactions.**
+///     ✅ **Page Object Model for Login Page.**
+///     ✅ **Ensures elements are loaded before interactions.**
 /// </summary>
-public class LoginPage : BasePage
+public class LoginPage(IPage page, IPageFactory pageFactory) : BasePage(page)
 {
+    /// <summary>
+    ///     ✅ **Constructor that accepts an `IPageObject`**
+    /// </summary>
+    private readonly IPageFactory _pageFactory = pageFactory;
+
     private ILocator _userName => Page.GetByLabel("Username");
     private ILocator _password => Page.GetByLabel("Password");
     private ILocator _submitButton => Page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Submit" });
-    private ILocator _loggedInSuccessfully => Page.GetByRole(AriaRole.Heading, new PageGetByRoleOptions { Name = "Logged In Successfully" });
+
+    private ILocator _loggedInSuccessfully =>
+        Page.GetByRole(AriaRole.Heading, new PageGetByRoleOptions { Name = "Logged In Successfully" });
 
     /// <summary>
-    /// ✅ **Constructor that accepts an `IPageObject`**
-    /// </summary>
-    private readonly IPageFactory _pageFactory;
-    public LoginPage(IPage page, IPageFactory pageFactory) : base(page)
-    {
-        _pageFactory = pageFactory;
-    }
-
-    /// <summary>
-    /// ✅ **Waits for the login form to be visible**
+    ///     ✅ **Waits for the login form to be visible**
     /// </summary>
     public async Task<bool> IsLoginFormVisible()
     {
@@ -36,7 +34,7 @@ public class LoginPage : BasePage
     }
 
     /// <summary>
-    /// ✅ **Performs a login action**
+    ///     ✅ **Performs a login action**
     /// </summary>
     public async Task Login(string userName, string password)
     {
@@ -46,7 +44,7 @@ public class LoginPage : BasePage
     }
 
     /// <summary>
-    /// ✅ **Performs login and verifies successful navigation**
+    ///     ✅ **Performs login and verifies successful navigation**
     /// </summary>
     public async Task LoginAndVerifyLink(string userName, string password)
     {

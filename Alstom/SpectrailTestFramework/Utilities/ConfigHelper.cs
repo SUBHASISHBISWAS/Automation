@@ -10,15 +10,15 @@ public class ConfigHelper
     {
         _configuration = new ConfigurationBuilder()
             .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            .AddJsonFile("appsettings.json", false, true)
             .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json",
-                optional: true, reloadOnChange: true) // ✅ Support for Dev/Test/Prod
+                true, true) // ✅ Support for Dev/Test/Prod
             .AddEnvironmentVariables() // ✅ Enables environment variable overrides
             .Build();
     }
 
     /// <summary>
-    /// ✅ Retrieves a setting from `appsettings.json`
+    ///     ✅ Retrieves a setting from `appsettings.json`
     /// </summary>
     public string GetSetting(string key)
     {
@@ -27,7 +27,7 @@ public class ConfigHelper
     }
 
     /// <summary>
-    /// ✅ Retrieves a boolean setting (default = false)
+    ///     ✅ Retrieves a boolean setting (default = false)
     /// </summary>
     public bool GetBoolSetting(string key, bool defaultValue = false)
     {
@@ -36,7 +36,7 @@ public class ConfigHelper
     }
 
     /// <summary>
-    /// ✅ Retrieves an integer setting (default = 0)
+    ///     ✅ Retrieves an integer setting (default = 0)
     /// </summary>
     public int GetIntSetting(string key, int defaultValue = 0)
     {
@@ -45,7 +45,7 @@ public class ConfigHelper
     }
 
     /// <summary>
-    /// ✅ Retrieves URLs from `Settings` section
+    ///     ✅ Retrieves URLs from `Settings` section
     /// </summary>
     public string GetUrl(string key)
     {

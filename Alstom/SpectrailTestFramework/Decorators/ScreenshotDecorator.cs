@@ -1,9 +1,7 @@
-﻿using System;
-using System.IO;
-using System.Threading.Tasks;
+﻿using Microsoft.Playwright;
 using NUnit.Framework;
+using NUnit.Framework.Interfaces;
 using Serilog;
-using Microsoft.Playwright;
 using SpectrailTestFramework.Interfaces;
 
 namespace SpectrailTestFramework.Decorators;
@@ -31,10 +29,11 @@ public class ScreenshotDecorator : BaseActionDecorator
             try
             {
                 await next();
-                IPage? page = handler.Page;
-                if (page != null && TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Inconclusive)
+                var page = handler.Page;
+                if (page != null && TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Inconclusive)
                 {
-                    string screenshotPath = Path.Combine(ScreenshotDirectory, TestContext.CurrentContext.Test.Name, "failure.png");
+                    string screenshotPath = Path.Combine(ScreenshotDirectory, TestContext.CurrentContext.Test.Name,
+                        "failure.png");
                     await page.ScreenshotAsync(new PageScreenshotOptions { Path = screenshotPath });
                     Log.Information($"📸 Screenshot saved: {screenshotPath}");
                 }
