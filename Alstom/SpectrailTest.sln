@@ -11,6 +11,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestServer", "TestServer", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.API", "SpectrailTestDataProvider.API\SpectrailTestDataProvider.API.csproj", "{24B53B74-B157-4CCB-87A0-2BAD321E5AE1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.Application", "SpectrailTestDataProvider.Application\SpectrailTestDataProvider.Application.csproj", "{BED53E5F-274D-4046-AEC9-F0CCD32E4EFF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.Domain", "SpectrailTestDataProvider.Domain\SpectrailTestDataProvider.Domain.csproj", "{48BA44ED-BCF3-41C4-A49C-DFB8EA0EE4FE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.Infrastructure", "SpectrailTestDataProvider.Infrastructure\SpectrailTestDataProvider.Infrastructure.csproj", "{BFEA12FB-F5B5-40C1-83BE-D5DF9C253005}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,11 +35,26 @@ Global
 		{24B53B74-B157-4CCB-87A0-2BAD321E5AE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{24B53B74-B157-4CCB-87A0-2BAD321E5AE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{24B53B74-B157-4CCB-87A0-2BAD321E5AE1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BED53E5F-274D-4046-AEC9-F0CCD32E4EFF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BED53E5F-274D-4046-AEC9-F0CCD32E4EFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BED53E5F-274D-4046-AEC9-F0CCD32E4EFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BED53E5F-274D-4046-AEC9-F0CCD32E4EFF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{48BA44ED-BCF3-41C4-A49C-DFB8EA0EE4FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{48BA44ED-BCF3-41C4-A49C-DFB8EA0EE4FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{48BA44ED-BCF3-41C4-A49C-DFB8EA0EE4FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{48BA44ED-BCF3-41C4-A49C-DFB8EA0EE4FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BFEA12FB-F5B5-40C1-83BE-D5DF9C253005}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BFEA12FB-F5B5-40C1-83BE-D5DF9C253005}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BFEA12FB-F5B5-40C1-83BE-D5DF9C253005}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BFEA12FB-F5B5-40C1-83BE-D5DF9C253005}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{24B53B74-B157-4CCB-87A0-2BAD321E5AE1} = {009E2F00-26CE-44F7-9851-186902C7B2E3}
+		{BED53E5F-274D-4046-AEC9-F0CCD32E4EFF} = {009E2F00-26CE-44F7-9851-186902C7B2E3}
+		{48BA44ED-BCF3-41C4-A49C-DFB8EA0EE4FE} = {009E2F00-26CE-44F7-9851-186902C7B2E3}
+		{BFEA12FB-F5B5-40C1-83BE-D5DF9C253005} = {009E2F00-26CE-44F7-9851-186902C7B2E3}
 	EndGlobalSection
 EndGlobal
