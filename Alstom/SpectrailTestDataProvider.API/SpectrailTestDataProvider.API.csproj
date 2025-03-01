@@ -14,4 +14,9 @@
     <Folder Include="Mappings\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\SpectrailTestDataProvider.Application\SpectrailTestDataProvider.Application.csproj" />
+    <ProjectReference Include="..\SpectrailTestDataProvider.Infrastructure\SpectrailTestDataProvider.Infrastructure.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -11,4 +11,12 @@
     <Folder Include="Persistence\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="MongoDB.Driver" Version="3.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SpectrailTestDataProvider.Application\SpectrailTestDataProvider.Application.csproj" />
+  </ItemGroup>
+
 </Project>
