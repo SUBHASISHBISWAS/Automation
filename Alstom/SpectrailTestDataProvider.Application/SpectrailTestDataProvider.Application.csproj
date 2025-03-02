@@ -7,8 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Contracts\" />
-    <Folder Include="Exceptions\" />
     <Folder Include="Features\ICD_DataProvider\" />
     <Folder Include="Features\ICD_DataProvider\Commands\" />
     <Folder Include="Features\ICD_DataProvider\Queries\" />
