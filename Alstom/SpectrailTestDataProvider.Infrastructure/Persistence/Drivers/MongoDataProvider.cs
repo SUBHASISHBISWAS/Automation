@@ -3,6 +3,7 @@
 using System.Linq.Expressions;
 using MongoDB.Driver;
 using SpectrailTestDataProvider.Application.Contracts;
+using SpectrailTestDataProvider.Domain.Common;
 using SpectrailTestDataProvider.Infrastructure.Persistence.Contexts.Mongo;
 
 #endregion
@@ -10,7 +11,7 @@ using SpectrailTestDataProvider.Infrastructure.Persistence.Contexts.Mongo;
 namespace SpectrailTestDataProvider.Infrastructure.Persistence.Drivers;
 
 public abstract class MongoDataProvider<T>(ISpectrailMongoDbContext<T> mongoDataContext) : IDataProvider<T>
-    where T : class
+    where T : EntityBase
 {
     private readonly IMongoCollection<T>? _collection = mongoDataContext.SpectrailData;
 

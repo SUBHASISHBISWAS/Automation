@@ -2,12 +2,13 @@
 
 using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
+using SpectrailTestDataProvider.Domain.Common;
 
 #endregion
 
 namespace SpectrailTestDataProvider.Infrastructure.Persistence.Contexts.Mongo;
 
-public abstract class SpectrailMongoDbContext<T> : ISpectrailMongoDbContext<T> where T : class
+public abstract class SpectrailMongoDbContext<T> : ISpectrailMongoDbContext<T> where T : EntityBase
 {
     protected SpectrailMongoDbContext(IConfiguration configuration)
     {
