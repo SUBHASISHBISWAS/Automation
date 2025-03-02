@@ -13,7 +13,7 @@ namespace SpectrailTestDataProvider.Infrastructure.Persistence.Contexts.Mongo;
 public abstract class SpectrailMongoDbContext<T> : ISpectrailMongoDbContext<T> where T : EntityBase
 {
     protected SpectrailMongoDbContext(IOptions<SpectrailMongoDatabaseSettings> databaseSettings,
-        ILogger<SpectrailMongoDbContext<T>> logger)
+        ILogger logger)
     {
         ArgumentNullException.ThrowIfNull(databaseSettings);
         SpectrailDatabaseSettings = databaseSettings.Value;
@@ -27,7 +27,7 @@ public abstract class SpectrailMongoDbContext<T> : ISpectrailMongoDbContext<T> w
 
     private protected SpectrailMongoDatabaseSettings SpectrailDatabaseSettings { get; }
 
-    private protected ILogger<SpectrailMongoDbContext<T>> Logger { get; }
+    private protected ILogger Logger { get; }
 
     public void SeedDataAsync()
     {
