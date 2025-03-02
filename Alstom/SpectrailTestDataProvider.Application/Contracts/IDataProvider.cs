@@ -1,13 +1,12 @@
 #region
 
 using System.Linq.Expressions;
-using SpectrailTestDataProvider.Domain.Common;
 
 #endregion
 
 namespace SpectrailTestDataProvider.Application.Contracts;
 
-public interface IAsyncRepository<T> where T : EntityBase
+public interface IDataProvider<T> where T : class
 {
     Task<IEnumerable<T>> GetAllAsync();
     Task<T> GetByIdAsync(string id);

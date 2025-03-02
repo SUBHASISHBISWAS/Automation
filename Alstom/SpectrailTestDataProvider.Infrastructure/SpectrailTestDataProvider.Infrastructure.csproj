@@ -7,11 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Repository\" />
-    <Folder Include="Persistence\" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.2" />
     <PackageReference Include="MongoDB.Driver" Version="3.2.1" />
   </ItemGroup>
 

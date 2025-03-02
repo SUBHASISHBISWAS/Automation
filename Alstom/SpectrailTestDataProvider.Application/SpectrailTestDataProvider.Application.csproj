@@ -10,7 +10,6 @@
     <Folder Include="Features\ICD_DataProvider\" />
     <Folder Include="Features\ICD_DataProvider\Commands\" />
     <Folder Include="Features\OutputDataProvider\" />
-    <Folder Include="Models\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -18,7 +17,7 @@
     <PackageReference Include="FluentValidation" Version="11.11.0" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
     <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.1.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.2" />
+    <PackageReference Include="MongoDB.Driver" Version="3.2.1" />
   </ItemGroup>
 
   <ItemGroup>

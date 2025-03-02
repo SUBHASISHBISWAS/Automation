@@ -1,25 +1,43 @@
+#region
+
+using Microsoft.OpenApi.Models;
+using SpectrailTestDataProvider.Application;
+using SpectrailTestDataProvider.Infrastructure;
+using SpectrailTestDataProvider.Infrastructure.Persistence;
+
+#endregion
+
 var builder = WebApplication.CreateBuilder(args);
+var configuration = builder.Configuration;
+var services = builder.Services;
 
-// Add services to the container.
+// ✅ Add AutoMapper
+services.AddAutoMapper(typeof(Program));
 
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
+// ✅ Add Application & Infrastructure Services
+services.AddApplicationServices();
+services.AddInfrastructureServices(configuration);
+
+// ✅ Add Controllers & Swagger
+services.AddControllers();
+services.AddSwaggerGen(c => { c.SwaggerDoc("v1", new OpenApiInfo { Title = "Ordering.API", Version = "v1" }); });
+
+// ✅ Build App
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+
+// ✅ Configure Middleware
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Ordering.API v1"));
 }
 
-app.UseHttpsRedirection();
-
+app.UseRouting();
 app.UseAuthorization();
-
 app.MapControllers();
 
+// ✅ Run Application
 app.Run();

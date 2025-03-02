@@ -1,7 +1,7 @@
 #region
 
 using AutoMapper;
-using SpectrailTestDataProvider.Application.Features.ICD_DataProvider.Queries;
+using SpectrailTestDataProvider.Application.Features.ICD_DataProvider.Queries.Model;
 using SpectrailTestDataProvider.Domain.Entities;
 
 #endregion

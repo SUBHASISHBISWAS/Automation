@@ -3,10 +3,12 @@
 using AutoMapper;
 using MediatR;
 using SpectrailTestDataProvider.Application.Contracts;
+using SpectrailTestDataProvider.Application.Features.ICD_DataProvider.Queries.Model;
+using SpectrailTestDataProvider.Application.Features.ICD_DataProvider.Queries.Query;
 
 #endregion
 
-namespace SpectrailTestDataProvider.Application.Features.ICD_DataProvider.Queries;
+namespace SpectrailTestDataProvider.Application.Features.ICD_DataProvider.Queries.Handler;
 
 public class GetICDQueryHandler(IICDRepository icdRepository, IMapper mapper)
     : IRequestHandler<GetICDQuery, List<ICDEntityVm>>
