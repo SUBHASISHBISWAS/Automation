@@ -9,9 +9,7 @@
   <ItemGroup>
     <Folder Include="Features\ICD_DataProvider\" />
     <Folder Include="Features\ICD_DataProvider\Commands\" />
-    <Folder Include="Features\ICD_DataProvider\Queries\" />
     <Folder Include="Features\OutputDataProvider\" />
-    <Folder Include="Mappings\" />
     <Folder Include="Models\" />
   </ItemGroup>
 

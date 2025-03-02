@@ -1,6 +1,7 @@
 #region
 
 using SpectrailTestDataProvider.Domain.Common;
+// ReSharper disable ClassNeverInstantiated.Global
 
 #endregion
 
