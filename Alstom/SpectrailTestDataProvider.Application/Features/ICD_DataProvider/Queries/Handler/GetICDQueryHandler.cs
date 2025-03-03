@@ -14,14 +14,14 @@ namespace SpectrailTestDataProvider.Application.Features.ICD_DataProvider.Querie
 public class GetICDQueryHandler(IICDRepository<ICDEntity> icdRepository, IMapper mapper)
     : IRequestHandler<GetICDQuery, List<ICDEntityVm>>
 {
-    //private readonly IICDRepository<ICDEntity> _icdRepository =
-    //icdRepository ?? throw new ArgumentNullException(nameof(icdRepository));
+    private readonly IICDRepository<ICDEntity> _icdRepository =
+        icdRepository ?? throw new ArgumentNullException(nameof(icdRepository));
 
     private readonly IMapper _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
 
     public async Task<List<ICDEntityVm>> Handle(GetICDQuery request, CancellationToken cancellationToken)
     {
-        //var orderList = await _icdRepository.GetAllAsync();
-        return _mapper.Map<List<ICDEntityVm>>(new List<ICDEntity>());
+        var icdDataList = await _icdRepository.GetAllAsync();
+        return _mapper.Map<List<ICDEntityVm>>(icdDataList);
     }
 }
