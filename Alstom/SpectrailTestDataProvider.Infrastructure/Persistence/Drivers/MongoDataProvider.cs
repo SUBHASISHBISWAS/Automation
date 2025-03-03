@@ -10,7 +10,7 @@ using SpectrailTestDataProvider.Infrastructure.Persistence.Contexts.Mongo;
 
 namespace SpectrailTestDataProvider.Infrastructure.Persistence.Drivers;
 
-public abstract class MongoDataProvider<T>(ISpectrailMongoDbContext<T> mongoDataContext) : IDataProvider<T>
+public class MongoDataProvider<T>(ISpectrailMongoDbContext<T> mongoDataContext) : IDataProvider<T>
     where T : EntityBase
 {
     private readonly IMongoCollection<T>? _collection = mongoDataContext.SpectrailData;

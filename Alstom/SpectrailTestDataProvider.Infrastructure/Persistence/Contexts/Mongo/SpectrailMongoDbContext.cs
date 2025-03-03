@@ -1,8 +1,8 @@
 #region
 
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using SpectrailTestDataProvider.Application.Contracts;
 using SpectrailTestDataProvider.Application.Models;
 using SpectrailTestDataProvider.Domain.Common;
 
@@ -12,12 +12,11 @@ namespace SpectrailTestDataProvider.Infrastructure.Persistence.Contexts.Mongo;
 
 public abstract class SpectrailMongoDbContext<T> : ISpectrailMongoDbContext<T> where T : EntityBase
 {
-    protected SpectrailMongoDbContext(IOptions<SpectrailMongoDatabaseSettings> databaseSettings,
-        ILogger logger)
+    protected SpectrailMongoDbContext(IOptions<SpectrailMongoDatabaseSettings> databaseSettings)
     {
         ArgumentNullException.ThrowIfNull(databaseSettings);
         SpectrailDatabaseSettings = databaseSettings.Value;
-        Logger = logger;
+
         var client = new MongoClient(SpectrailDatabaseSettings.ConnectionString);
         var database = client.GetDatabase(SpectrailDatabaseSettings.DatabaseName);
         //SpectrailData = database.GetCollection<T>(collectionName);
@@ -27,7 +26,6 @@ public abstract class SpectrailMongoDbContext<T> : ISpectrailMongoDbContext<T> w
 
     private protected SpectrailMongoDatabaseSettings SpectrailDatabaseSettings { get; }
 
-    private protected ILogger Logger { get; }
 
     public void SeedDataAsync()
     {

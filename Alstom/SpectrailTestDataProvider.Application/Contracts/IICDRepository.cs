@@ -1,11 +1,11 @@
 #region
 
-using SpectrailTestDataProvider.Domain.Entities;
+using SpectrailTestDataProvider.Domain.Common;
 
 #endregion
 
 namespace SpectrailTestDataProvider.Application.Contracts;
 
-public interface IICDRepository : IAsyncRepository<ICDEntity>
+public interface IICDRepository<T> : IAsyncRepository<T> where T : EntityBase
 {
 }

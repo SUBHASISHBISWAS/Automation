@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SpectrailTestDataProvider.Application.Contracts;
 using SpectrailTestDataProvider.Application.Models;
 using SpectrailTestDataProvider.Infrastructure.Persistence.Contexts.Mongo;
+using SpectrailTestDataProvider.Infrastructure.Persistence.Drivers;
 using SpectrailTestDataProvider.Infrastructure.Repository;
 
 #endregion
@@ -17,10 +18,10 @@ public static class InfrastructureServiceRegistration
         IConfiguration configuration)
     {
         services.Configure<SpectrailMongoDatabaseSettings>(c => configuration.GetSection("MongoDatabaseSettings"));
-        services.AddScoped(typeof(IDataContext<>), typeof(SpectrailMongoDbContext<>));
-        services.AddScoped(typeof(ISpectrailMongoDbContext<>), typeof(ICDMongoDataContext));
+        services.AddScoped(typeof(ISpectrailMongoDbContext<>), typeof(ICDMongoDataContext<>));
+        services.AddScoped(typeof(IDataProvider<>), typeof(MongoDataProvider<>));
         services.AddScoped(typeof(IAsyncRepository<>), typeof(RepositoryBase<>));
-        services.AddScoped<IICDRepository, ICDRepository>();
+        services.AddScoped(typeof(IICDRepository<>), typeof(ICDRepository<>));
         return services;
     }
 }

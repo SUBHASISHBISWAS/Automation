@@ -1,22 +1,20 @@
 #region
 
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using MongoDB.Driver;
 using SpectrailTestDataProvider.Application.Models;
-using SpectrailTestDataProvider.Domain.Entities;
+using SpectrailTestDataProvider.Domain.Common;
 
 #endregion
 
 namespace SpectrailTestDataProvider.Infrastructure.Persistence.Contexts.Mongo;
 
-public class ICDMongoDataContext(
-    IOptions<SpectrailMongoDatabaseSettings> databaseSettings,
-    ILogger<ICDMongoDataContext> logger) : SpectrailMongoDbContext<ICDEntity>(databaseSettings, logger)
+public class ICDMongoDataContext<T>(
+    IOptions<SpectrailMongoDatabaseSettings> databaseSettings)
+    : SpectrailMongoDbContext<T>(databaseSettings) where T : EntityBase
 {
-    public IMongoCollection<ICDEntity>? ICDData => SpectrailData;
+    //public IMongoCollection<ICDEntity>? ICDData => SpectrailData;
 
-    protected override IEnumerable<ICDEntity> GetPreconfiguredData()
+    protected override IEnumerable<T> GetPreconfiguredData()
     {
         throw new NotImplementedException();
     }

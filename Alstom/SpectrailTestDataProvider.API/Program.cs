@@ -3,7 +3,6 @@
 using Microsoft.OpenApi.Models;
 using SpectrailTestDataProvider.Application;
 using SpectrailTestDataProvider.Infrastructure;
-using SpectrailTestDataProvider.Infrastructure.Persistence;
 
 #endregion
 
@@ -22,6 +21,9 @@ services.AddInfrastructureServices(configuration);
 // ✅ Add Controllers & Swagger
 services.AddControllers();
 services.AddSwaggerGen(c => { c.SwaggerDoc("v1", new OpenApiInfo { Title = "Ordering.API", Version = "v1" }); });
+
+foreach (var descriptor in builder.Services)
+    Console.WriteLine($"{descriptor.ServiceType} -> {descriptor.ImplementationType}");
 
 // ✅ Build App
 var app = builder.Build();
