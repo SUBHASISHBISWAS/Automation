@@ -24,7 +24,9 @@ public abstract class SpectrailMongoDbContext<T> : ISpectrailMongoDbContext<T> w
         SeedDataAsync();
     }
 
-    private protected SpectrailMongoDatabaseSettings SpectrailDatabaseSettings { get; }
+    private SpectrailMongoDatabaseSettings SpectrailDatabaseSettings { get; }
+
+    public IMongoCollection<T>? SpectrailData { get; set; }
 
 
     public void SeedDataAsync()
@@ -32,8 +34,6 @@ public abstract class SpectrailMongoDbContext<T> : ISpectrailMongoDbContext<T> w
         var isDataExist = SpectrailData.Find(p => true).Any();
         if (!isDataExist) SpectrailData?.InsertManyAsync(GetPreconfiguredData());
     }
-
-    public IMongoCollection<T>? SpectrailData { get; set; }
 
     protected abstract IEnumerable<T> GetPreconfiguredData();
 }
