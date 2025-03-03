@@ -1,9 +1,19 @@
 services:
+  ICD-DB:
+    container_name: ICD-DB
+    restart: always
+    ports:
+        - "27017:27017"
+    volumes:
+        - mongo_data:/data/db
+
   spectrailtestdataprovider.api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
       - ASPNETCORE_HTTPS_PORTS=8081
+    depends_on:
+          - ICD-DB
     ports:
       - "8080"
       - "8081"

@@ -1,4 +1,7 @@
 services:
+  ICD-DB:
+    image: mongo
+
   spectrailtestdataprovider.api:
     image: ${DOCKER_REGISTRY-}spectrailtestdataproviderapi
     build:
