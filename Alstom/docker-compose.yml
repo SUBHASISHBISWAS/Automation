@@ -1,0 +1,6 @@
+services:
+  spectrailtestdataprovider.api:
+    image: ${DOCKER_REGISTRY-}spectrailtestdataproviderapi
+    build:
+      context: .
+      dockerfile: SpectrailTestServer/SpectrailTestDataProvider.API/Dockerfile
