@@ -11,7 +11,7 @@ using SpectrailTestDataProvider.Domain.Entities;
 
 namespace SpectrailTestDataProvider.Application.Features.ICD_DataProvider.Queries.Handler;
 
-public class GetICDQueryHandler(IDataProvider<ICDEntity> icdRepository, IMapper mapper)
+public class GetICDQueryHandler(IICDRepository<ICDEntity> icdRepository, IMapper mapper)
     : IRequestHandler<GetICDQuery, List<ICDEntityVm>>
 {
     //private readonly IICDRepository<ICDEntity> _icdRepository =
