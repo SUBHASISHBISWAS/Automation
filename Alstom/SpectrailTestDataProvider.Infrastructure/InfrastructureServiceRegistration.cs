@@ -17,10 +17,10 @@ public static class InfrastructureServiceRegistration
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.Configure<SpectrailMongoDatabaseSettings>(c => configuration.GetSection("MongoDatabaseSettings"));
+        services.Configure<SpectrailMongoDatabaseSettings>(options =>
+            configuration.GetSection("SpectrailMongoDatabaseSettings").Bind(options));
         services.AddScoped(typeof(ISpectrailMongoDbContext<>), typeof(ICDMongoDataContext<>));
         services.AddScoped(typeof(IDataProvider<>), typeof(MongoDataProvider<>));
-        //services.AddScoped(typeof(IAsyncRepository<>), typeof(RepositoryBase<>));
         services.AddScoped(typeof(IICDRepository<>), typeof(ICDRepository<>));
         return services;
     }
