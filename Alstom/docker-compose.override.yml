@@ -1,5 +1,5 @@
 services:
-  ICD-DB:
+  ICDDB:
     container_name: ICD-DB
     restart: always
     ports:
@@ -12,8 +12,11 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
       - ASPNETCORE_HTTPS_PORTS=8081
+      - "SpectrailMongoDatabaseSettings:ConnectionString=mongodb://localhost:27017"
+      - "SpectrailMongoDatabaseSettings:DatabaseName=ICDDB"
+      - "SpectrailMongoDatabaseSettings:CollectionName=ICDDatas"
     depends_on:
-          - ICD-DB
+          - ICDDB
     ports:
       - "8080"
       - "8081"

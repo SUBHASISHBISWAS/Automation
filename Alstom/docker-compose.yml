@@ -1,5 +1,5 @@
 services:
-  ICD-DB:
+  ICDDB:
     image: mongo
 
   spectrailtestdataprovider.api:
@@ -7,3 +7,6 @@ services:
     build:
       context: .
       dockerfile: SpectrailTestServer/SpectrailTestDataProvider.API/Dockerfile
+
+volumes:
+  mongo_data:
