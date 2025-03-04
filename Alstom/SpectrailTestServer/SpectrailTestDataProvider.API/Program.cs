@@ -22,8 +22,6 @@ services.AddInfrastructureServices(configuration);
 services.AddControllers();
 services.AddSwaggerGen(c => { c.SwaggerDoc("v1", new OpenApiInfo { Title = "Ordering.API", Version = "v1" }); });
 
-foreach (var descriptor in builder.Services)
-    Console.WriteLine($"{descriptor.ServiceType} -> {descriptor.ImplementationType}");
 
 // ✅ Build App
 var app = builder.Build();

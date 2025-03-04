@@ -1,6 +1,7 @@
 #region
 
 using Microsoft.Extensions.Options;
+using MongoDB.Driver;
 using SpectrailTestDataProvider.Application.Models;
 using SpectrailTestDataProvider.Domain.Common;
 
@@ -10,12 +11,17 @@ namespace SpectrailTestDataProvider.Infrastructure.Persistence.Contexts.Mongo;
 
 public class ICDMongoDataContext<T>(
     IOptions<SpectrailMongoDatabaseSettings> databaseSettings)
-    : SpectrailMongoDbContext<T>(databaseSettings) where T : EntityBase
+    : SpectrailMongoDbContext<T>(databaseSettings) where T : EntityBase, new()
 {
-    //public IMongoCollection<ICDEntity>? ICDData => SpectrailData;
+    public IMongoCollection<T>? ICDData => SpectrailData;
 
     protected override IEnumerable<T> GetPreconfiguredData()
     {
-        throw new NotImplementedException();
+        return new List<T>
+        {
+            new(),
+            new(),
+            new()
+        };
     }
 }
