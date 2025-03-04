@@ -1,14 +1,16 @@
 services:
   ICDDB:
-    image: mongo
+    image: mongo:latest
 
-  spectrailtestdataprovider.api:
-    image: ${DOCKER_REGISTRY-}spectrailtestdataproviderapi
+  spectrailtestserver.api:
+    image: ${DOCKER_REGISTRY-}spectrailtestserver
     build:
       context: .
       dockerfile: SpectrailTestServer/SpectrailTestDataProvider.API/Dockerfile
+      
   portainer:
     image: portainer/portainer-ce
+    
 volumes:
   mongo_data:
   portainer_data:

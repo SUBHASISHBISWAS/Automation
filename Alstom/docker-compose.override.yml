@@ -6,9 +6,14 @@ services:
         - "27017:27017"
     volumes:
         - mongo_data:/data/db
-
-  spectrailtestdataprovider.api:
-    container_name: spectrailtestdataprovider.api
+    healthcheck:
+      test: [ "CMD", "mongo", "--eval", "db.runCommand('ping').ok" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      
+  spectrailtestserver.api:
+    container_name: spectrailtestserver.api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - "SpectrailMongoDatabaseSettings:ConnectionString=mongodb://ICDDB:27017"
@@ -27,3 +32,17 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - portainer_data:/data
+  
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo-express
+    restart: always
+    ports:
+      - "8082:8081"  # Expose Mongo Express on host port 8082
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=ICDDB  # Connect to the MongoDB service
+      - ME_CONFIG_MONGODB_PORT=27017
+      - ME_CONFIG_BASICAUTH=false  # Disable basic auth for simplicity (optional)
+    depends_on:
+      ICDDB:
+        condition: service_healthy
