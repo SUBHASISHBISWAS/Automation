@@ -8,18 +8,22 @@ services:
         - mongo_data:/data/db
 
   spectrailtestdataprovider.api:
+    container_name: spectrailtestdataprovider.api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_HTTP_PORTS=8080
-      - ASPNETCORE_HTTPS_PORTS=8081
-      - "SpectrailMongoDatabaseSettings:ConnectionString=mongodb://localhost:27017"
+      - "SpectrailMongoDatabaseSettings:ConnectionString=mongodb://ICDDB:27017"
       - "SpectrailMongoDatabaseSettings:DatabaseName=ICDDB"
       - "SpectrailMongoDatabaseSettings:CollectionName=ICDDatas"
-    depends_on:
-          - ICDDB
     ports:
-      - "8080"
-      - "8081"
+      - "8080:8080"
+      - "8081:8081"
+    
+  portainer:
+    container_name: portainer
+    restart: always
+    ports:
+      - "7070:8000"
+      - "9000:9000"
     volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
-      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
