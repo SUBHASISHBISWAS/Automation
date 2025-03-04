@@ -16,10 +16,8 @@ public abstract class SpectrailMongoDbContext<T> : ISpectrailMongoDbContext<T> w
     {
         ArgumentNullException.ThrowIfNull(databaseSettings);
         SpectrailDatabaseSettings = databaseSettings.Value;
-
         var client = new MongoClient(SpectrailDatabaseSettings.ConnectionString);
         var database = client.GetDatabase(SpectrailDatabaseSettings.DatabaseName);
-        //SpectrailData = database.GetCollection<T>(collectionName);
         SpectrailData = database.GetCollection<T>(typeof(T).Name);
         SeedDataAsync();
     }
