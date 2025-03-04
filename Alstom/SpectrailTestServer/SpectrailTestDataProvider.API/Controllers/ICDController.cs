@@ -18,9 +18,9 @@ public class ICDController(IMediator mediator) : ControllerBase
 
     [HttpGet(Name = "GetICDData")]
     [ProducesResponseType(typeof(IEnumerable<ICDEntityVm>), (int)HttpStatusCode.OK)]
-    public async Task<ActionResult<IEnumerable<ICDEntityVm>>> GetICDData(string userName)
+    public async Task<ActionResult<IEnumerable<ICDEntityVm>>> GetICDData()
     {
-        var query = new GetICDQuery(userName);
+        var query = new GetICDQuery("");
         var icdData = await _mediator.Send(query);
         return Ok(icdData);
     }
