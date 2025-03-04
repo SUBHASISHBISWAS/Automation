@@ -6,11 +6,7 @@ services:
         - "27017:27017"
     volumes:
         - mongo_data:/data/db
-    healthcheck:
-      test: [ "CMD", "mongo", "--eval", "db.runCommand('ping').ok" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    
       
   spectrailtestserver.api:
     container_name: spectrailtestserver.api
@@ -22,7 +18,9 @@ services:
     ports:
       - "8080:8080"
       - "8081:8081"
-    
+    depends_on:
+      - ICDDB
+      
   portainer:
     container_name: portainer
     restart: always
@@ -44,5 +42,5 @@ services:
       - ME_CONFIG_MONGODB_PORT=27017
       - ME_CONFIG_BASICAUTH=false  # Disable basic auth for simplicity (optional)
     depends_on:
-      ICDDB:
-        condition: service_healthy
+      - ICDDB
+        

@@ -1,6 +1,6 @@
 services:
   ICDDB:
-    image: mongo:latest
+    image: mongo
 
   spectrailtestserver.api:
     image: ${DOCKER_REGISTRY-}spectrailtestserver
