@@ -20,13 +20,13 @@ public class SpectrailNewFeatureHandler(
     private readonly ApiServiceFactory _apiServiceFactory =
         apiServiceFactory ?? throw new ArgumentNullException(nameof(apiServiceFactory));
 
-    private readonly SpectrailNewFeatureHandlerPage _duplicateVariablePage =
+    private readonly IHandlerFactory _handlerFactory =
+        handlerFactory ?? throw new ArgumentNullException(nameof(handlerFactory));
+
+    private readonly SpectrailNewFeatureHandlerPage _spectrailNewFeaturePage =
         pageObject as SpectrailNewFeatureHandlerPage ??
         throw new ArgumentException(
             "Invalid PageObject type.");
-
-    private readonly IHandlerFactory _handlerFactory =
-        handlerFactory ?? throw new ArgumentNullException(nameof(handlerFactory));
 
     protected override async Task ExecuteAsync()
     {
