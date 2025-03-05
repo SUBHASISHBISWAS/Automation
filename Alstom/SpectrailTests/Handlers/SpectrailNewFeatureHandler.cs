@@ -1,10 +1,10 @@
 ﻿#region
 
 using SpectrailTestFramework.Actions;
+using SpectrailTestFramework.API.Services;
 using SpectrailTestFramework.Attributes;
 using SpectrailTestFramework.Factory;
 using SpectrailTestFramework.Interfaces;
-using SpectrailTestFramework.Services;
 using SpectrailTests.Pages;
 
 #endregion

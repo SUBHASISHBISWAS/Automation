@@ -1,12 +1,14 @@
 #region
 
 using RestSharp;
+using SpectrailTestFramework.API.APIClient;
+using SpectrailTestFramework.Services;
 
 #endregion
 
-namespace SpectrailTestFramework.Services;
+namespace SpectrailTestFramework.API.Services;
 
-public class ICDDataService(RestClient client) : IApiService
+public class ICDDataService(ApiClient client) : IApiService
 {
     public async Task<RestResponse> GetDataAsync(string endpoint)
     {

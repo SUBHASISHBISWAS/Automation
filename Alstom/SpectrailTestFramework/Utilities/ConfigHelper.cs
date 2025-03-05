@@ -62,4 +62,11 @@ public class ConfigHelper
         return _configuration[$"Settings:{key}"] ??
                throw new Exception($"❌ URL '{key}' not found in appsettings.json!");
     }
+
+    public IConfigurationSection GetSection(string sectionKey)
+    {
+        var section = _configuration.GetSection(sectionKey);
+        if (!section.Exists()) throw new Exception($"❌ Section '{sectionKey}' not found in appsettings.json!");
+        return section;
+    }
 }
