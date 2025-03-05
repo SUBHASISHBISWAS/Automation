@@ -20,7 +20,10 @@ services.AddInfrastructureServices(configuration);
 
 // ✅ Add Controllers & Swagger
 services.AddControllers();
-services.AddSwaggerGen(c => { c.SwaggerDoc("v1", new OpenApiInfo { Title = "Ordering.API", Version = "v1" }); });
+services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "SpectrailTestDataProvider.API", Version = "v1" });
+});
 
 
 // ✅ Build App
@@ -32,7 +35,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
     app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Ordering.API v1"));
+    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "SpectrailTestDataProvider.API v1"));
 }
 
 app.UseRouting();

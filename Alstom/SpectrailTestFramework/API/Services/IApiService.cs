@@ -1,4 +1,4 @@
-namespace SpectrailTestFramework.Services;
+namespace SpectrailTestFramework.API.Services;
 
 public interface IApiService
 {

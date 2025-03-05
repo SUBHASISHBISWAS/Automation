@@ -16,7 +16,7 @@ public class ICDController(IMediator mediator) : ControllerBase
 {
     private readonly IMediator _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
 
-    [HttpGet(Name = "GetICDData")]
+    [HttpGet("GetICDData")]
     [ProducesResponseType(typeof(IEnumerable<ICDEntityVm>), (int)HttpStatusCode.OK)]
     public async Task<ActionResult<IEnumerable<ICDEntityVm>>> GetICDData()
     {

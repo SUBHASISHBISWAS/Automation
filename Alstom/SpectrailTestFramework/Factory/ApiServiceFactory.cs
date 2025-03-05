@@ -2,7 +2,7 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using SpectrailTestFramework.API.APIClient;
-using SpectrailTestFramework.Services;
+using SpectrailTestFramework.API.Services;
 using SpectrailTestFramework.Utilities;
 
 #endregion
