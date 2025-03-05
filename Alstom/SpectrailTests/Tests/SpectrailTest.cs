@@ -38,6 +38,10 @@ public class SpectrailTest : TestHooks
     [AllureFeature("Login")]
     public async Task Open_Instantiation_EditVariable()
     {
+        var spectrailNewFeatureHandler = ActionFactory!.GetAction<SpectrailNewFeatureHandler>();
+        await spectrailNewFeatureHandler.RunAsync();
+        
+        /*
         string testName = TestContext.CurrentContext.Test.Name;
         ExtentReportManager.StartTest(testName);
         ExtentReportManager.LogTestInfo("🚀 Starting Login Test...");
@@ -51,5 +55,6 @@ public class SpectrailTest : TestHooks
         //await handler.RunAsync();
         ExtentReportManager.LogTestPass("✅ Login Test Passed.");
         ExtentReportManager.FlushReport();
+        */
     }
 }

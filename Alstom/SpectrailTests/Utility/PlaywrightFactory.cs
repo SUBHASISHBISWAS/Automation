@@ -1,13 +1,19 @@
-﻿using System.Reflection;
+﻿#region
+
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Playwright;
+using RestSharp;
 using Serilog;
 using SpectrailTestFramework.Attributes;
 using SpectrailTestFramework.Decorators;
 using SpectrailTestFramework.Factory;
 using SpectrailTestFramework.Interfaces;
+using SpectrailTestFramework.Services;
 using SpectrailTestFramework.Utilities;
 using SpectrailTests.Pages;
+
+#endregion
 
 namespace SpectrailTests.Utility;
 
@@ -62,6 +68,19 @@ public static class PlaywrightFactory
         services.AddSingleton<IPageFactory, PageFactory>();
 
         services.AddTransient<ActionFactory>();
+
+        // ✅ Register RestClient (Base URL should be configurable)
+        services.AddSingleton<RestClient>(provider =>
+            new RestClient(provider.GetRequiredService<ConfigHelper>().GetSetting("ServerSettings:ApiBaseUrl"))
+        );
+
+        // ✅ Dynamically register all API services implementing `IApiService`
+        services.Scan(scan => scan
+            .FromApplicationDependencies() // ✅ Scans all referenced assemblies
+            .AddClasses(classes => classes.AssignableTo<IApiService>())
+            .AsImplementedInterfaces()
+            .AsSelf()
+            .WithTransientLifetime());
 
         // ✅ Register All Page Objects (Lazy Resolved)
         services.Scan(scan => scan

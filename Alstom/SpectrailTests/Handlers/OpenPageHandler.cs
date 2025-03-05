@@ -1,16 +1,22 @@
-﻿using Microsoft.Playwright;
+﻿#region
 
+using Microsoft.Playwright;
 using SpectrailTestFramework.Actions;
 using SpectrailTestFramework.Attributes;
+using SpectrailTestFramework.Factory;
 using SpectrailTestFramework.Interfaces;
-
 using SpectrailTests.Pages;
+
+#endregion
 
 namespace SpectrailTests.Handlers;
 
 [MapsToPage(typeof(OpenPage))] // ✅ Automatically maps to `LoginPage`
-public class OpenPageHandler(IPageObject pageObject) : BaseActionHandler
+public class OpenPageHandler(IPageObject pageObject, ApiServiceFactory apiServiceFactory) : BaseActionHandler
 {
+    private readonly ApiServiceFactory _apiServiceFactory =
+        apiServiceFactory ?? throw new ArgumentNullException(nameof(apiServiceFactory));
+
     private readonly IPage _page = pageObject.Page ?? throw new ArgumentNullException(nameof(pageObject));
     private string? _url;
 
@@ -25,9 +31,7 @@ public class OpenPageHandler(IPageObject pageObject) : BaseActionHandler
     protected override async Task ExecuteAsync()
     {
         if (string.IsNullOrEmpty(_url))
-        {
             throw new InvalidOperationException("❌ URL must be set before executing OpenPageHandler.");
-        }
 
         await _page.GotoAsync(_url);
     }
