@@ -34,6 +34,6 @@ public class SpectrailNewFeatureHandler(
         var icdDataService = _apiServiceFactory.GetService("ICDDataService") as ICDDataService ??
                              throw new ArgumentNullException(nameof(ICDDataService))
             ;
-        var userResponse = await icdDataService.GetDataAsync("/ICD");
+        var userResponse = await icdDataService.GetICDDataAsync();
     }
 }
