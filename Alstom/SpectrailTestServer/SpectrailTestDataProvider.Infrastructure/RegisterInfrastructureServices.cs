@@ -14,7 +14,7 @@ namespace SpectrailTestDataProvider.Infrastructure;
 
 public static class InfrastructureServiceRegistration
 {
-    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services,
+    public static IServiceCollection RegisterInfrastructureServices(this IServiceCollection services,
         IConfiguration configuration)
     {
         services.Configure<SpectrailMongoDatabaseSettings>(options =>

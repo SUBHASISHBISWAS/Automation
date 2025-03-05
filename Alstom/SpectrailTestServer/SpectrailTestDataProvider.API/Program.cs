@@ -15,8 +15,8 @@ services.AddAutoMapper(typeof(Program));
 
 
 // ✅ Add Application & Infrastructure Services
-services.AddApplicationServices();
-services.AddInfrastructureServices(configuration);
+services.RegisterApplicationServices();
+services.RegisterInfrastructureServices(configuration);
 
 // ✅ Add Controllers & Swagger
 services.AddControllers();
