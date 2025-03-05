@@ -71,7 +71,8 @@ public static class PlaywrightFactory
 
         // ✅ Register RestClient (Base URL should be configurable)
         services.AddSingleton<RestClient>(provider =>
-            new RestClient(provider.GetRequiredService<ConfigHelper>().GetSetting("ServerSettings:ApiBaseUrl"))
+            new RestClient(provider.GetRequiredService<ConfigHelper>().GetSetting("ApiBaseUrl") ??
+                           throw new InvalidOperationException())
         );
 
         // ✅ Dynamically register all API services implementing `IApiService`
@@ -81,6 +82,8 @@ public static class PlaywrightFactory
             .AsImplementedInterfaces()
             .AsSelf()
             .WithTransientLifetime());
+        // ✅ Register API Service Factory
+        services.AddSingleton<ApiServiceFactory>();
 
         // ✅ Register All Page Objects (Lazy Resolved)
         services.Scan(scan => scan

@@ -1,4 +1,8 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿#region
+
+using Microsoft.Extensions.Configuration;
+
+#endregion
 
 namespace SpectrailTestFramework.Utilities;
 
@@ -20,10 +24,16 @@ public class ConfigHelper
     /// <summary>
     ///     ✅ Retrieves a setting from `appsettings.json`
     /// </summary>
-    public string GetSetting(string key)
+    public string? GetSetting(string key)
     {
-        return _configuration[$"PlaywrightSettings:{key}"] ??
-               throw new Exception($"❌ Setting '{key}' not found in appsettings.json!");
+        if (string.IsNullOrEmpty(key)) throw new ArgumentException("Value cannot be null or empty.", nameof(key));
+        if (_configuration[$"PlaywrightSettings:{key}"] != null) return _configuration[$"PlaywrightSettings:{key}"];
+
+        if (_configuration[$"Settings:{key}"] != null) return _configuration[$"Settings:{key}"];
+
+        if (_configuration[$"ServerSettings:{key}"] != null) return _configuration[$"ServerSettings:{key}"];
+
+        throw new Exception($"❌ Setting '{key}' not found in appsettings.json!");
     }
 
     /// <summary>
@@ -31,8 +41,8 @@ public class ConfigHelper
     /// </summary>
     public bool GetBoolSetting(string key, bool defaultValue = false)
     {
-        string? value = _configuration[$"PlaywrightSettings:{key}"];
-        return bool.TryParse(value, out bool result) ? result : defaultValue;
+        var value = _configuration[$"PlaywrightSettings:{key}"];
+        return bool.TryParse(value, out var result) ? result : defaultValue;
     }
 
     /// <summary>
@@ -40,8 +50,8 @@ public class ConfigHelper
     /// </summary>
     public int GetIntSetting(string key, int defaultValue = 0)
     {
-        string? value = _configuration[$"PlaywrightSettings:{key}"];
-        return int.TryParse(value, out int result) ? result : defaultValue;
+        var value = _configuration[$"PlaywrightSettings:{key}"];
+        return int.TryParse(value, out var result) ? result : defaultValue;
     }
 
     /// <summary>
