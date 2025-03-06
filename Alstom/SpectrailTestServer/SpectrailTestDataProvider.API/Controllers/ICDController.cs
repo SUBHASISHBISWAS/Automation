@@ -1,27 +1,55 @@
 #region
 
-using System.Net;
+using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using SpectrailTestDataProvider.Application.Features.ICD_DataProvider.Queries.Model;
-using SpectrailTestDataProvider.Application.Features.ICD_DataProvider.Queries.Query;
+using SpectrailTestDataProvider.Application.Contracts;
+using SpectrailTestDataProvider.Application.Features.ICD.Queries.Model;
+using SpectrailTestDataProvider.Application.Features.ICD.Queries.Query;
+using SpectrailTestDataProvider.Domain.Entities.ICD;
 
 #endregion
 
 namespace SpectrailTestDataProvider.API.Controllers;
 
-[ApiController]
 [Route("api/v1/[Controller]")]
-public class ICDController(IMediator mediator) : ControllerBase
+[ApiController]
+public class ICDController(IMediator mediator, IExcelService excelService, IMapper mapper) : ControllerBase
 {
-    private readonly IMediator _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
-
-    [HttpGet("GetICDData")]
-    [ProducesResponseType(typeof(IEnumerable<ICDEntityVm>), (int)HttpStatusCode.OK)]
-    public async Task<ActionResult<IEnumerable<ICDEntityVm>>> GetICDData()
+    /// <summary>
+    ///     ✅ Fetch all DCU records from MongoDB
+    /// </summary>
+    [HttpGet("all")]
+    public async Task<ActionResult<IEnumerable<DCUEntityVm>>> GetAllDCURecords()
     {
-        var query = new GetICDQuery("");
-        var icdData = await _mediator.Send(query);
-        return Ok(icdData);
+        var repository = await mediator.Send(new GetRepositoryQuery<DCUEntity>());
+        var data = await repository.GetAllAsync();
+        return mapper.Map<List<DCUEntityVm>>(data);
+        return Ok(data);
+    }
+
+    /// <summary>
+    ///     ✅ Reads an Excel file and stores DCU data in MongoDB (Detects Changes)
+    /// </summary>
+    [HttpPost("import-excel")]
+    public async Task<ActionResult<List<DCUEntityVm>>> ImportDCUDataFromExcel(
+        [FromQuery] string filePath = "/Users/subhasishbiswas/Downloads/Alstom/TRDP_ICD_GENERATED.xlsx",
+        [FromQuery] string? sheetName = "DCU")
+    {
+        var data = await excelService.ReadExcelAndStoreAsync<DCUEntity>(filePath, sheetName);
+        return mapper.Map<List<DCUEntityVm>>(data);
+        return Ok(data);
+    }
+
+    /// <summary>
+    ///     ✅ Fetch a single DCU record by ID
+    /// </summary>
+    [HttpGet("{id}")]
+    public async Task<ActionResult<DCUEntityVm>> GetDCURecordById(string id)
+    {
+        var repository = await mediator.Send(new GetRepositoryQuery<DCUEntity>());
+        var entity = await repository.GetByIdAsync(id);
+        return mapper.Map<DCUEntityVm>(entity);
+        return Ok(entity);
     }
 }

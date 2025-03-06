@@ -2,8 +2,8 @@
 
 using Newtonsoft.Json;
 using RestSharp;
+using SpectrailTestDataProvider.Domain.Entities.ICD;
 using SpectrailTestFramework.API.APIClient;
-using SpectrailTestFramework.API.Models;
 
 #endregion
 
@@ -13,8 +13,11 @@ public class ICDDataService(ApiClient client) : IApiService
 {
     public async Task<List<ICDRecord>?> GetICDDataAsync()
     {
-        var request = new RestRequest("/GetICDData");
+        var request = new RestRequest("/import-excel?filePath=C:\\Data\\DCU_Data.xlsx&sheetName=Sheet1");
         var response = await client.ExecuteAsync(request);
+
+        request = new RestRequest("/all");
+        response = await client.ExecuteAsync(request);
 
         if (!response.IsSuccessful) throw new Exception($"❌ API Error: {response.ErrorMessage}");
 

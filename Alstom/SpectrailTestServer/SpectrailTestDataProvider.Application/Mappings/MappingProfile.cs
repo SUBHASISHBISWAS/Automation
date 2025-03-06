@@ -1,8 +1,8 @@
 #region
 
 using AutoMapper;
-using SpectrailTestDataProvider.Application.Features.ICD_DataProvider.Queries.Model;
-using SpectrailTestDataProvider.Domain.Entities;
+using SpectrailTestDataProvider.Application.Features.ICD.Queries.Model;
+using SpectrailTestDataProvider.Domain.Entities.ICD;
 
 #endregion
 
@@ -12,6 +12,6 @@ public class MappingProfile : Profile
 {
     public MappingProfile()
     {
-        CreateMap<ICDEntity, ICDEntityVm>().ReverseMap();
+        CreateMap<DCUEntity, DCUEntityVm>().ReverseMap();
     }
 }

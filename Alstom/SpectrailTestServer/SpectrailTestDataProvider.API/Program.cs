@@ -14,6 +14,9 @@ var services = builder.Services;
 services.AddAutoMapper(typeof(Program));
 
 
+// ✅ Register MediatR
+//services.AddMediatR(Assembly.GetExecutingAssembly());
+
 // ✅ Add Application & Infrastructure Services
 services.RegisterApplicationServices();
 services.RegisterInfrastructureServices(configuration);

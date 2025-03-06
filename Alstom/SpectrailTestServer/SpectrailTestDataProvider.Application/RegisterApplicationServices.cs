@@ -5,6 +5,8 @@ using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using SpectrailTestDataProvider.Application.Behaviours;
+using SpectrailTestDataProvider.Application.Contracts;
+using SpectrailTestDataProvider.Application.Features.ICD.Services;
 
 #endregion
 
@@ -20,6 +22,7 @@ public static class ApplicationServiceRegistration
 
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UnhandledExceptionBehaviour<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
+        services.AddSingleton<IExcelService, ExcelService>();
 
         return services;
     }

@@ -26,9 +26,12 @@ public class RepositoryBase<T>(IDataProvider<T> dataProvider) : IAsyncRepository
         return dataProvider.GetByFilterAsync(filter);
     }
 
-    public Task AddAsync(T entity)
+    /// <summary>
+    ///     ✅ Saves a new entity in MongoDB.
+    /// </summary>
+    public async Task AddAsync(T entity)
     {
-        throw new NotImplementedException();
+        await dataProvider.AddAsync(entity);
     }
 
     public Task<bool> UpdateAsync(string id, T entity)

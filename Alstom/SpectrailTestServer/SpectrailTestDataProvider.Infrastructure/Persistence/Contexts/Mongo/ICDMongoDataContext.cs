@@ -4,7 +4,7 @@ using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using SpectrailTestDataProvider.Application.Models;
 using SpectrailTestDataProvider.Domain.Common;
-using SpectrailTestDataProvider.Domain.Entities;
+using SpectrailTestDataProvider.Domain.Entities.ICD;
 
 #endregion
 
@@ -12,31 +12,27 @@ namespace SpectrailTestDataProvider.Infrastructure.Persistence.Contexts.Mongo;
 
 public class ICDMongoDataContext<T>(
     IOptions<SpectrailMongoDatabaseSettings> databaseSettings)
-    : SpectrailMongoDbContext<ICDEntity>(databaseSettings) where T : EntityBase
+    : SpectrailMongoDbContext<DCUEntity>(databaseSettings) where T : EntityBase
 {
-    public IMongoCollection<ICDEntity>? ICDData => SpectrailData;
+    public IMongoCollection<DCUEntity>? ICDData => SpectrailData;
 
-    protected override IEnumerable<ICDEntity> GetPreconfiguredData()
+    protected override IEnumerable<DCUEntity> GetPreconfiguredData()
     {
-        return new List<ICDEntity>
+        return new List<DCUEntity>
         {
             new()
             {
                 CreatedDate = DateTime.Now,
                 CreatedBy = "System",
                 LastModifiedDate = DateTime.Now,
-                LastModifiedBy = "System",
-                ICDName = "Hello",
-                ICDDescription = "HelloDescription"
+                LastModifiedBy = "System"
             },
             new()
             {
                 CreatedDate = DateTime.Now,
                 CreatedBy = "SUBHASISH",
                 LastModifiedDate = DateTime.Now,
-                LastModifiedBy = "SUBHASISH",
-                ICDName = "HI",
-                ICDDescription = "HI Description"
+                LastModifiedBy = "SUBHASISH"
             }
         };
     }

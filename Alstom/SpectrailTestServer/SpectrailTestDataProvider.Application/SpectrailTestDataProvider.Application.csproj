@@ -7,13 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Features\ICD_DataProvider\" />
-    <Folder Include="Features\ICD_DataProvider\Commands\" />
+    <Folder Include="Features\ICD\Commands\" />
     <Folder Include="Features\OutputDataProvider\" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="14.0.0" />
+    <PackageReference Include="ClosedXML" Version="0.105.0-rc" />
     <PackageReference Include="FluentValidation" Version="11.11.0" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
     <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.1.0" />
@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\SpectrailTestFramework\SpectrailTestFramework.csproj" />
     <ProjectReference Include="..\SpectrailTestDataProvider.Domain\SpectrailTestDataProvider.Domain.csproj" />
   </ItemGroup>
 
