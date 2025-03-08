@@ -27,7 +27,7 @@ public class ExcelService(IMediator mediator) : IExcelService
     /// <summary>
     ///     ✅ Reads Excel, detects changes, and stores in MongoDB dynamically.
     /// </summary>
-    public async Task<List<T>> ReadExcelAndStoreAsync<T>(string filePath, string? sheetName = null)
+    public Task<List<T>> ReadExcelAndStoreAsync<T>(string filePath, string? sheetName = null)
         where T : EntityBase, new()
     {
         if (!File.Exists(filePath))
@@ -36,21 +36,21 @@ public class ExcelService(IMediator mediator) : IExcelService
         var newChecksum = ComputeFileChecksum(filePath);
 
         // ✅ Get Repository for the specific entity type
-        var repository = mediator.Send(new GetRepositoryQuery<T>()).Result;
-        var existingRecords = await repository.GetAllAsync();
-        var existingChecksum = existingRecords.FirstOrDefault()?.Checksum;
+        //var repository = mediator.Send(new GetRepositoryQuery<T>()).Result;
+        //var existingRecords = await repository.GetAllAsync();
+        //var existingChecksum = existingRecords.FirstOrDefault()?.Checksum;
 
         // ✅ Compare checksum: If unchanged, return stored data
-        if (existingChecksum == newChecksum) return existingRecords.ToList();
+        //if (existingChecksum == newChecksum) return existingRecords.ToList();
 
         // ✅ Read new data from Excel
         var newRecords = ReadExcel<T>(filePath, sheetName);
 
         // ✅ Store in MongoDB (Delete old & Insert new)
-        foreach (var record in existingRecords) await repository.DeleteAsync(record.Id);
-        foreach (var record in newRecords) await repository.AddAsync(record);
+        //foreach (var record in existingRecords) await repository.DeleteAsync(record.Id);
+        //foreach (var record in newRecords) await repository.AddAsync(record);
 
-        return newRecords;
+        return Task.FromResult(newRecords);
     }
 
     /// <summary>
@@ -86,15 +86,22 @@ public class ExcelService(IMediator mediator) : IExcelService
             for (var colIndex = 0; colIndex < headers.Count; colIndex++)
             {
                 var header = headers[colIndex];
-                var property =
-                    properties.FirstOrDefault(p => p.Name.Equals(header, StringComparison.OrdinalIgnoreCase));
+                var normalizedHeader = header.Trim().Replace(" ", ""); // Remove spaces from the header
+                var property = properties.FirstOrDefault(p =>
+                    p.Name.Equals(normalizedHeader, StringComparison.OrdinalIgnoreCase));
 
-                if (property != null)
+                try
                 {
-                    object? cellValue = row.Cell(colIndex + 1).Value;
-                    if (cellValue is string s && string.IsNullOrWhiteSpace(s)) cellValue = null;
+                    var cell = row.Cell(colIndex + 1);
+                    var cellValue = ExtractCellValue(cell);
 
-                    property.SetValue(entity, Convert.ChangeType(cellValue, property.PropertyType));
+                    if (property != null)
+                        property.SetValue(entity, Convert.ChangeType(cellValue, property.PropertyType));
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    throw;
                 }
             }
 
@@ -102,6 +109,20 @@ public class ExcelService(IMediator mediator) : IExcelService
             entities.Add(entity);
         }
 
-        return entities;
+        return  entities;
+    }
+
+    private static object? ExtractCellValue(IXLCell cell)
+    {
+        if (cell.IsEmpty()) return null;
+
+        return cell.DataType switch
+        {
+            XLDataType.Text => cell.GetString().Trim(),
+            XLDataType.Number => cell.GetDouble(),
+            XLDataType.Boolean => cell.GetBoolean(),
+            XLDataType.DateTime => cell.GetDateTime(),
+            _ => cell.Value
+        };
     }
 }
