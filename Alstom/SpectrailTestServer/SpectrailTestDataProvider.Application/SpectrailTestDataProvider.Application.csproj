@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <Folder Include="Features\ICD\Commands\" />
-    <Folder Include="Features\OutputDataProvider\" />
   </ItemGroup>
 
   <ItemGroup>
