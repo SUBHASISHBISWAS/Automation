@@ -18,5 +18,5 @@ public abstract class EntityBase
     public string? LastModifiedBy { get; set; } = "System";
     public DateTime? LastModifiedDate { get; set; } = DateTime.Now;
 
-    [BsonIgnore] public string? Checksum { get; set; } // ✅ Checksum for change detection
+    [BsonElement("checksum")] public string? Checksum { get; set; } // ✅ Checksum for change detection
 }

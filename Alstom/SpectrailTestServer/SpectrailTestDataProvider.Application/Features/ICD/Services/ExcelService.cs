@@ -38,20 +38,41 @@ public class ExcelService(IMediator mediator) : IExcelService
         // ✅ Get Repository for the specific entity type
         var repository = mediator.Send(new GetRepositoryQuery<T>()).Result;
         var existingRecords = await repository.GetAllAsync();
-        var entityBases = existingRecords.ToList();
+        var enumerable = existingRecords as T[] ?? existingRecords.ToArray();
+        var entityBases = enumerable.ToList();
         {
             var existingChecksum = entityBases.FirstOrDefault()?.Checksum;
 
             // ✅ Compare checksum: If unchanged, return stored data
-            if (existingChecksum == newChecksum) return entityBases.ToList();
+            if (existingChecksum == newChecksum)
+            {
+                Console.WriteLine($"✅ No changes detected for {typeof(T).Name}. Using cached data.");
+                return entityBases.ToList();
+            }
         }
-
+        Console.WriteLine($"🔄 Changes detected in {typeof(T).Name}. Updating database...");
         // ✅ Read new data from Excel
         var newRecords = ReadExcel<T>(filePath, sheetName);
 
-        // ✅ Store in MongoDB (Delete old & Insert new)
-        foreach (var record in entityBases) await repository.DeleteAsync(record.Id);
-        foreach (var record in newRecords) await repository.AddAsync(record);
+        // ✅ Assign Checksum & Prepare for Insertion
+        var updatedRecords = newRecords.Select(record =>
+        {
+            record.Checksum = newChecksum;
+            return record;
+        }).ToList();
+
+        // ✅ Batch delete & insert operations
+        if (enumerable.Length != 0)
+        {
+            var deleteTasks = enumerable.Select(record => repository.DeleteAsync(record.Id ?? string.Empty));
+            await Task.WhenAll(deleteTasks);
+        }
+
+        if (updatedRecords.Count == 0) return await Task.FromResult(newRecords);
+        {
+            var insertTasks = updatedRecords.Select(record => repository.AddAsync(record));
+            await Task.WhenAll(insertTasks);
+        }
 
         return await Task.FromResult(newRecords);
     }
@@ -79,19 +100,19 @@ public class ExcelService(IMediator mediator) : IExcelService
         var rows = worksheet.RowsUsed().Skip(1); // ✅ Skip header row
         var properties = typeof(T).GetProperties();
         var headers = worksheet.Row(1).Cells().Select(c => c.GetString().Trim()).ToList();
+        var checksum = ComputeFileChecksum(filePath); // ✅ Precompute checksum
 
         var entities = new List<T>();
 
         foreach (var row in rows)
         {
-            var entity = new T();
+            var entity = new T { Checksum = checksum }; // ✅ Assign checksum
 
             for (var colIndex = 0; colIndex < headers.Count; colIndex++)
             {
-                var header = headers[colIndex];
-                var normalizedHeader = header.Trim().Replace(" ", ""); // Remove spaces from the header
-                var property = properties.FirstOrDefault(p =>
-                    p.Name.Equals(normalizedHeader, StringComparison.OrdinalIgnoreCase));
+                var header = headers[colIndex].Trim().Replace(" ", "");
+                var property =
+                    properties.FirstOrDefault(p => p.Name.Equals(header, StringComparison.OrdinalIgnoreCase));
 
                 try
                 {
@@ -108,7 +129,6 @@ public class ExcelService(IMediator mediator) : IExcelService
                 }
             }
 
-            entity.Checksum = ComputeFileChecksum(filePath);
             entities.Add(entity);
         }
 
