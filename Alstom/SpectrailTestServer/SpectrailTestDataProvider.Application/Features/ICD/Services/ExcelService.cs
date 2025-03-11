@@ -27,7 +27,7 @@ public class ExcelService(IMediator mediator) : IExcelService
     /// <summary>
     ///     ✅ Reads Excel, detects changes, and stores in MongoDB dynamically.
     /// </summary>
-    public Task<List<T>> ReadExcelAndStoreAsync<T>(string filePath, string? sheetName = null)
+    public async Task<List<T>> ReadExcelAndStoreAsync<T>(string filePath, string? sheetName = null)
         where T : EntityBase, new()
     {
         if (!File.Exists(filePath))
@@ -36,21 +36,24 @@ public class ExcelService(IMediator mediator) : IExcelService
         var newChecksum = ComputeFileChecksum(filePath);
 
         // ✅ Get Repository for the specific entity type
-        //var repository = mediator.Send(new GetRepositoryQuery<T>()).Result;
-        //var existingRecords = await repository.GetAllAsync();
-        //var existingChecksum = existingRecords.FirstOrDefault()?.Checksum;
+        var repository = mediator.Send(new GetRepositoryQuery<T>()).Result;
+        var existingRecords = await repository.GetAllAsync();
+        var entityBases = existingRecords.ToList();
+        {
+            var existingChecksum = entityBases.FirstOrDefault()?.Checksum;
 
-        // ✅ Compare checksum: If unchanged, return stored data
-        //if (existingChecksum == newChecksum) return existingRecords.ToList();
+            // ✅ Compare checksum: If unchanged, return stored data
+            if (existingChecksum == newChecksum) return entityBases.ToList();
+        }
 
         // ✅ Read new data from Excel
         var newRecords = ReadExcel<T>(filePath, sheetName);
 
         // ✅ Store in MongoDB (Delete old & Insert new)
-        //foreach (var record in existingRecords) await repository.DeleteAsync(record.Id);
-        //foreach (var record in newRecords) await repository.AddAsync(record);
+        foreach (var record in entityBases) await repository.DeleteAsync(record.Id);
+        foreach (var record in newRecords) await repository.AddAsync(record);
 
-        return Task.FromResult(newRecords);
+        return await Task.FromResult(newRecords);
     }
 
     /// <summary>
@@ -109,7 +112,7 @@ public class ExcelService(IMediator mediator) : IExcelService
             entities.Add(entity);
         }
 
-        return  entities;
+        return entities;
     }
 
     private static object? ExtractCellValue(IXLCell cell)
