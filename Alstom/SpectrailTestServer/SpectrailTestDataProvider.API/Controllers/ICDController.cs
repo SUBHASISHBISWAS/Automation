@@ -3,6 +3,7 @@
 using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using SpectrailTestDataProvider.API.Utility;
 using SpectrailTestDataProvider.Application.Contracts;
 using SpectrailTestDataProvider.Application.Features.ICD.Queries.Model;
 using SpectrailTestDataProvider.Application.Features.ICD.Queries.Query;
@@ -14,7 +15,8 @@ namespace SpectrailTestDataProvider.API.Controllers;
 
 [Route("api/v1/[Controller]")]
 [ApiController]
-public class ICDController(IMediator mediator, IExcelService excelService, IMapper mapper) : ControllerBase
+public class ICDController(IMediator mediator, IExcelService excelService, IMapper mapper,ServerConfigHelper configHelper) : 
+    ControllerBase
 {
     /// <summary>
     ///     ✅ Fetch all DCU records from MongoDB
@@ -33,10 +35,15 @@ public class ICDController(IMediator mediator, IExcelService excelService, IMapp
     /// </summary>
     [HttpPost("import-excel")]
     public async Task<ActionResult<List<DCUEntityVm>>> ImportDCUDataFromExcel(
-        [FromQuery] string filePath = "/Users/subhasishbiswas/Downloads/Alstom/TRDP_ICD_GENERATED.xlsx",
+        [FromQuery] string? filePath ="" ,
         [FromQuery] string? sheetName = "DCU")
     {
-        var data = await excelService.ReadExcelAndStoreAsync<DCUEntity>(filePath, sheetName);
+        if (string.IsNullOrEmpty(filePath))
+            filePath = configHelper.GetSetting("ICD_URL-1");
+        if (string.IsNullOrEmpty(filePath))
+            sheetName = "DCU";
+        
+        var data = await excelService.ReadExcelAndStoreAsync<DCUEntity>(filePath!, sheetName);
         return mapper.Map<List<DCUEntityVm>>(data);
         return Ok(data);
     }

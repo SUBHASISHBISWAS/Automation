@@ -1,6 +1,9 @@
 #region
 
+using System.Reflection;
+using MediatR;
 using Microsoft.OpenApi.Models;
+using SpectrailTestDataProvider.API.Utility;
 using SpectrailTestDataProvider.Application;
 using SpectrailTestDataProvider.Infrastructure;
 
@@ -13,9 +16,11 @@ var services = builder.Services;
 // ✅ Add AutoMapper
 services.AddAutoMapper(typeof(Program));
 
+ServerConfigHelper configHelper = new();
+services.AddSingleton(configHelper);
 
 // ✅ Register MediatR
-//services.AddMediatR(Assembly.GetExecutingAssembly());
+services.AddMediatR(Assembly.GetExecutingAssembly());
 
 // ✅ Add Application & Infrastructure Services
 services.RegisterApplicationServices();
