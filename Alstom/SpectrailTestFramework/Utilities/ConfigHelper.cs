@@ -12,8 +12,12 @@ public class ConfigHelper
 
     public ConfigHelper()
     {
+        // ✅ Determine Base Path for Config Files (Cross-Platform)
+        var basePath = Environment.GetEnvironmentVariable("CONFIG_PATH") // For Docker
+                       ?? Directory.GetCurrentDirectory(); // For macOS, Windows, and Linux
+
         _configuration = new ConfigurationBuilder()
-            .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+            .SetBasePath(basePath) // ✅ Dynamically determine the config path
             .AddJsonFile("appsettings.json", false, true)
             .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json",
                 true, true) // ✅ Support for Dev/Test/Prod
@@ -27,13 +31,11 @@ public class ConfigHelper
     public string? GetSetting(string key)
     {
         if (string.IsNullOrEmpty(key)) throw new ArgumentException("Value cannot be null or empty.", nameof(key));
-        if (_configuration[$"PlaywrightSettings:{key}"] != null) return _configuration[$"PlaywrightSettings:{key}"];
 
-        if (_configuration[$"Settings:{key}"] != null) return _configuration[$"Settings:{key}"];
-
-        if (_configuration[$"ServerSettings:{key}"] != null) return _configuration[$"ServerSettings:{key}"];
-
-        throw new Exception($"❌ Setting '{key}' not found in appsettings.json!");
+        return _configuration[$"PlaywrightSettings:{key}"]
+               ?? _configuration[$"Settings:{key}"]
+               ?? _configuration[$"ServerSettings:{key}"]
+               ?? throw new Exception($"❌ Setting '{key}' not found in appsettings.json!");
     }
 
     /// <summary>
@@ -59,10 +61,13 @@ public class ConfigHelper
     /// </summary>
     public string GetUrl(string key)
     {
-        return _configuration[$"Settings:{key}"] ??
-               throw new Exception($"❌ URL '{key}' not found in appsettings.json!");
+        return _configuration[$"Settings:{key}"]
+               ?? throw new Exception($"❌ URL '{key}' not found in appsettings.json!");
     }
 
+    /// <summary>
+    ///     ✅ Retrieves an entire configuration section
+    /// </summary>
     public IConfigurationSection GetSection(string sectionKey)
     {
         var section = _configuration.GetSection(sectionKey);
