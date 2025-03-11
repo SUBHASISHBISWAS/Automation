@@ -6,6 +6,7 @@ using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using SpectrailTestDataProvider.Application.Behaviours;
 using SpectrailTestDataProvider.Application.Contracts;
+using SpectrailTestDataProvider.Application.Features.ICD.Queries.Handler;
 using SpectrailTestDataProvider.Application.Features.ICD.Services;
 
 #endregion
@@ -18,12 +19,9 @@ public static class ApplicationServiceRegistration
     {
         services.AddAutoMapper(Assembly.GetExecutingAssembly());
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
-        services.AddMediatR(Assembly.GetExecutingAssembly());
-
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UnhandledExceptionBehaviour<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
-        services.AddSingleton<IExcelService, ExcelService>();
-
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(GetRepositoryQueryHandler<>).Assembly));
         return services;
     }
 }

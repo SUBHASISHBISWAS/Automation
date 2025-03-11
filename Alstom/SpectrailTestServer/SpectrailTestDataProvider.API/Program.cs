@@ -19,12 +19,11 @@ services.AddAutoMapper(typeof(Program));
 ServerConfigHelper configHelper = new();
 services.AddSingleton(configHelper);
 
-// ✅ Register MediatR
-services.AddMediatR(Assembly.GetExecutingAssembly());
-
 // ✅ Add Application & Infrastructure Services
 services.RegisterApplicationServices();
 services.RegisterInfrastructureServices(configuration);
+// ✅ Register MediatR
+foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies()) services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(assembly));
 
 // ✅ Add Controllers & Swagger
 services.AddControllers();
