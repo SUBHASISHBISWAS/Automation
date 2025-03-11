@@ -20,10 +20,11 @@ ServerConfigHelper configHelper = new();
 services.AddSingleton(configHelper);
 
 // ✅ Add Application & Infrastructure Services
-services.RegisterApplicationServices();
 services.RegisterInfrastructureServices(configuration);
+services.RegisterApplicationServices();
+
 // ✅ Register MediatR
-foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies()) services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(assembly));
+//foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies()) services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(assembly));
 
 // ✅ Add Controllers & Swagger
 services.AddControllers();

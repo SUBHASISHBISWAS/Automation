@@ -7,7 +7,9 @@ using Microsoft.Extensions.DependencyInjection;
 using SpectrailTestDataProvider.Application.Behaviours;
 using SpectrailTestDataProvider.Application.Contracts;
 using SpectrailTestDataProvider.Application.Features.ICD.Queries.Handler;
+using SpectrailTestDataProvider.Application.Features.ICD.Queries.Query;
 using SpectrailTestDataProvider.Application.Features.ICD.Services;
+using SpectrailTestDataProvider.Domain.Entities.ICD;
 
 #endregion
 
@@ -22,6 +24,7 @@ public static class ApplicationServiceRegistration
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UnhandledExceptionBehaviour<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(GetRepositoryQueryHandler<>).Assembly));
+        services.AddScoped<IRequestHandler<GetRepositoryQuery<DCUEntity>, IAsyncRepository<DCUEntity>>, GetRepositoryQueryHandler<DCUEntity>>();
         return services;
     }
 }
