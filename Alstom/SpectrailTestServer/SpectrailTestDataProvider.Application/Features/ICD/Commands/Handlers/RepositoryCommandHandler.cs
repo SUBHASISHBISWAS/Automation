@@ -2,6 +2,7 @@
 
 using System.Reflection;
 using MediatR;
+using SpectrailTestDataProvider.Application.Attributes;
 using SpectrailTestDataProvider.Application.Contracts;
 using SpectrailTestDataProvider.Application.Features.ICD.Commands.Command;
 using SpectrailTestDataProvider.Domain.Common;

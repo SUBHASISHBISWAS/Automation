@@ -5,16 +5,16 @@ using System.Security.Cryptography;
 using ClosedXML.Excel;
 using MediatR;
 using SpectrailTestDataProvider.Application.Contracts;
+using SpectrailTestDataProvider.Application.Enums;
 using SpectrailTestDataProvider.Application.Features.ICD.Commands.Command;
 using SpectrailTestDataProvider.Application.Features.ICD.Queries.Query;
 using SpectrailTestDataProvider.Application.Registry;
-using SpectrailTestDataProvider.Application.Utility;
 using SpectrailTestDataProvider.Domain.Common;
 using SpectrailTestDataProvider.Shared.Configuration;
 
 #endregion
 
-namespace SpectrailTestDataProvider.Application.Features.ICD.Services;
+namespace SpectrailTestDataProvider.Application.Services;
 
 /// <summary>
 ///     ✅ Manages dynamic reading, checksum validation, and MongoDB storage of Excel data.
@@ -51,7 +51,9 @@ public class ICDExcelService(IMediator mediator, ServerConfigHelper configHelper
         newRecords.ForEach(record => record.Checksum = newChecksum);
 
         // ✅ Use `RepositoryCommand<T>` for efficient batch operations
-        await ExecuteRepositoryCommand(_configHelper.IsFeatureEnabled("EnableEagerLoading"), newRecords);
+        var isFeatureEnabled = _configHelper.IsFeatureEnabled("EnableEagerLoading") ||
+                               _configHelper.IsFeatureEnabled("EnableMiddlewarePreloading");
+        await ExecuteRepositoryCommand(isFeatureEnabled, newRecords);
 
         Console.WriteLine($"✅ Successfully processed {newRecords.Count} records from {sheetName}.");
         return newRecords;
@@ -77,23 +79,6 @@ public class ICDExcelService(IMediator mediator, ServerConfigHelper configHelper
     }
 
     /// <summary>
-    ///     ✅ Executes repository operations dynamically.
-    /// </summary>
-    private async Task ExecuteRepositoryCommand<T>(bool isEagerLoading, List<T> newRecords) where T : EntityBase
-    {
-        if (isEagerLoading)
-        {
-            await _mediator.Send(new RepositoryCommand<T>(RepositoryOperation.DeleteAll));
-            await _mediator.Send(new RepositoryCommand<T>(RepositoryOperation.Initialize, entities: newRecords));
-        }
-        else
-        {
-            foreach (var record in newRecords)
-                await _mediator.Send(new RepositoryCommand<T>(RepositoryOperation.Add, record));
-        }
-    }
-
-    /// <summary>
     ///     ✅ Initializes all configured ICD files from `appsettings.json`
     /// </summary>
     public async Task InitializeAsync()
@@ -108,6 +93,23 @@ public class ICDExcelService(IMediator mediator, ServerConfigHelper configHelper
             {
                 Console.WriteLine($"❌ Error processing {filePath}: {ex.Message}");
             }
+    }
+
+    /// <summary>
+    ///     ✅ Executes repository operations dynamically.
+    /// </summary>
+    private async Task ExecuteRepositoryCommand<T>(bool isEagerLoading, List<T> newRecords) where T : EntityBase
+    {
+        if (isEagerLoading)
+        {
+            await _mediator.Send(new RepositoryCommand<T>(RepositoryOperation.DeleteAll));
+            await _mediator.Send(new RepositoryCommand<T>(RepositoryOperation.SeedData, entities: newRecords));
+        }
+        else
+        {
+            foreach (var record in newRecords)
+                await _mediator.Send(new RepositoryCommand<T>(RepositoryOperation.Add, record));
+        }
     }
 
     /// <summary>

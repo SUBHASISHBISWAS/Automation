@@ -15,25 +15,4 @@ public class ICDMongoDataContext<T>(
     : SpectrailMongoDbContext<DCUEntity>(databaseSettings) where T : EntityBase
 {
     public IMongoCollection<DCUEntity>? ICDData => SpectrailData;
-
-    protected override IEnumerable<DCUEntity> GetPreconfiguredData()
-    {
-        return new List<DCUEntity>
-        {
-            new()
-            {
-                CreatedDate = DateTime.Now,
-                CreatedBy = "System",
-                LastModifiedDate = DateTime.Now,
-                LastModifiedBy = "System"
-            },
-            new()
-            {
-                CreatedDate = DateTime.Now,
-                CreatedBy = "SUBHASISH",
-                LastModifiedDate = DateTime.Now,
-                LastModifiedBy = "SUBHASISH"
-            }
-        };
-    }
 }

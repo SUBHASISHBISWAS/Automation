@@ -1,6 +1,7 @@
 #region
 
 using Microsoft.OpenApi.Models;
+using SpectrailTestDataProvider.API.Middleware;
 using SpectrailTestDataProvider.Application;
 using SpectrailTestDataProvider.Infrastructure;
 using SpectrailTestDataProvider.Shared.Configuration;
@@ -13,12 +14,12 @@ var services = builder.Services;
 
 // ✅ Add AutoMapper
 services.AddAutoMapper(typeof(Program));
-
 builder.Services.AddSingleton<ServerConfigHelper>();
 
 // ✅ Add Application & Infrastructure Services
-services.RegisterInfrastructureServices(configuration);
 services.RegisterApplicationServices();
+services.RegisterInfrastructureServices(configuration);
+
 
 // ✅ Add Controllers & Swagger
 services.AddControllers();
@@ -31,6 +32,7 @@ services.AddSwaggerGen(c =>
 // ✅ Build App
 var app = builder.Build();
 
+app.UseMiddleware<ICDSeedDataMiddleware>();
 
 // ✅ Configure Middleware
 if (app.Environment.IsDevelopment())

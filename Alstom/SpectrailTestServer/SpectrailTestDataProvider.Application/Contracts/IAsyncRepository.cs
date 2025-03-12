@@ -1,6 +1,7 @@
 #region
 
 using System.Linq.Expressions;
+using SpectrailTestDataProvider.Application.Attributes;
 using SpectrailTestDataProvider.Domain.Common;
 
 #endregion
@@ -30,8 +31,11 @@ public interface IAsyncRepository<T> where T : EntityBase
     /// <summary>
     ///     ✅ Adds multiple records efficiently in batch.
     /// </summary>
-    [RepositoryOperation("Initialize")]
-    Task InitializeAsync(IEnumerable<T> entities);
+    [RepositoryOperation("AddMany")]
+    Task AddManyAsync(IEnumerable<T> entities);
+
+    [RepositoryOperation("SeedData")]
+    Task SeedDataAsync(IEnumerable<T> entities);
 
     /// <summary>
     ///     ✅ Deletes all records in the collection.

@@ -44,9 +44,14 @@ public class RepositoryBase<T>(IDataProvider<T> dataProvider) : IAsyncRepository
         return await dataProvider.DeleteAsync(id);
     }
 
-    public async Task InitializeAsync(IEnumerable<T> entities)
+    public async Task AddManyAsync(IEnumerable<T> entities)
     {
-        await dataProvider.InitializeAsync(entities);
+        await dataProvider.AddManyAsync(entities);
+    }
+
+    public async Task SeedDataAsync(IEnumerable<T> entities)
+    {
+        await dataProvider.AddManyAsync(entities);
     }
 
     public async Task<bool> DeleteAllAsync()

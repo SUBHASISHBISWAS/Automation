@@ -19,7 +19,8 @@ public interface IDataProvider<T> where T : EntityBase
     /// <summary>
     ///     ✅ Adds multiple records efficiently in batch.
     /// </summary>
-    Task InitializeAsync(IEnumerable<T> entities);
+    Task AddManyAsync(IEnumerable<T> entities);
+
 
     /// <summary>
     ///     ✅ Deletes all records in the collection.

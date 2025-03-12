@@ -13,6 +13,7 @@ namespace SpectrailTestDataProvider.Shared.Configuration;
 public class ServerConfigHelper
 {
     private readonly IConfiguration _configuration;
+    private readonly ICDConfig _icdConfig;
 
     /// <summary>
     ///     ✅ Supports Dependency Injection (Pass IConfiguration)
@@ -20,25 +21,10 @@ public class ServerConfigHelper
     public ServerConfigHelper(IConfiguration configuration)
     {
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        _icdConfig = new ICDConfig();
+        GetSection("Settings").Bind(_icdConfig);
     }
 
-    /// <summary>
-    ///     ✅ Retrieves a setting from `appsettings.json` dynamically
-    /// </summary>
-    public string? GetSetting(string key)
-    {
-        if (string.IsNullOrEmpty(key))
-            throw new ArgumentException("❌ Key cannot be null or empty.", nameof(key));
-
-        var value = _configuration[$"Settings:{key}"]
-                    ?? _configuration[$"ServerSettings:{key}"]
-                    ?? _configuration[$"PlaywrightSettings:{key}"];
-
-        if (value == null)
-            throw new Exception($"❌ Setting '{key}' not found in configuration!");
-
-        return ResolvePath(value); // ✅ Convert relative paths
-    }
 
     /// <summary>
     ///     ✅ Converts relative paths to absolute paths for cross-platform compatibility.
@@ -59,28 +45,11 @@ public class ServerConfigHelper
         return Path.Combine(basePath, path);
     }
 
-    /// <summary>
-    ///     ✅ Retrieves an integer setting from configuration (Default = 0)
-    /// </summary>
-    public int GetIntSetting(string key, int defaultValue = 0)
-    {
-        var value = _configuration[$"Settings:{key}"];
-        return int.TryParse(value, out var result) ? result : defaultValue;
-    }
-
-    /// <summary>
-    ///     ✅ Retrieves a boolean setting from configuration (Default = false)
-    /// </summary>
-    public bool GetBoolSetting(string key, bool defaultValue = false)
-    {
-        var value = _configuration[$"Settings:{key}"];
-        return bool.TryParse(value, out var result) ? result : defaultValue;
-    }
 
     /// <summary>
     ///     ✅ Retrieves Configuration Sections from `appsettings.json`
     /// </summary>
-    public IConfigurationSection GetSection(string sectionKey)
+    private IConfigurationSection GetSection(string sectionKey)
     {
         var section = _configuration.GetSection(sectionKey);
         if (!section.Exists())
@@ -91,17 +60,9 @@ public class ServerConfigHelper
     /// <summary>
     ///     ✅ Retrieves a list of ICD files from `appsettings.json`
     /// </summary>
-    public List<string> GetICDFiles()
+    public List<string>? GetICDFiles()
     {
-        var filesString = GetSetting("ICD_Files");
-
-        if (string.IsNullOrEmpty(filesString))
-            return [];
-
-        // ✅ Split CSV string into a list (Supports comma `,` or semicolon `;`)
-        return filesString.Split([',', ';'], StringSplitOptions.RemoveEmptyEntries)
-            .Select(f => ResolvePath(f.Trim()))
-            .ToList();
+        return _icdConfig.ICD_Files.Select(ResolvePath).ToList();
     }
 
     /// <summary>
@@ -109,8 +70,7 @@ public class ServerConfigHelper
     /// </summary>
     public bool IsFeatureEnabled(string feature)
     {
-        var value = GetSetting($"FeatureFlags:{feature}");
-
+        var value = _configuration[$"FeatureFlags:{feature}"];
         return bool.TryParse(value, out var result) && result;
     }
 }

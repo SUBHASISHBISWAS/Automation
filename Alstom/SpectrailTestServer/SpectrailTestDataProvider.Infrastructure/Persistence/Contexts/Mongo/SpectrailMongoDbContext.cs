@@ -19,19 +19,9 @@ public abstract class SpectrailMongoDbContext<T> : ISpectrailMongoDbContext<T> w
         var client = new MongoClient(SpectrailDatabaseSettings.ConnectionString);
         var database = client.GetDatabase(SpectrailDatabaseSettings.DatabaseName);
         SpectrailData = database.GetCollection<T>(typeof(T).Name);
-        SeedDataAsync();
     }
 
     private SpectrailMongoDatabaseSettings SpectrailDatabaseSettings { get; }
 
     public IMongoCollection<T>? SpectrailData { get; set; }
-
-
-    public void SeedDataAsync()
-    {
-        var isDataExist = SpectrailData.Find(p => true).Any();
-        if (!isDataExist) SpectrailData?.InsertManyAsync(GetPreconfiguredData());
-    }
-
-    protected abstract IEnumerable<T> GetPreconfiguredData();
 }

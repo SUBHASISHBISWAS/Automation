@@ -2,10 +2,11 @@
 
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using SpectrailTestDataProvider.Application.Enums;
 using SpectrailTestDataProvider.Application.Features.ICD.Commands.Command;
 using SpectrailTestDataProvider.Application.Features.ICD.Queries.Query;
-using SpectrailTestDataProvider.Application.Utility;
 using SpectrailTestDataProvider.Domain.Entities.ICD;
+using SpectrailTestDataProvider.Shared.Configuration;
 
 #endregion
 
@@ -13,13 +14,28 @@ namespace SpectrailTestDataProvider.API.Controllers;
 
 [ApiController]
 [Route("api/v1/[Controller]")]
-public class ICDController(IMediator mediator) : ControllerBase
+public class ICDController : ControllerBase
 {
+    private readonly IMediator _mediator;
+
+    public ICDController(IMediator mediator, ServerConfigHelper configHelper)
+    {
+        _mediator = mediator;
+        /*if (configHelper.IsFeatureEnabled("EnableEagerLoading"))
+            Task.Run(async () =>
+            {
+                var success = await _mediator.Send(new SeedICDDataCommand());
+                return success
+                    ? Ok("✅ ICD Database Seeded Successfully!")
+                    : StatusCode(500, "⚠️ ICD Database Seeding Failed!");
+            });*/
+    }
+
     /// ✅ Fetch all DCU records
     [HttpGet("all")]
     public async Task<IActionResult> GetAllDCURecords()
     {
-        var data = await mediator.Send(new RepositoryQuery<DCUEntity>());
+        var data = await _mediator.Send(new RepositoryQuery<DCUEntity>());
         return Ok(data);
     }
 
@@ -27,7 +43,7 @@ public class ICDController(IMediator mediator) : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> GetDCURecordById(string id)
     {
-        var data = await mediator.Send(new RepositoryQuery<DCUEntity>(id));
+        var data = await _mediator.Send(new RepositoryQuery<DCUEntity>(id));
         return Ok(data);
     }
 
@@ -35,7 +51,7 @@ public class ICDController(IMediator mediator) : ControllerBase
     [HttpPost("add")]
     public async Task<IActionResult> AddDCURecord([FromBody] DCUEntity entity)
     {
-        var result = await mediator.Send(new RepositoryCommand<DCUEntity>(RepositoryOperation.Add, entity));
+        var result = await _mediator.Send(new RepositoryCommand<DCUEntity>(RepositoryOperation.Add, entity));
         return result ? Ok("✅ Record Added!") : BadRequest("❌ Failed to Add!");
     }
 
@@ -44,7 +60,7 @@ public class ICDController(IMediator mediator) : ControllerBase
     public async Task<IActionResult> AddManyDCURecords([FromBody] List<DCUEntity> entities)
     {
         var result =
-            await mediator.Send(new RepositoryCommand<DCUEntity>(RepositoryOperation.Initialize, entities: entities));
+            await _mediator.Send(new RepositoryCommand<DCUEntity>(RepositoryOperation.AddMany, entities: entities));
         return result ? Ok("✅ Records Added!") : BadRequest("❌ Failed to Add!");
     }
 
@@ -52,7 +68,7 @@ public class ICDController(IMediator mediator) : ControllerBase
     [HttpPut("update/{id}")]
     public async Task<IActionResult> UpdateDCURecord(string id, [FromBody] DCUEntity entity)
     {
-        var result = await mediator.Send(new RepositoryCommand<DCUEntity>(RepositoryOperation.Update, entity, id: id));
+        var result = await _mediator.Send(new RepositoryCommand<DCUEntity>(RepositoryOperation.Update, entity, id: id));
         return result ? Ok("✅ Record Updated!") : BadRequest("❌ Failed to Update!");
     }
 
@@ -60,7 +76,7 @@ public class ICDController(IMediator mediator) : ControllerBase
     [HttpDelete("delete/{id}")]
     public async Task<IActionResult> DeleteDCURecord(string id)
     {
-        var result = await mediator.Send(new RepositoryCommand<DCUEntity>(RepositoryOperation.Delete, id: id));
+        var result = await _mediator.Send(new RepositoryCommand<DCUEntity>(RepositoryOperation.Delete, id: id));
         return result ? Ok("✅ Record Deleted!") : BadRequest("❌ Failed to Delete!");
     }
 
@@ -68,7 +84,7 @@ public class ICDController(IMediator mediator) : ControllerBase
     [HttpDelete("delete-all")]
     public async Task<IActionResult> DeleteAllDCURecords()
     {
-        var result = await mediator.Send(new RepositoryCommand<DCUEntity>(RepositoryOperation.DeleteAll));
+        var result = await _mediator.Send(new RepositoryCommand<DCUEntity>(RepositoryOperation.DeleteAll));
         return result ? Ok("✅ All Records Deleted!") : BadRequest("❌ Failed to Delete!");
     }
 }

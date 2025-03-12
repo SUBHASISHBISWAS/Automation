@@ -149,12 +149,11 @@ public class MongoDataProvider<T>(ISpectrailMongoDbContext<T> mongoDataContext) 
     /// <summary>
     ///     ✅ Adds multiple records efficiently in batch.
     /// </summary>
-    public async Task InitializeAsync(IEnumerable<T> entities)
+    public async Task AddManyAsync(IEnumerable<T> entities)
     {
         try
         {
             Debug.Assert(_collection is not null, $"{nameof(_collection)} is null");
-
             await _collection.InsertManyAsync(entities);
         }
         catch (Exception ex)

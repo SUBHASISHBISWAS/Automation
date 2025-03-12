@@ -1,7 +1,7 @@
 #region
 
 using MediatR;
-using SpectrailTestDataProvider.Application.Utility;
+using SpectrailTestDataProvider.Application.Enums;
 using SpectrailTestDataProvider.Domain.Common;
 
 #endregion

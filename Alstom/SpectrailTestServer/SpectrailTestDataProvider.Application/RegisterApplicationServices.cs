@@ -4,10 +4,12 @@ using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using SpectrailTestDataProvider.Application.Behaviours;
+using SpectrailTestDataProvider.Application.Contracts;
 using SpectrailTestDataProvider.Application.Features.ICD.Commands.Command;
 using SpectrailTestDataProvider.Application.Features.ICD.Commands.Handlers;
 using SpectrailTestDataProvider.Application.Features.ICD.Queries.Handler;
 using SpectrailTestDataProvider.Application.Features.ICD.Queries.Query;
+using SpectrailTestDataProvider.Application.Services;
 using SpectrailTestDataProvider.Domain.Entities.ICD;
 using static System.Reflection.Assembly;
 
@@ -25,7 +27,7 @@ public static class ApplicationServiceRegistration
         services.AddValidatorsFromAssembly(GetExecutingAssembly());
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UnhandledExceptionBehaviour<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
-        // ✅ Automatically register all MediatR handlers from the assembly
+
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(RepositoryQueryHandler<>).Assembly));
         services
             .AddScoped<IRequestHandler<RepositoryQuery<DCUEntity>, IEnumerable<DCUEntity>>,
@@ -34,26 +36,8 @@ public static class ApplicationServiceRegistration
         services
             .AddScoped<IRequestHandler<RepositoryCommand<DCUEntity>, bool>,
                 RepositoryCommandHandler<DCUEntity>>();
-
-
-        /*services.Scan(scan => scan
-            .FromAssemblies(typeof(RepositoryCommandHandler<>).Assembly) // ✅ Scan the correct assembly
-            .AddClasses(classes => classes.AssignableTo(typeof(IRequestHandler<,>))) // ✅ Find all MediatR handlers
-            .AsImplementedInterfaces() // ✅ Register as implemented interfaces
-            .WithScopedLifetime()); // ✅ Use scoped lifetime (same as before)
-
-        services.Scan(scan => scan
-            .FromAssemblies(typeof(RepositoryQueryHandler<>).Assembly)
-            .AddClasses(classes => classes.AssignableTo(typeof(IRequestHandler<>)))
-            .AsImplementedInterfaces()
-            .WithScopedLifetime());*/
-
-
-        /*
-        services
-            .AddScoped<IRequestHandler<GetRepositoryQuery<DCUEntity>, IAsyncRepository<DCUEntity>>,
-                GetRepositoryQueryHandler<DCUEntity>>();
-                */
+        services.AddScoped<IRequestHandler<SeedICDDataCommand, bool>, SeedICDDataCommandHandler>();
+        services.AddScoped<IExcelService, ICDExcelService>();
         return services;
     }
 }

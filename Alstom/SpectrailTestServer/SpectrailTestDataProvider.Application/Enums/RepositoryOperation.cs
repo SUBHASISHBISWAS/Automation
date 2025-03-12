@@ -1,4 +1,4 @@
-namespace SpectrailTestDataProvider.Application.Utility;
+namespace SpectrailTestDataProvider.Application.Enums;
 
 public enum RepositoryOperation
 {
@@ -7,5 +7,5 @@ public enum RepositoryOperation
     Update,
     Delete,
     DeleteAll,
-    Initialize
+    SeedData
 }

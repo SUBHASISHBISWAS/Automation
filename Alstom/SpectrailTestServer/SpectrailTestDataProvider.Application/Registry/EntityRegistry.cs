@@ -16,7 +16,7 @@ public static class EntityRegistry
     /// </summary>
     static EntityRegistry()
     {
-        RegisterEntitiesFromAssembly(Assembly.GetExecutingAssembly());
+        RegisterEntitiesFromAssembly(Assembly.GetAssembly(typeof(EntityBase)));
     }
 
     public static Type? GetEntityType(string sheetName)
@@ -30,7 +30,7 @@ public static class EntityRegistry
             _entityMappings[sheetName] = entityType;
     }
 
-    public static void RegisterEntitiesFromAssembly(Assembly assembly)
+    public static void RegisterEntitiesFromAssembly(Assembly? assembly)
     {
         var entityTypes = assembly.GetTypes()
             .Where(t => typeof(EntityBase).IsAssignableFrom(t) && !t.IsAbstract)
