@@ -17,8 +17,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\SpectrailTestDataProvider.Shared\SpectrailTestDataProvider.Shared.csproj" />
     <ProjectReference Include="..\SpectrailTestDataProvider.Application\SpectrailTestDataProvider.Application.csproj" />
     <ProjectReference Include="..\SpectrailTestDataProvider.Infrastructure\SpectrailTestDataProvider.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Utility\" />
   </ItemGroup>
 
 </Project>

@@ -7,7 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Features\ICD\Commands\" />
+    <Folder Include="Features\ICD\Commands\Models\" />
+    <Folder Include="Utility\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -20,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\SpectrailTestDataProvider.Shared\SpectrailTestDataProvider.Shared.csproj" />
     <ProjectReference Include="..\..\SpectrailTestFramework\SpectrailTestFramework.csproj" />
     <ProjectReference Include="..\SpectrailTestDataProvider.Domain\SpectrailTestDataProvider.Domain.csproj" />
   </ItemGroup>

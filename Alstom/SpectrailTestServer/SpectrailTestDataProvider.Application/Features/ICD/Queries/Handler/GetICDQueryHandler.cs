@@ -1,4 +1,4 @@
-#region
+/*#region
 
 using MediatR;
 using SpectrailTestDataProvider.Application.Contracts;
@@ -21,4 +21,5 @@ public class GetRepositoryQueryHandler<T>(IAsyncRepository<T> repository)
     {
         return Task.FromResult(_repository);
     }
-}
+}*/
+

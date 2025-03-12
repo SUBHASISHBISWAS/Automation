@@ -1,11 +1,8 @@
 #region
 
-using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using SpectrailTestDataProvider.API.Utility;
-using SpectrailTestDataProvider.Application.Contracts;
-using SpectrailTestDataProvider.Application.Features.ICD.Queries.Model;
+using SpectrailTestDataProvider.Application.Features.ICD.Commands.Command;
 using SpectrailTestDataProvider.Application.Features.ICD.Queries.Query;
 using SpectrailTestDataProvider.Domain.Entities.ICD;
 
@@ -13,50 +10,63 @@ using SpectrailTestDataProvider.Domain.Entities.ICD;
 
 namespace SpectrailTestDataProvider.API.Controllers;
 
-[Route("api/v1/[Controller]")]
 [ApiController]
-public class ICDController(IMediator mediator, IExcelService excelService, IMapper mapper,ServerConfigHelper configHelper) : 
-    ControllerBase
+[Route("api/v1/[Controller]")]
+public class ICDController(IMediator mediator) : ControllerBase
 {
-    /// <summary>
-    ///     ✅ Fetch all DCU records from MongoDB
-    /// </summary>
+    /// ✅ Fetch all DCU records
     [HttpGet("all")]
-    public async Task<ActionResult<IEnumerable<DCUEntityVm>>> GetAllDCURecords()
+    public async Task<IActionResult> GetAllDCURecords()
     {
-        var repository = await mediator.Send(new GetRepositoryQuery<DCUEntity>());
-        var data = await repository.GetAllAsync();
-        return mapper.Map<List<DCUEntityVm>>(data);
+        var data = await mediator.Send(new RepositoryQuery<DCUEntity>());
         return Ok(data);
     }
 
-    /// <summary>
-    ///     ✅ Reads an Excel file and stores DCU data in MongoDB (Detects Changes)
-    /// </summary>
-    [HttpPost("import-excel")]
-    public async Task<ActionResult<List<DCUEntityVm>>> ImportDCUDataFromExcel(
-        [FromQuery] string? filePath ="" ,
-        [FromQuery] string? sheetName = "DCU")
-    {
-        if (string.IsNullOrEmpty(filePath))
-            filePath = configHelper.GetSetting("ICD_URL-1");
-        if (string.IsNullOrEmpty(filePath))
-            sheetName = "DCU";
-        
-        var data = await excelService.ReadExcelAndStoreAsync<DCUEntity>(filePath!, sheetName);
-        return mapper.Map<List<DCUEntityVm>>(data);
-        return Ok(data);
-    }
-
-    /// <summary>
-    ///     ✅ Fetch a single DCU record by ID
-    /// </summary>
+    /// ✅ Fetch a specific DCU record by ID
     [HttpGet("{id}")]
-    public async Task<ActionResult<DCUEntityVm>> GetDCURecordById(string id)
+    public async Task<IActionResult> GetDCURecordById(string id)
     {
-        var repository = await mediator.Send(new GetRepositoryQuery<DCUEntity>());
-        var entity = await repository.GetByIdAsync(id);
-        return mapper.Map<DCUEntityVm>(entity);
-        return Ok(entity);
+        var data = await mediator.Send(new RepositoryQuery<DCUEntity>(id));
+        return Ok(data);
+    }
+
+    /// ✅ Add a single DCU record (Dynamically calls "AddAsync")
+    [HttpPost("add")]
+    public async Task<IActionResult> AddDCURecord([FromBody] DCUEntity entity)
+    {
+        var result = await mediator.Send(new RepositoryCommand<DCUEntity>("AddAsync", entity));
+        return result ? Ok("✅ Record Added!") : BadRequest("❌ Failed to Add!");
+    }
+
+    /// ✅ Add multiple DCU records (Dynamically calls "InitializeAsync")
+    [HttpPost("add-many")]
+    public async Task<IActionResult> AddManyDCURecords([FromBody] List<DCUEntity> entities)
+    {
+        var result = await mediator.Send(new RepositoryCommand<DCUEntity>("InitializeAsync", entities: entities));
+        return result ? Ok("✅ Records Added!") : BadRequest("❌ Failed to Add!");
+    }
+
+    /// ✅ Update a DCU record (Dynamically calls "UpdateAsync")
+    [HttpPut("update/{id}")]
+    public async Task<IActionResult> UpdateDCURecord(string id, [FromBody] DCUEntity entity)
+    {
+        var result = await mediator.Send(new RepositoryCommand<DCUEntity>("UpdateAsync", entity, id: id));
+        return result ? Ok("✅ Record Updated!") : BadRequest("❌ Failed to Update!");
+    }
+
+    /// ✅ Delete a DCU record (Dynamically calls "DeleteAsync")
+    [HttpDelete("delete/{id}")]
+    public async Task<IActionResult> DeleteDCURecord(string id)
+    {
+        var result = await mediator.Send(new RepositoryCommand<DCUEntity>("DeleteAsync", id: id));
+        return result ? Ok("✅ Record Deleted!") : BadRequest("❌ Failed to Delete!");
+    }
+
+    /// ✅ Delete all DCU records (Dynamically calls "DeleteAllAsync")
+    [HttpDelete("delete-all")]
+    public async Task<IActionResult> DeleteAllDCURecords()
+    {
+        var result = await mediator.Send(new RepositoryCommand<DCUEntity>("DeleteAllAsync"));
+        return result ? Ok("✅ All Records Deleted!") : BadRequest("❌ Failed to Delete!");
     }
 }

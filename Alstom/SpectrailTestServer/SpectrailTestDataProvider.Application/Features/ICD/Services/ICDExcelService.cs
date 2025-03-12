@@ -1,48 +1,71 @@
 #region
 
+using System.Reflection;
 using System.Security.Cryptography;
 using ClosedXML.Excel;
 using MediatR;
 using SpectrailTestDataProvider.Application.Contracts;
+using SpectrailTestDataProvider.Application.Features.ICD.Commands.Command;
 using SpectrailTestDataProvider.Application.Features.ICD.Queries.Query;
 using SpectrailTestDataProvider.Application.Registry;
-using SpectrailTestDataProvider.Application.Utility;
 using SpectrailTestDataProvider.Domain.Common;
+using SpectrailTestDataProvider.Shared.Configuration;
 
 #endregion
 
 namespace SpectrailTestDataProvider.Application.Features.ICD.Services;
 
-public class ICDExcelService(IMediator mediator, ApplicationConfigHelper configHelper) : IExcelService
+/// <summary>
+///     ✅ Manages dynamic reading, checksum validation, and MongoDB storage of Excel data.
+/// </summary>
+public class ICDExcelService(IMediator mediator, ServerConfigHelper configHelper) : IExcelService
 {
+    private readonly ServerConfigHelper _configHelper = configHelper;
+    private readonly IMediator _mediator = mediator;
+
+    /// <summary>
+    ///     ✅ Reads an Excel file, detects changes, and updates MongoDB.
+    /// </summary>
     public async Task<List<T>> ReadExcelAndStoreAsync<T>(string? filePath, string? sheetName)
         where T : EntityBase, new()
     {
-        var newChecksum = ComputeFileChecksum(filePath ?? throw new ArgumentNullException(nameof(filePath)));
-        var repository = await mediator.Send(new GetRepositoryQuery<T>());
-        var existingRecords = await repository.GetAllAsync();
-        var entityBases = existingRecords.ToList();
-        var existingChecksum = entityBases.FirstOrDefault()?.Checksum;
+        if (string.IsNullOrEmpty(filePath) || string.IsNullOrEmpty(sheetName))
+            throw new ArgumentNullException("❌ File path or sheet name cannot be null!");
 
-        if (configHelper.IsFeatureEnabled("EnableChecksumValidation") && existingChecksum == newChecksum)
-            return entityBases.ToList();
+        var newChecksum = ComputeFileChecksum(filePath);
 
-        var newRecords = ReadExcel<T>(filePath, sheetName ?? throw new ArgumentNullException(nameof(sheetName)));
+        // ✅ Fetch existing data
+        var existingRecords = await _mediator.Send(new RepositoryQuery<T>());
+        var existingChecksum = existingRecords.FirstOrDefault()?.Checksum;
+
+        // ✅ Skip processing if checksum validation is enabled and file is unchanged
+        if (_configHelper.IsFeatureEnabled("EnableChecksumValidation") && existingChecksum == newChecksum)
+        {
+            Console.WriteLine($"✅ No changes detected for {sheetName}. Using existing data.");
+            return existingRecords.ToList();
+        }
+
+        var newRecords = ReadExcel<T>(filePath, sheetName);
         newRecords.ForEach(record => record.Checksum = newChecksum);
 
-        if (configHelper.IsFeatureEnabled("EnableBatchProcessing"))
-        {
-            //await repository.DeleteAllAsync();
-            //await repository.AddManyAsync(newRecords);
-        }
-        else
-        {
-            foreach (var record in newRecords) await repository.AddAsync(record);
-        }
+        // ✅ Use `RepositoryCommand<T>` for efficient batch operations
+        await ExecuteRepositoryCommand(_configHelper.IsFeatureEnabled("EnableEagerLoading"), newRecords);
 
+        Console.WriteLine($"✅ Successfully processed {newRecords.Count} records from {sheetName}.");
         return newRecords;
     }
 
+    /// <summary>
+    ///     ✅ Retrieves stored data from MongoDB using RepositoryQuery.
+    /// </summary>
+    public async Task<List<T>> GetStoredDataAsync<T>() where T : EntityBase, new()
+    {
+        return (await _mediator.Send(new RepositoryQuery<T>())).ToList();
+    }
+
+    /// <summary>
+    ///     ✅ Computes MD5 checksum for file change detection.
+    /// </summary>
     public string ComputeFileChecksum(string filePath)
     {
         using var md5 = MD5.Create();
@@ -51,18 +74,43 @@ public class ICDExcelService(IMediator mediator, ApplicationConfigHelper configH
         return BitConverter.ToString(hash).Replace("-", "").ToLower();
     }
 
-    public async Task<List<T>> GetStoredDataAsync<T>() where T : EntityBase, new()
+    /// <summary>
+    ///     ✅ Executes repository operations dynamically.
+    /// </summary>
+    private async Task ExecuteRepositoryCommand<T>(bool isEagerLoading, List<T> newRecords) where T : EntityBase
     {
-        var repository = mediator.Send(new GetRepositoryQuery<T>()).Result;
-        return (await repository.GetAllAsync()).ToList();
+        if (isEagerLoading)
+        {
+            await _mediator.Send(new RepositoryCommand<T>("DeleteAll"));
+            await _mediator.Send(new RepositoryCommand<T>("Initialize", entities: newRecords));
+        }
+        else
+        {
+            foreach (var record in newRecords)
+                await _mediator.Send(new RepositoryCommand<T>("Add", record));
+        }
     }
 
-    public async Task LoadAllICDsAsync()
+    /// <summary>
+    ///     ✅ Initializes all configured ICD files from `appsettings.json`
+    /// </summary>
+    public async Task InitializeAsync()
     {
-        var icdFiles = configHelper.GetICDFiles();
-        foreach (var filePath in icdFiles) await ReadAndStoreAllSheetsAsync(filePath);
+        var icdFiles = _configHelper.GetICDFiles();
+        foreach (var filePath in icdFiles)
+            try
+            {
+                await ReadAndStoreAllSheetsAsync(filePath);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error processing {filePath}: {ex.Message}");
+            }
     }
 
+    /// <summary>
+    ///     ✅ Reads and processes all sheets dynamically.
+    /// </summary>
     private async Task ReadAndStoreAllSheetsAsync(string filePath)
     {
         if (!File.Exists(filePath))
@@ -80,20 +128,37 @@ public class ICDExcelService(IMediator mediator, ApplicationConfigHelper configH
                 continue;
             }
 
-            var readMethod = typeof(ExcelService).GetMethod(nameof(ReadExcelAndStoreAsync))?
-                .MakeGenericMethod(entityType);
-
-            await (Task)readMethod?.Invoke(this, new object[] { filePath, sheetName })!;
+            // ✅ Dynamically invoke ReadExcelAndStoreAsync<T> for detected entity type
+            await InvokeGenericMethod(nameof(ReadExcelAndStoreAsync), entityType, filePath, sheetName);
         }
     }
 
+    /// <summary>
+    ///     ✅ Dynamically invokes a generic method.
+    /// </summary>
+    private async Task InvokeGenericMethod(string methodName, Type entityType, params object[] parameters)
+    {
+        var method = typeof(ICDExcelService)
+            .GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public)?
+            .MakeGenericMethod(entityType);
+
+        if (method == null)
+            throw new InvalidOperationException($"❌ Method '{methodName}' not found in {nameof(ICDExcelService)}.");
+
+        await (Task)method.Invoke(this, parameters)!;
+    }
+
+    /// <summary>
+    ///     ✅ Reads an Excel file and maps dynamically to a strongly typed entity.
+    /// </summary>
     private List<T> ReadExcel<T>(string filePath, string sheetName) where T : EntityBase, new()
     {
         using var workbook = new XLWorkbook(filePath);
         var worksheet = workbook.Worksheet(sheetName);
-        var rows = worksheet.RowsUsed().Skip(1);
+        var rows = worksheet.RowsUsed().Skip(1); // ✅ Skip header row
         var properties = typeof(T).GetProperties();
-        var headers = worksheet.Row(1).Cells().Select(c => c.GetString().Trim()).ToList();
+        var headers = worksheet.Row(1).Cells().Select(c => c.GetString().Trim().Replace(" ", "")).ToList();
+
         var entities = new List<T>();
 
         foreach (var row in rows)
@@ -102,12 +167,20 @@ public class ICDExcelService(IMediator mediator, ApplicationConfigHelper configH
             for (var colIndex = 0; colIndex < headers.Count; colIndex++)
             {
                 var property = properties.FirstOrDefault(p =>
-                    p.Name.Equals(headers[colIndex].Replace(" ", ""), StringComparison.OrdinalIgnoreCase));
+                    p.Name.Equals(headers[colIndex], StringComparison.OrdinalIgnoreCase));
+
                 if (property != null)
-                {
-                    var cellValue = ExtractCellValue(row.Cell(colIndex + 1));
-                    property.SetValue(entity, Convert.ChangeType(cellValue, property.PropertyType));
-                }
+                    try
+                    {
+                        var cellValue = ExtractCellValue(row.Cell(colIndex + 1));
+                        if (cellValue != null)
+                            property.SetValue(entity, Convert.ChangeType(cellValue, property.PropertyType));
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(
+                            $"⚠️ Error mapping column '{headers[colIndex]}' to property '{property.Name}': {ex.Message}");
+                    }
             }
 
             entity.Checksum = ComputeFileChecksum(filePath);
@@ -117,6 +190,9 @@ public class ICDExcelService(IMediator mediator, ApplicationConfigHelper configH
         return entities;
     }
 
+    /// <summary>
+    ///     ✅ Extracts and normalizes Excel cell values.
+    /// </summary>
     private static object? ExtractCellValue(IXLCell cell)
     {
         return cell.DataType switch

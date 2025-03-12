@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.I
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{2872D2E5-46D2-477C-9567-E833E9646AF9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.Shared", "SpectrailTestDataProvider.Shared\SpectrailTestDataProvider.Shared.csproj", "{78C76E53-8AA3-4331-8E1C-21EA1CE91AB6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,6 +55,10 @@ Global
 		{2872D2E5-46D2-477C-9567-E833E9646AF9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2872D2E5-46D2-477C-9567-E833E9646AF9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2872D2E5-46D2-477C-9567-E833E9646AF9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{78C76E53-8AA3-4331-8E1C-21EA1CE91AB6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{78C76E53-8AA3-4331-8E1C-21EA1CE91AB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{78C76E53-8AA3-4331-8E1C-21EA1CE91AB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{78C76E53-8AA3-4331-8E1C-21EA1CE91AB6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -62,5 +68,6 @@ Global
 		{41D67F5E-0449-4B87-9EA6-25BDAD1F4C0D} = {5487E6A8-E869-40C3-9F0E-44968338D86F}
 		{864027F8-53BF-461D-97F6-1E7F27567223} = {5487E6A8-E869-40C3-9F0E-44968338D86F}
 		{465766BB-7A43-4355-BE51-8C98B21B76D7} = {5487E6A8-E869-40C3-9F0E-44968338D86F}
+		{78C76E53-8AA3-4331-8E1C-21EA1CE91AB6} = {5487E6A8-E869-40C3-9F0E-44968338D86F}
 	EndGlobalSection
 EndGlobal

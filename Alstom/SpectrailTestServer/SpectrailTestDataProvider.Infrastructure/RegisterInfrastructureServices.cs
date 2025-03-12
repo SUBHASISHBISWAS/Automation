@@ -1,7 +1,5 @@
 #region
 
-using System.Reflection;
-using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SpectrailTestDataProvider.Application.Contracts;
@@ -26,7 +24,7 @@ public static class InfrastructureServiceRegistration
         services.AddScoped(typeof(IDataProvider<>), typeof(MongoDataProvider<>));
         services.AddScoped(typeof(IAsyncRepository<>), typeof(ICDRepository<>));
         services.AddScoped(typeof(IICDRepository<>), typeof(ICDRepository<>));
-        services.AddScoped<IExcelService, ExcelService>();
+        services.AddScoped<IExcelService, ICDExcelService>();
         return services;
     }
 }

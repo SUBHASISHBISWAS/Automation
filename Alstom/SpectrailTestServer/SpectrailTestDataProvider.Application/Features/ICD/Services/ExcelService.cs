@@ -1,4 +1,4 @@
-#region
+/*#region
 
 using System.Security.Cryptography;
 using ClosedXML.Excel;
@@ -148,4 +148,5 @@ public class ExcelService(IMediator mediator) : IExcelService
             _ => cell.Value
         };
     }
-}
+}*/
+

@@ -11,19 +11,19 @@ namespace SpectrailTestDataProvider.Infrastructure.Repository;
 public class RepositoryBase<T>(IDataProvider<T> dataProvider) : IAsyncRepository<T>
     where T : EntityBase
 {
-    public Task<IEnumerable<T>> GetAllAsync()
+    public async Task<IEnumerable<T>> GetAllAsync()
     {
-        return dataProvider.GetAllAsync();
+        return await dataProvider.GetAllAsync();
     }
 
-    public Task<T> GetByIdAsync(string id)
+    public async Task<T> GetByIdAsync(string id)
     {
-        return dataProvider.GetByIdAsync(id);
+        return await dataProvider.GetByIdAsync(id);
     }
 
-    public Task<IEnumerable<T>> GetByFilterAsync(Expression<Func<T, bool>> filter)
+    public async Task<IEnumerable<T>> GetByFilterAsync(Expression<Func<T, bool>> filter)
     {
-        return dataProvider.GetByFilterAsync(filter);
+        return await dataProvider.GetByFilterAsync(filter);
     }
 
     /// <summary>
@@ -34,13 +34,23 @@ public class RepositoryBase<T>(IDataProvider<T> dataProvider) : IAsyncRepository
         await dataProvider.AddAsync(entity);
     }
 
-    public Task<bool> UpdateAsync(string id, T entity)
+    public async Task<bool> UpdateAsync(string id, T entity)
     {
-        return dataProvider.UpdateAsync(id, entity);
+        return await dataProvider.UpdateAsync(id, entity);
     }
 
-    public Task<bool> DeleteAsync(string id)
+    public async Task<bool> DeleteAsync(string id)
     {
-        return dataProvider.DeleteAsync(id);
+        return await dataProvider.DeleteAsync(id);
+    }
+
+    public async Task InitializeAsync(IEnumerable<T> entities)
+    {
+        await dataProvider.InitializeAsync(entities);
+    }
+
+    public async Task<bool> DeleteAllAsync()
+    {
+        return await dataProvider.DeleteAllAsync();
     }
 }

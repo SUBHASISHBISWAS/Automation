@@ -2,12 +2,13 @@
 
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using SpectrailTestDataProvider.Domain.Contract;
 
 #endregion
 
 namespace SpectrailTestDataProvider.Domain.Common;
 
-public abstract class EntityBase
+public abstract class EntityBase : IEntityBase
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]

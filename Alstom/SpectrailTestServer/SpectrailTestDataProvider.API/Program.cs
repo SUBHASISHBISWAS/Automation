@@ -1,9 +1,9 @@
 #region
 
 using Microsoft.OpenApi.Models;
-using SpectrailTestDataProvider.API.Utility;
 using SpectrailTestDataProvider.Application;
 using SpectrailTestDataProvider.Infrastructure;
+using SpectrailTestDataProvider.Shared.Configuration;
 
 #endregion
 
@@ -14,8 +14,7 @@ var services = builder.Services;
 // ✅ Add AutoMapper
 services.AddAutoMapper(typeof(Program));
 
-ServerConfigHelper configHelper = new();
-services.AddSingleton(configHelper);
+builder.Services.AddSingleton<ServerConfigHelper>();
 
 // ✅ Add Application & Infrastructure Services
 services.RegisterInfrastructureServices(configuration);
