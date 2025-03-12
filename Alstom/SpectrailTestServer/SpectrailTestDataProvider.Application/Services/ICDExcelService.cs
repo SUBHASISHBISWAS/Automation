@@ -21,9 +21,6 @@ namespace SpectrailTestDataProvider.Application.Services;
 /// </summary>
 public class ICDExcelService(IMediator mediator, ServerConfigHelper configHelper) : IExcelService
 {
-    private readonly ServerConfigHelper _configHelper = configHelper;
-    private readonly IMediator _mediator = mediator;
-
     /// <summary>
     ///     ✅ Reads an Excel file, detects changes, and updates MongoDB.
     /// </summary>
@@ -36,12 +33,12 @@ public class ICDExcelService(IMediator mediator, ServerConfigHelper configHelper
         var newChecksum = ComputeFileChecksum(filePath);
 
         // ✅ Fetch existing data
-        var existingRecords = await _mediator.Send(new RepositoryQuery<T>());
+        var existingRecords = await mediator.Send(new RepositoryQuery<T>());
         var entityBases = existingRecords.ToList();
         var existingChecksum = entityBases.FirstOrDefault()?.Checksum;
 
         // ✅ Skip processing if checksum validation is enabled and file is unchanged
-        if (_configHelper.IsFeatureEnabled("EnableChecksumValidation") && existingChecksum == newChecksum)
+        if (configHelper.IsFeatureEnabled("EnableChecksumValidation") && existingChecksum == newChecksum)
         {
             Console.WriteLine($"✅ No changes detected for {sheetName}. Using existing data.");
             return entityBases.ToList();
@@ -51,8 +48,8 @@ public class ICDExcelService(IMediator mediator, ServerConfigHelper configHelper
         newRecords.ForEach(record => record.Checksum = newChecksum);
 
         // ✅ Use `RepositoryCommand<T>` for efficient batch operations
-        var isFeatureEnabled = _configHelper.IsFeatureEnabled("EnableEagerLoading") ||
-                               _configHelper.IsFeatureEnabled("EnableMiddlewarePreloading");
+        var isFeatureEnabled = configHelper.IsFeatureEnabled("EnableEagerLoading") ||
+                               configHelper.IsFeatureEnabled("EnableMiddlewarePreloading");
         await ExecuteRepositoryCommand(isFeatureEnabled, newRecords);
 
         Console.WriteLine($"✅ Successfully processed {newRecords.Count} records from {sheetName}.");
@@ -64,7 +61,7 @@ public class ICDExcelService(IMediator mediator, ServerConfigHelper configHelper
     /// </summary>
     public async Task<List<T>> GetStoredDataAsync<T>() where T : EntityBase, new()
     {
-        return (await _mediator.Send(new RepositoryQuery<T>())).ToList();
+        return (await mediator.Send(new RepositoryQuery<T>())).ToList();
     }
 
     /// <summary>
@@ -83,7 +80,7 @@ public class ICDExcelService(IMediator mediator, ServerConfigHelper configHelper
     /// </summary>
     public async Task InitializeAsync()
     {
-        var icdFiles = _configHelper.GetICDFiles();
+        var icdFiles = configHelper.GetICDFiles();
         foreach (var filePath in icdFiles)
             try
             {
@@ -102,13 +99,13 @@ public class ICDExcelService(IMediator mediator, ServerConfigHelper configHelper
     {
         if (isEagerLoading)
         {
-            await _mediator.Send(new RepositoryCommand<T>(RepositoryOperation.DeleteAll));
-            await _mediator.Send(new RepositoryCommand<T>(RepositoryOperation.SeedData, entities: newRecords));
+            await mediator.Send(new RepositoryCommand<T>(RepositoryOperation.DeleteAll));
+            await mediator.Send(new RepositoryCommand<T>(RepositoryOperation.SeedData, entities: newRecords));
         }
         else
         {
             foreach (var record in newRecords)
-                await _mediator.Send(new RepositoryCommand<T>(RepositoryOperation.Add, record));
+                await mediator.Send(new RepositoryCommand<T>(RepositoryOperation.Add, record));
         }
     }
 
