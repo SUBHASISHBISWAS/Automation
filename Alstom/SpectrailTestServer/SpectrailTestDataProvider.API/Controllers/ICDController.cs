@@ -21,14 +21,14 @@ public class ICDController : ControllerBase
     public ICDController(IMediator mediator, ServerConfigHelper configHelper)
     {
         _mediator = mediator;
-        /*if (configHelper.IsFeatureEnabled("EnableEagerLoading"))
+        if (configHelper.IsFeatureEnabled("EnableEagerLoading"))
             Task.Run(async () =>
             {
                 var success = await _mediator.Send(new SeedICDDataCommand());
                 return success
                     ? Ok("✅ ICD Database Seeded Successfully!")
                     : StatusCode(500, "⚠️ ICD Database Seeding Failed!");
-            });*/
+            });
     }
 
     /// ✅ Fetch all DCU records
