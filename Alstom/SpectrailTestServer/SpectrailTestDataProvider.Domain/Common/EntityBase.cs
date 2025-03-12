@@ -1,5 +1,6 @@
 #region
 
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using SpectrailTestDataProvider.Domain.Contract;
 
@@ -9,9 +10,9 @@ namespace SpectrailTestDataProvider.Domain.Common;
 
 public abstract class EntityBase : IEntityBase
 {
-    /*[BsonId] // ✅ Marks it as the primary key
-    [BsonRepresentation(BsonType.ObjectId)] // ✅ Ensures MongoDB stores it correctly
-    public string Id { get; set; } = ObjectId.GenerateNewId().ToString(); */ // ✅ Generate new ObjectId when needed
+    [BsonId]
+    [BsonRepresentation(BsonType.ObjectId)]
+    public ObjectId Id { get; set; } = ObjectId.GenerateNewId();
 
     public string? CreatedBy { get; set; } = "System";
     public DateTime CreatedDate { get; set; } = DateTime.Now;
