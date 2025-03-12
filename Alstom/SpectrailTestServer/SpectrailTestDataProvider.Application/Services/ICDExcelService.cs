@@ -123,14 +123,21 @@ public class ICDExcelService(IMediator mediator, ServerConfigHelper configHelper
             var sheetName = worksheet.Name;
             var entityType = EntityRegistry.GetEntityType(sheetName);
 
-            if (entityType == null)
+            if (entityType == null || !typeof(EntityBase).IsAssignableFrom(entityType))
             {
-                Console.WriteLine($"⚠️ No registered entity for sheet: {sheetName}. Skipping...");
+                Console.WriteLine($"⚠️ No valid entity mapped for sheet: {sheetName}. Skipping...");
                 continue;
             }
 
-            // ✅ Dynamically invoke ReadExcelAndStoreAsync<T> for detected entity type
-            await InvokeGenericMethod(nameof(ReadExcelAndStoreAsync), entityType, filePath, sheetName);
+            // ✅ Ensure entity type is properly instantiated before proceeding
+            try
+            {
+                await InvokeGenericMethod(nameof(ReadExcelAndStoreAsync), entityType, filePath, sheetName);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error processing sheet '{sheetName}': {ex.Message}");
+            }
         }
     }
 
@@ -175,7 +182,43 @@ public class ICDExcelService(IMediator mediator, ServerConfigHelper configHelper
                 {
                     var cellValue = ExtractCellValue(row.Cell(colIndex + 1));
                     if (cellValue != null)
-                        property.SetValue(entity, Convert.ChangeType(cellValue, property.PropertyType));
+                    {
+                        try
+                        {
+                            var targetType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+
+                            // ✅ Normalize cell value
+                            var sanitizedValue = cellValue.ToString()?.Trim();
+                            
+                            // ✅ Skip conversion if value is empty
+                            if (string.IsNullOrEmpty(sanitizedValue))
+                            {
+                                continue;
+                            }
+
+                            // ✅ Handle Enum values safely
+                            if (property.PropertyType.IsEnum)
+                            {
+                                if (Enum.TryParse(property.PropertyType, sanitizedValue, true, out var enumValue))
+                                {
+                                    property.SetValue(entity, enumValue);
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"⚠️ Invalid enum value '{sanitizedValue}' for property '{property.Name}'.");
+                                }
+                            }
+                            else
+                            {
+                                property.SetValue(entity, Convert.ChangeType(sanitizedValue, targetType));
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(
+                                $"⚠️ Error converting column '{headers[colIndex]}' value '{cellValue}' to property '{property.Name}': {ex.Message}");
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
