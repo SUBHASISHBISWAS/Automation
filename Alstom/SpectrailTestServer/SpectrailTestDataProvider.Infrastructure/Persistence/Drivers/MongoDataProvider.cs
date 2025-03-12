@@ -36,8 +36,16 @@ public class MongoDataProvider<T>(ISpectrailMongoDbContext<T> mongoDataContext) 
 
     public async Task AddAsync(T entity)
     {
-        Debug.Assert(_collection != null, nameof(_collection) + " != null");
-        await _collection!.InsertOneAsync(entity);
+        try
+        {
+            Debug.Assert(_collection != null, nameof(_collection) + " != null");
+            await _collection!.InsertOneAsync(entity);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
     }
 
     public async Task<bool> UpdateAsync(string id, T entity)
