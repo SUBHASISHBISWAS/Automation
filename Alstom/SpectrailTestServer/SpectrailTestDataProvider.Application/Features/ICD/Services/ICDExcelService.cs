@@ -8,6 +8,7 @@ using SpectrailTestDataProvider.Application.Contracts;
 using SpectrailTestDataProvider.Application.Features.ICD.Commands.Command;
 using SpectrailTestDataProvider.Application.Features.ICD.Queries.Query;
 using SpectrailTestDataProvider.Application.Registry;
+using SpectrailTestDataProvider.Application.Utility;
 using SpectrailTestDataProvider.Domain.Common;
 using SpectrailTestDataProvider.Shared.Configuration;
 
@@ -36,13 +37,14 @@ public class ICDExcelService(IMediator mediator, ServerConfigHelper configHelper
 
         // ✅ Fetch existing data
         var existingRecords = await _mediator.Send(new RepositoryQuery<T>());
-        var existingChecksum = existingRecords.FirstOrDefault()?.Checksum;
+        var entityBases = existingRecords.ToList();
+        var existingChecksum = entityBases.FirstOrDefault()?.Checksum;
 
         // ✅ Skip processing if checksum validation is enabled and file is unchanged
         if (_configHelper.IsFeatureEnabled("EnableChecksumValidation") && existingChecksum == newChecksum)
         {
             Console.WriteLine($"✅ No changes detected for {sheetName}. Using existing data.");
-            return existingRecords.ToList();
+            return entityBases.ToList();
         }
 
         var newRecords = ReadExcel<T>(filePath, sheetName);
@@ -81,13 +83,13 @@ public class ICDExcelService(IMediator mediator, ServerConfigHelper configHelper
     {
         if (isEagerLoading)
         {
-            await _mediator.Send(new RepositoryCommand<T>("DeleteAll"));
-            await _mediator.Send(new RepositoryCommand<T>("Initialize", entities: newRecords));
+            await _mediator.Send(new RepositoryCommand<T>(RepositoryOperation.DeleteAll));
+            await _mediator.Send(new RepositoryCommand<T>(RepositoryOperation.Initialize, entities: newRecords));
         }
         else
         {
             foreach (var record in newRecords)
-                await _mediator.Send(new RepositoryCommand<T>("Add", record));
+                await _mediator.Send(new RepositoryCommand<T>(RepositoryOperation.Add, record));
         }
     }
 
@@ -169,18 +171,18 @@ public class ICDExcelService(IMediator mediator, ServerConfigHelper configHelper
                 var property = properties.FirstOrDefault(p =>
                     p.Name.Equals(headers[colIndex], StringComparison.OrdinalIgnoreCase));
 
-                if (property != null)
-                    try
-                    {
-                        var cellValue = ExtractCellValue(row.Cell(colIndex + 1));
-                        if (cellValue != null)
-                            property.SetValue(entity, Convert.ChangeType(cellValue, property.PropertyType));
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(
-                            $"⚠️ Error mapping column '{headers[colIndex]}' to property '{property.Name}': {ex.Message}");
-                    }
+                if (property == null) continue;
+                try
+                {
+                    var cellValue = ExtractCellValue(row.Cell(colIndex + 1));
+                    if (cellValue != null)
+                        property.SetValue(entity, Convert.ChangeType(cellValue, property.PropertyType));
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(
+                        $"⚠️ Error mapping column '{headers[colIndex]}' to property '{property.Name}': {ex.Message}");
+                }
             }
 
             entity.Checksum = ComputeFileChecksum(filePath);

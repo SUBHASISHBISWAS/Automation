@@ -1,5 +1,6 @@
 #region
 
+using System.Reflection;
 using MediatR;
 using SpectrailTestDataProvider.Application.Contracts;
 using SpectrailTestDataProvider.Application.Features.ICD.Commands.Command;
@@ -12,16 +13,20 @@ namespace SpectrailTestDataProvider.Application.Features.ICD.Commands.Handlers;
 public class RepositoryCommandHandler<T>(IAsyncRepository<T> repository) : IRequestHandler<RepositoryCommand<T>, bool>
     where T : EntityBase
 {
+    private static readonly Dictionary<string, MethodInfo> _methodCache = typeof(IAsyncRepository<T>)
+        .GetMethods()
+        .ToDictionary(
+            m => m.GetCustomAttribute<RepositoryOperationAttribute>()?.Name ??
+                 m.Name, // ✅ Use attribute if available, otherwise fallback to method name
+            m => m
+        );
+
     public async Task<bool> Handle(RepositoryCommand<T> request, CancellationToken cancellationToken)
     {
         try
         {
-            var repositoryType = typeof(IAsyncRepository<T>);
-            var method = repositoryType.GetMethod(request.Operation);
-
-            if (method == null)
+            if (!_methodCache.TryGetValue(request.Operation, out var method))
                 throw new InvalidOperationException($"❌ Operation '{request.Operation}' not found in repository!");
-
             object?[] parameters = method.GetParameters().Length switch
             {
                 1 when request.Entity != null => [request.Entity],
@@ -31,16 +36,12 @@ public class RepositoryCommandHandler<T>(IAsyncRepository<T> repository) : IRequ
             };
 
             var result = method.Invoke(repository, parameters);
-            switch (result)
+            return await (result switch
             {
-                case Task<bool> taskBool:
-                    return await taskBool;
-                case Task task:
-                    await task;
-                    break;
-            }
-
-            return true;
+                Task<bool> taskBool => taskBool,
+                Task task => task.ContinueWith(_ => true, cancellationToken),
+                _ => Task.FromResult(true)
+            });
         }
         catch (Exception ex)
         {

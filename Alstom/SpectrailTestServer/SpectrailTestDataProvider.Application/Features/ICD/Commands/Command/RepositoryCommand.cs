@@ -1,22 +1,36 @@
 #region
 
 using MediatR;
+using SpectrailTestDataProvider.Application.Utility;
 using SpectrailTestDataProvider.Domain.Common;
 
 #endregion
 
 namespace SpectrailTestDataProvider.Application.Features.ICD.Commands.Command;
 
-public class RepositoryCommand<T>(
-    string operation,
-    T? entity = null,
-    IEnumerable<T>? entities = null,
-    string? id = null)
-    : IRequest<bool>
-    where T : EntityBase
+public class RepositoryCommand<T> : IRequest<bool> where T : EntityBase
 {
-    public string Operation { get; } = operation;
-    public string? Id { get; } = id;
-    public T? Entity { get; } = entity;
-    public IEnumerable<T>? Entities { get; } = entities;
+    // ✅ Constructor supporting Enum
+    public RepositoryCommand(RepositoryOperation operation, T? entity = null, IEnumerable<T>? entities = null,
+        string? id = null)
+    {
+        Operation = operation.ToString();
+        Entity = entity;
+        Entities = entities;
+        Id = id;
+    }
+
+    // ✅ Constructor supporting String for backward compatibility
+    public RepositoryCommand(string operation, T? entity = null, IEnumerable<T>? entities = null, string? id = null)
+    {
+        Operation = operation;
+        Entity = entity;
+        Entities = entities;
+        Id = id;
+    }
+
+    public string Operation { get; }
+    public T? Entity { get; }
+    public IEnumerable<T>? Entities { get; }
+    public string? Id { get; }
 }
