@@ -7,6 +7,7 @@ using SpectrailTestDataProvider.Application.Behaviours;
 using SpectrailTestDataProvider.Application.Contracts;
 using SpectrailTestDataProvider.Application.Features.ICD.Queries.Handler;
 using SpectrailTestDataProvider.Application.Features.ICD.Queries.Query;
+using SpectrailTestDataProvider.Application.Utility;
 using SpectrailTestDataProvider.Domain.Entities.ICD;
 using static System.Reflection.Assembly;
 
@@ -19,6 +20,8 @@ public static class ApplicationServiceRegistration
     public static IServiceCollection RegisterApplicationServices(this IServiceCollection services)
     {
         // ReSharper disable once HeapView.ObjectAllocation
+        ApplicationConfigHelper configHelper = new();
+        services.AddSingleton(configHelper);
         services.AddAutoMapper(GetExecutingAssembly());
         services.AddValidatorsFromAssembly(GetExecutingAssembly());
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UnhandledExceptionBehaviour<,>));

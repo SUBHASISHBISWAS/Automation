@@ -85,4 +85,14 @@ public class ServerConfigHelper
             throw new Exception($"❌ Section '{sectionKey}' not found in appsettings.json!");
         return section;
     }
+
+    public List<string> GetICDFiles()
+    {
+        return _configuration.GetSection("Settings:ICD_Files").Get<List<string>>() ?? new List<string>();
+    }
+
+    public bool IsFeatureEnabled(string feature)
+    {
+        return _configuration.GetValue<bool>($"FeatureFlags:{feature}");
+    }
 }
