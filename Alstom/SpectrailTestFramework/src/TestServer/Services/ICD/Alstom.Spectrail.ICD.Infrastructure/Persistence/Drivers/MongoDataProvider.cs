@@ -2,11 +2,10 @@
 
 using System.Diagnostics;
 using System.Linq.Expressions;
+using Alstom.Spectrail.ICD.Application.Contracts;
+using Alstom.Spectrail.Server.Common.Entities;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Alstom.Spectrail.ICD.Application.Contracts;
-using Alstom.Spectrail.ICD.Domain.Common;
-using Alstom.Spectrail.Server.Common.Entities;
 
 #endregion
 

@@ -1,9 +1,9 @@
 #region
 
 using System.Diagnostics;
-using MediatR;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
 using Alstom.Spectrail.Server.Common.Configuration;
+using MediatR;
 
 #endregion
 

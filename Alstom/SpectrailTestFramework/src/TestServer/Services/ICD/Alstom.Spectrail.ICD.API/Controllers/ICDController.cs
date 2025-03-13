@@ -1,12 +1,12 @@
 #region
 
-using MediatR;
-using Microsoft.AspNetCore.Mvc;
 using Alstom.Spectrail.ICD.Application.Enums;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Queries.Query;
 using Alstom.Spectrail.ICD.Domain.Entities.ICD;
 using Alstom.Spectrail.Server.Common.Configuration;
+using MediatR;
+using Microsoft.AspNetCore.Mvc;
 
 #endregion
 

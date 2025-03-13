@@ -1,10 +1,10 @@
 #region
 
-using Microsoft.OpenApi.Models;
 using Alstom.Spectrail.ICD.API.Middleware;
 using Alstom.Spectrail.ICD.Application;
 using Alstom.Spectrail.ICD.Infrastructure;
 using Alstom.Spectrail.Server.Common.Configuration;
+using Microsoft.OpenApi.Models;
 
 #endregion
 
