@@ -10,6 +10,7 @@ namespace Alstom.Spectrail.ICD.Application.Registry;
 
 public static class EntityRegistry
 {
+    // ReSharper disable once InconsistentNaming
     private static readonly Dictionary<string, Type> _entityMappings = new();
 
     /// <summary>
@@ -25,7 +26,7 @@ public static class EntityRegistry
     /// </summary>
     public static Type? GetEntityType(string sheetName)
     {
-        return _entityMappings.TryGetValue(sheetName, out var entityType) ? entityType : null;
+        return _entityMappings.GetValueOrDefault(sheetName);
     }
 
     /// <summary>
@@ -44,7 +45,9 @@ public static class EntityRegistry
     /// </summary>
     private static void RegisterEntitiesFromAssembly()
     {
-        var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+        var assemblies = AppDomain.CurrentDomain.GetAssemblies()
+            .Where(asm => asm.FullName!.StartsWith("Alstom.Spectrail"))
+            .ToList();
 
         foreach (var asm in assemblies)
         {
@@ -57,11 +60,8 @@ public static class EntityRegistry
             foreach (var type in entityTypes)
             {
                 var entityName = type.Name.Replace("Entity", "");
-                if (!_entityMappings.ContainsKey(entityName))
-                {
-                    _entityMappings[entityName] = type;
-                    Console.WriteLine($"✅ Registered Entity: {type.Name} as '{entityName}'");
-                }
+                if (!_entityMappings.TryAdd(entityName, type)) continue;
+                Console.WriteLine($"✅ Registered Entity: {type.Name} as '{entityName}'");
             }
         }
     }
