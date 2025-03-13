@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestFramework", "S
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTests", "SpectrailTests\SpectrailTests.csproj", "{F5D356FF-9B9B-440B-848D-12958FA1D9A1}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SpectrailTestServer", "SpectrailTestServer", "{5487E6A8-E869-40C3-9F0E-44968338D86F}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestServer", "TestServer", "{5487E6A8-E869-40C3-9F0E-44968338D86F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.API", "SpectrailTestServer\SpectrailTestDataProvider.API\SpectrailTestDataProvider.API.csproj", "{93901AFB-281F-4499-B54A-00271FC35390}"
 EndProject
@@ -20,6 +20,10 @@ EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{2872D2E5-46D2-477C-9567-E833E9646AF9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.Shared", "SpectrailTestDataProvider.Shared\SpectrailTestDataProvider.Shared.csproj", "{78C76E53-8AA3-4331-8E1C-21EA1CE91AB6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Framework", "Framework", "{880F98CC-85AE-415C-9BF2-B5C2F7FB4627}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{50F5DAFC-E089-415E-8C9D-CA6F95FFD67B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -69,5 +73,7 @@ Global
 		{864027F8-53BF-461D-97F6-1E7F27567223} = {5487E6A8-E869-40C3-9F0E-44968338D86F}
 		{465766BB-7A43-4355-BE51-8C98B21B76D7} = {5487E6A8-E869-40C3-9F0E-44968338D86F}
 		{78C76E53-8AA3-4331-8E1C-21EA1CE91AB6} = {5487E6A8-E869-40C3-9F0E-44968338D86F}
+		{C1C7883C-5EF6-4D02-A271-A81249E7FB1B} = {880F98CC-85AE-415C-9BF2-B5C2F7FB4627}
+		{F5D356FF-9B9B-440B-848D-12958FA1D9A1} = {50F5DAFC-E089-415E-8C9D-CA6F95FFD67B}
 	EndGlobalSection
 EndGlobal
