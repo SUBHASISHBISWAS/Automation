@@ -45,6 +45,6 @@ if (app.Environment.IsDevelopment())
 app.UseRouting();
 app.UseAuthorization();
 app.MapControllers();
-
+app.MapGet("/health", () => Results.Ok("Healthy"));
 // ✅ Run Application
 app.Run();

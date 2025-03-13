@@ -40,7 +40,7 @@ services:
       - "SpectrailMongoDatabaseSettings:ConnectionString=mongodb://ICD-DB:27017"
       - "SpectrailMongoDatabaseSettings:DatabaseName=ICDDB"
       - "SpectrailMongoDatabaseSettings:CollectionName=ICDDatas"
-      - "Settings__ICD_Files__0=DATA/ICDs/TRDP_ICD_GENERATED.xlsx"
+      - "Settings__ICD_FOLDER_PATH=DATA/ICDs"
       - "FeatureFlags__EnableChecksumValidation=true"
       - "FeatureFlags__EnableEagerLoading=false"
       - "FeatureFlags__EnableMiddlewarePreloading=true"
@@ -52,7 +52,7 @@ services:
     volumes:
       - ${APPDATA:-$HOME/.microsoft}/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA:-$HOME/.aspnet}/Https:/home/app/.aspnet/https:ro
-      - ${APPDATA:-$HOME}/SpectrailArtifacts/DATA/ICDs/TRDP_ICD_GENERATED.xlsx:/home/app/SpectrailArtifacts/DATA/ICDs/TRDP_ICD_GENERATED.xlsx:ro"
+      - ${APPDATA:-$HOME}/SpectrailArtifacts/DATA/ICDs:/home/app/SpectrailArtifacts/DATA/ICDs:ro"
       
     networks:
       - alstom_spectrail_server_network
@@ -60,11 +60,11 @@ services:
     restart: always
     ## 🔹 Add Health Check (Ensure API is running)
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD", "curl -f http://localhost:8080/health || exit 1"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 10s
+      retries: 5
+      start_period: 60s
     ## 🔹 Add Logging Options (Limit log size)
     logging:
       driver: "json-file"
