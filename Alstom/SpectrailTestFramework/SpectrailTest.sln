@@ -17,7 +17,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BuildingBlocks", "BuildingB
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ApiGateways", "ApiGateways", "{140349DE-64E5-485C-971B-BA35995B96B3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.API", "src\TestServer\Services\ICD\SpectrailTestDataProvider.API\SpectrailTestDataProvider.API.csproj", "{C2360D09-14E5-41F9-895F-9E98515FEDF9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alstom.Spectrail.ICD.API", "src\TestServer\Services\ICD\Alstom.Spectrail.ICD.API\Alstom.Spectrail.ICD.API.csproj", "{C2360D09-14E5-41F9-895F-9E98515FEDF9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.Infrastructure", "src\TestServer\Services\ICD\SpectrailTestDataProvider.Infrastructure\SpectrailTestDataProvider.Infrastructure.csproj", "{2CF4A166-6F8F-4054-B62F-F8E5C8177DBD}"
 EndProject

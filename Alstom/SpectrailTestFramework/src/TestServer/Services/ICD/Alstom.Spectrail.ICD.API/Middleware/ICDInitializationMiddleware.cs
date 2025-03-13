@@ -7,7 +7,7 @@ using SpectrailTestDataProvider.Shared.Configuration;
 
 #endregion
 
-namespace SpectrailTestDataProvider.API.Middleware;
+namespace Alstom.Spectrail.ICD.API.Middleware;
 
 /// <summary>
 ///     ✅ Middleware to Seed ICD Data on Application Startup based on Feature Flags

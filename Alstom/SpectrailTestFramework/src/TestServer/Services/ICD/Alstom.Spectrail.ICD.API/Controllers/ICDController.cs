@@ -10,7 +10,7 @@ using SpectrailTestDataProvider.Shared.Configuration;
 
 #endregion
 
-namespace SpectrailTestDataProvider.API.Controllers;
+namespace Alstom.Spectrail.ICD.API.Controllers;
 
 [ApiController]
 [Route("api/v1/[Controller]")]

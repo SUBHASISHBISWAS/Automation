@@ -4,7 +4,7 @@ using AutoMapper;
 
 #endregion
 
-namespace SpectrailTestDataProvider.API.Mappings;
+namespace Alstom.Spectrail.ICD.API.Mappings;
 
 public class MappingProfile : Profile
 {

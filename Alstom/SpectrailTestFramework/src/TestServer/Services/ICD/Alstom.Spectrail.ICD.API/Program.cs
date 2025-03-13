@@ -1,7 +1,7 @@
 #region
 
 using Microsoft.OpenApi.Models;
-using SpectrailTestDataProvider.API.Middleware;
+using Alstom.Spectrail.ICD.API.Middleware;
 using SpectrailTestDataProvider.Application;
 using SpectrailTestDataProvider.Infrastructure;
 using SpectrailTestDataProvider.Shared.Configuration;
@@ -25,7 +25,7 @@ services.RegisterInfrastructureServices(configuration);
 services.AddControllers();
 services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "SpectrailTestDataProvider.API", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Alstom.Spectrail.ICD.API", Version = "v1" });
 });
 
 
@@ -39,7 +39,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
     app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "SpectrailTestDataProvider.API v1"));
+    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Alstom.Spectrail.ICD.API v1"));
 }
 
 app.UseRouting();
