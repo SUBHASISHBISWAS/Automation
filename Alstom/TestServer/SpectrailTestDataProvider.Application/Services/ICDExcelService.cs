@@ -182,31 +182,24 @@ public class ICDExcelService(IMediator mediator, ServerConfigHelper configHelper
                 {
                     var cellValue = ExtractCellValue(row.Cell(colIndex + 1));
                     if (cellValue != null)
-                    {
                         try
                         {
                             var targetType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
 
                             // ✅ Normalize cell value
                             var sanitizedValue = cellValue.ToString()?.Trim();
-                            
+
                             // ✅ Skip conversion if value is empty
-                            if (string.IsNullOrEmpty(sanitizedValue))
-                            {
-                                continue;
-                            }
+                            if (string.IsNullOrEmpty(sanitizedValue)) continue;
 
                             // ✅ Handle Enum values safely
                             if (property.PropertyType.IsEnum)
                             {
                                 if (Enum.TryParse(property.PropertyType, sanitizedValue, true, out var enumValue))
-                                {
                                     property.SetValue(entity, enumValue);
-                                }
                                 else
-                                {
-                                    Console.WriteLine($"⚠️ Invalid enum value '{sanitizedValue}' for property '{property.Name}'.");
-                                }
+                                    Console.WriteLine(
+                                        $"⚠️ Invalid enum value '{sanitizedValue}' for property '{property.Name}'.");
                             }
                             else
                             {
@@ -218,7 +211,6 @@ public class ICDExcelService(IMediator mediator, ServerConfigHelper configHelper
                             Console.WriteLine(
                                 $"⚠️ Error converting column '{headers[colIndex]}' value '{cellValue}' to property '{property.Name}': {ex.Message}");
                         }
-                    }
                 }
                 catch (Exception ex)
                 {
