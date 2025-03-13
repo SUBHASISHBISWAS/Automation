@@ -15,21 +15,19 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestFramework", "F
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTests", "Tests\SpectrailTests\SpectrailTests.csproj", "{E45F17B2-78B1-4BB8-AA4C-0559C41A2B6C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.API", "TestServer\SpectrailTestDataProvider.API\SpectrailTestDataProvider.API.csproj", "{B76A7372-AF54-4384-9B8F-467E5D22A0D4}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.Shared", "TestServer\SpectrailTestDataProvider.Shared\SpectrailTestDataProvider.Shared.csproj", "{91E980D3-0126-4863-8984-1FF453DC13B0}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.Application", "TestServer\SpectrailTestDataProvider.Application\SpectrailTestDataProvider.Application.csproj", "{F0EF0A8F-C79C-4709-96B0-8C16B74B70BB}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.Infrastructure", "TestServer\SpectrailTestDataProvider.Infrastructure\SpectrailTestDataProvider.Infrastructure.csproj", "{250AA299-2FE4-4D96-AFA6-2863EF1AE80E}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.Domain", "TestServer\SpectrailTestDataProvider.Domain\SpectrailTestDataProvider.Domain.csproj", "{3490789D-FDAD-4D37-A9EE-AB6EE35764CE}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{EB996A99-19A2-41BA-8D74-E6279AA09679}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BuildingBlocks", "BuildingBlocks", "{12A4CCAD-E72B-472D-B279-6B165A11DE5E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ApiGateways", "ApiGateways", "{140349DE-64E5-485C-971B-BA35995B96B3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.API", "src\TestServer\Services\ICD\SpectrailTestDataProvider.API\SpectrailTestDataProvider.API.csproj", "{C2360D09-14E5-41F9-895F-9E98515FEDF9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.Infrastructure", "src\TestServer\Services\ICD\SpectrailTestDataProvider.Infrastructure\SpectrailTestDataProvider.Infrastructure.csproj", "{2CF4A166-6F8F-4054-B62F-F8E5C8177DBD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.Application", "src\TestServer\Services\ICD\SpectrailTestDataProvider.Application\SpectrailTestDataProvider.Application.csproj", "{97DDD98C-74A7-4EF2-A53F-9E2122EF45EA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.Domain", "src\TestServer\Services\ICD\SpectrailTestDataProvider.Domain\SpectrailTestDataProvider.Domain.csproj", "{7929FC3B-953B-43DD-92CF-CB618603F2ED}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -49,26 +47,22 @@ Global
 		{E45F17B2-78B1-4BB8-AA4C-0559C41A2B6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E45F17B2-78B1-4BB8-AA4C-0559C41A2B6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E45F17B2-78B1-4BB8-AA4C-0559C41A2B6C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B76A7372-AF54-4384-9B8F-467E5D22A0D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B76A7372-AF54-4384-9B8F-467E5D22A0D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B76A7372-AF54-4384-9B8F-467E5D22A0D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B76A7372-AF54-4384-9B8F-467E5D22A0D4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{91E980D3-0126-4863-8984-1FF453DC13B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{91E980D3-0126-4863-8984-1FF453DC13B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{91E980D3-0126-4863-8984-1FF453DC13B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{91E980D3-0126-4863-8984-1FF453DC13B0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F0EF0A8F-C79C-4709-96B0-8C16B74B70BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F0EF0A8F-C79C-4709-96B0-8C16B74B70BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F0EF0A8F-C79C-4709-96B0-8C16B74B70BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F0EF0A8F-C79C-4709-96B0-8C16B74B70BB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{250AA299-2FE4-4D96-AFA6-2863EF1AE80E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{250AA299-2FE4-4D96-AFA6-2863EF1AE80E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{250AA299-2FE4-4D96-AFA6-2863EF1AE80E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{250AA299-2FE4-4D96-AFA6-2863EF1AE80E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3490789D-FDAD-4D37-A9EE-AB6EE35764CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3490789D-FDAD-4D37-A9EE-AB6EE35764CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3490789D-FDAD-4D37-A9EE-AB6EE35764CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3490789D-FDAD-4D37-A9EE-AB6EE35764CE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2360D09-14E5-41F9-895F-9E98515FEDF9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2360D09-14E5-41F9-895F-9E98515FEDF9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2360D09-14E5-41F9-895F-9E98515FEDF9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2360D09-14E5-41F9-895F-9E98515FEDF9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2CF4A166-6F8F-4054-B62F-F8E5C8177DBD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2CF4A166-6F8F-4054-B62F-F8E5C8177DBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2CF4A166-6F8F-4054-B62F-F8E5C8177DBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2CF4A166-6F8F-4054-B62F-F8E5C8177DBD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{97DDD98C-74A7-4EF2-A53F-9E2122EF45EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97DDD98C-74A7-4EF2-A53F-9E2122EF45EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97DDD98C-74A7-4EF2-A53F-9E2122EF45EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97DDD98C-74A7-4EF2-A53F-9E2122EF45EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7929FC3B-953B-43DD-92CF-CB618603F2ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7929FC3B-953B-43DD-92CF-CB618603F2ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7929FC3B-953B-43DD-92CF-CB618603F2ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7929FC3B-953B-43DD-92CF-CB618603F2ED}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -76,13 +70,12 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{338FF971-1280-4295-A204-68B4810E3A8A} = {880F98CC-85AE-415C-9BF2-B5C2F7FB4627}
 		{E45F17B2-78B1-4BB8-AA4C-0559C41A2B6C} = {50F5DAFC-E089-415E-8C9D-CA6F95FFD67B}
-		{B76A7372-AF54-4384-9B8F-467E5D22A0D4} = {5487E6A8-E869-40C3-9F0E-44968338D86F}
-		{91E980D3-0126-4863-8984-1FF453DC13B0} = {5487E6A8-E869-40C3-9F0E-44968338D86F}
-		{F0EF0A8F-C79C-4709-96B0-8C16B74B70BB} = {5487E6A8-E869-40C3-9F0E-44968338D86F}
-		{250AA299-2FE4-4D96-AFA6-2863EF1AE80E} = {5487E6A8-E869-40C3-9F0E-44968338D86F}
-		{3490789D-FDAD-4D37-A9EE-AB6EE35764CE} = {5487E6A8-E869-40C3-9F0E-44968338D86F}
 		{EB996A99-19A2-41BA-8D74-E6279AA09679} = {5487E6A8-E869-40C3-9F0E-44968338D86F}
 		{12A4CCAD-E72B-472D-B279-6B165A11DE5E} = {5487E6A8-E869-40C3-9F0E-44968338D86F}
 		{140349DE-64E5-485C-971B-BA35995B96B3} = {5487E6A8-E869-40C3-9F0E-44968338D86F}
+		{C2360D09-14E5-41F9-895F-9E98515FEDF9} = {EB996A99-19A2-41BA-8D74-E6279AA09679}
+		{2CF4A166-6F8F-4054-B62F-F8E5C8177DBD} = {EB996A99-19A2-41BA-8D74-E6279AA09679}
+		{97DDD98C-74A7-4EF2-A53F-9E2122EF45EA} = {EB996A99-19A2-41BA-8D74-E6279AA09679}
+		{7929FC3B-953B-43DD-92CF-CB618603F2ED} = {EB996A99-19A2-41BA-8D74-E6279AA09679}
 	EndGlobalSection
 EndGlobal
