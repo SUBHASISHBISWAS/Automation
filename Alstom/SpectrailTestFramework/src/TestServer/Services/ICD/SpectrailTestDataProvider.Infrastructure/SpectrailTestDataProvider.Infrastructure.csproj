@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SpectrailTestDataProvider.Application\SpectrailTestDataProvider.Application.csproj" />
+    <ProjectReference Include="..\Alstom.Spectrail.ICD.Application\Alstom.Spectrail.ICD.Application.csproj" />
   </ItemGroup>
 
 </Project>

@@ -2,7 +2,7 @@
 
 using Microsoft.OpenApi.Models;
 using Alstom.Spectrail.ICD.API.Middleware;
-using SpectrailTestDataProvider.Application;
+using Alstom.Spectrail.ICD.Application;
 using SpectrailTestDataProvider.Infrastructure;
 using SpectrailTestDataProvider.Shared.Configuration;
 

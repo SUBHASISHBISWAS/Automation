@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Linq.Expressions;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using SpectrailTestDataProvider.Application.Contracts;
+using Alstom.Spectrail.ICD.Application.Contracts;
 using SpectrailTestDataProvider.Domain.Common;
 
 #endregion

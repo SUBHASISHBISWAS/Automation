@@ -1,6 +1,6 @@
 #region
 
-using SpectrailTestDataProvider.Application.Contracts;
+using Alstom.Spectrail.ICD.Application.Contracts;
 using SpectrailTestDataProvider.Domain.Common;
 
 #endregion

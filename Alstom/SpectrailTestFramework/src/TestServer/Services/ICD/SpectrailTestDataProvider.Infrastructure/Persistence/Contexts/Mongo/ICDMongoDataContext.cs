@@ -2,7 +2,7 @@
 
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
-using SpectrailTestDataProvider.Application.Models;
+using Alstom.Spectrail.ICD.Application.Models;
 using SpectrailTestDataProvider.Domain.Common;
 using SpectrailTestDataProvider.Domain.Entities.ICD;
 

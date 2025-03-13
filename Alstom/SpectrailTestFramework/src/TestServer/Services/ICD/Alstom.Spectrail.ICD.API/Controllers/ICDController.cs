@@ -2,9 +2,9 @@
 
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using SpectrailTestDataProvider.Application.Enums;
-using SpectrailTestDataProvider.Application.Features.ICD.Commands.Command;
-using SpectrailTestDataProvider.Application.Features.ICD.Queries.Query;
+using Alstom.Spectrail.ICD.Application.Enums;
+using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
+using Alstom.Spectrail.ICD.Application.Features.ICD.Queries.Query;
 using SpectrailTestDataProvider.Domain.Entities.ICD;
 using SpectrailTestDataProvider.Shared.Configuration;
 

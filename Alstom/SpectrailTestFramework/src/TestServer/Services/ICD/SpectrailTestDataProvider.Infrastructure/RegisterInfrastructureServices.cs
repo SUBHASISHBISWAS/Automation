@@ -2,8 +2,8 @@
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using SpectrailTestDataProvider.Application.Contracts;
-using SpectrailTestDataProvider.Application.Models;
+using Alstom.Spectrail.ICD.Application.Contracts;
+using Alstom.Spectrail.ICD.Application.Models;
 using SpectrailTestDataProvider.Infrastructure.Persistence.Contexts.Mongo;
 using SpectrailTestDataProvider.Infrastructure.Persistence.Drivers;
 using SpectrailTestDataProvider.Infrastructure.Repository;

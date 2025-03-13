@@ -18,7 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\BuildingBlocks\SpectrailTestDataProvider.Shared\SpectrailTestDataProvider.Shared.csproj" />
-    <ProjectReference Include="..\SpectrailTestDataProvider.Application\SpectrailTestDataProvider.Application.csproj" />
+    <ProjectReference Include="..\Alstom.Spectrail.ICD.Application\Alstom.Spectrail.ICD.Application.csproj" />
     <ProjectReference Include="..\SpectrailTestDataProvider.Infrastructure\SpectrailTestDataProvider.Infrastructure.csproj" />
   </ItemGroup>
 
