@@ -17,33 +17,58 @@ public static class EntityRegistry
     /// </summary>
     static EntityRegistry()
     {
-        RegisterEntitiesFromAssembly(Assembly.GetAssembly(typeof(EntityBase)));
+        RegisterEntitiesFromAssembly();
     }
 
+    /// <summary>
+    ///     ✅ Gets the registered entity type by sheet name.
+    /// </summary>
     public static Type? GetEntityType(string sheetName)
     {
         return _entityMappings.TryGetValue(sheetName, out var entityType) ? entityType : null;
     }
 
+    /// <summary>
+    ///     ✅ Registers a single entity dynamically.
+    /// </summary>
     public static void RegisterEntity(string sheetName, Type entityType)
     {
         if (typeof(EntityBase).IsAssignableFrom(entityType) && !_entityMappings.ContainsKey(sheetName))
-            _entityMappings[sheetName] = entityType;
-    }
-
-    public static void RegisterEntitiesFromAssembly(Assembly? assembly)
-    {
-        var entityTypes = assembly.GetTypes()
-            .Where(t => typeof(EntityBase).IsAssignableFrom(t) && !t.IsAbstract)
-            .ToList();
-
-        foreach (var type in entityTypes)
         {
-            var entityName = type.Name.Replace("Entity", "");
-            if (!_entityMappings.ContainsKey(entityName)) _entityMappings[entityName] = type;
+            _entityMappings[sheetName] = entityType;
         }
     }
 
+    /// <summary>
+    ///     ✅ Scans and registers all entities that inherit from EntityBase dynamically.
+    /// </summary>
+    private static void RegisterEntitiesFromAssembly()
+    {
+        var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+
+        foreach (var asm in assemblies)
+        {
+            Console.WriteLine($"🔍 Scanning Assembly: {asm.FullName}");
+
+            var entityTypes = asm.GetTypes()
+                .Where(t => t.IsClass && !t.IsAbstract && typeof(EntityBase).IsAssignableFrom(t))
+                .ToList();
+
+            foreach (var type in entityTypes)
+            {
+                var entityName = type.Name.Replace("Entity", "");
+                if (!_entityMappings.ContainsKey(entityName))
+                {
+                    _entityMappings[entityName] = type;
+                    Console.WriteLine($"✅ Registered Entity: {type.Name} as '{entityName}'");
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    ///     ✅ Returns all registered entity mappings.
+    /// </summary>
     public static IReadOnlyDictionary<string, Type> GetAllMappings()
     {
         return _entityMappings;
