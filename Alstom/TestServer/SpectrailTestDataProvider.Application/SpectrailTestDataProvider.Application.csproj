@@ -24,6 +24,7 @@
     <ProjectReference Include="..\..\SpectrailTestDataProvider.Shared\SpectrailTestDataProvider.Shared.csproj" />
     <ProjectReference Include="..\..\SpectrailTestFramework\SpectrailTestFramework.csproj" />
     <ProjectReference Include="..\SpectrailTestDataProvider.Domain\SpectrailTestDataProvider.Domain.csproj" />
+    <ProjectReference Include="..\SpectrailTestDataProvider.Shared\SpectrailTestDataProvider.Shared.csproj" />
   </ItemGroup>
 
 </Project>

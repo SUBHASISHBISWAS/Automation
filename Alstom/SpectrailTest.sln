@@ -5,17 +5,7 @@ VisualStudioVersion = 17.12.35707.178
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestServer", "TestServer", "{5487E6A8-E869-40C3-9F0E-44968338D86F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.API", "SpectrailTestServer\SpectrailTestDataProvider.API\SpectrailTestDataProvider.API.csproj", "{93901AFB-281F-4499-B54A-00271FC35390}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.Application", "SpectrailTestServer\SpectrailTestDataProvider.Application\SpectrailTestDataProvider.Application.csproj", "{41D67F5E-0449-4B87-9EA6-25BDAD1F4C0D}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.Domain", "SpectrailTestServer\SpectrailTestDataProvider.Domain\SpectrailTestDataProvider.Domain.csproj", "{864027F8-53BF-461D-97F6-1E7F27567223}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.Infrastructure", "SpectrailTestServer\SpectrailTestDataProvider.Infrastructure\SpectrailTestDataProvider.Infrastructure.csproj", "{465766BB-7A43-4355-BE51-8C98B21B76D7}"
-EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{2872D2E5-46D2-477C-9567-E833E9646AF9}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.Shared", "SpectrailTestDataProvider.Shared\SpectrailTestDataProvider.Shared.csproj", "{78C76E53-8AA3-4331-8E1C-21EA1CE91AB6}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Framework", "Framework", "{880F98CC-85AE-415C-9BF2-B5C2F7FB4627}"
 EndProject
@@ -25,36 +15,26 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestFramework", "F
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTests", "Tests\SpectrailTests\SpectrailTests.csproj", "{E45F17B2-78B1-4BB8-AA4C-0559C41A2B6C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.API", "TestServer\SpectrailTestDataProvider.API\SpectrailTestDataProvider.API.csproj", "{B76A7372-AF54-4384-9B8F-467E5D22A0D4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.Shared", "TestServer\SpectrailTestDataProvider.Shared\SpectrailTestDataProvider.Shared.csproj", "{91E980D3-0126-4863-8984-1FF453DC13B0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.Application", "TestServer\SpectrailTestDataProvider.Application\SpectrailTestDataProvider.Application.csproj", "{F0EF0A8F-C79C-4709-96B0-8C16B74B70BB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.Infrastructure", "TestServer\SpectrailTestDataProvider.Infrastructure\SpectrailTestDataProvider.Infrastructure.csproj", "{250AA299-2FE4-4D96-AFA6-2863EF1AE80E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.Domain", "TestServer\SpectrailTestDataProvider.Domain\SpectrailTestDataProvider.Domain.csproj", "{3490789D-FDAD-4D37-A9EE-AB6EE35764CE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{93901AFB-281F-4499-B54A-00271FC35390}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{93901AFB-281F-4499-B54A-00271FC35390}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{93901AFB-281F-4499-B54A-00271FC35390}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{93901AFB-281F-4499-B54A-00271FC35390}.Release|Any CPU.Build.0 = Release|Any CPU
-		{41D67F5E-0449-4B87-9EA6-25BDAD1F4C0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{41D67F5E-0449-4B87-9EA6-25BDAD1F4C0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{41D67F5E-0449-4B87-9EA6-25BDAD1F4C0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{41D67F5E-0449-4B87-9EA6-25BDAD1F4C0D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{864027F8-53BF-461D-97F6-1E7F27567223}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{864027F8-53BF-461D-97F6-1E7F27567223}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{864027F8-53BF-461D-97F6-1E7F27567223}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{864027F8-53BF-461D-97F6-1E7F27567223}.Release|Any CPU.Build.0 = Release|Any CPU
-		{465766BB-7A43-4355-BE51-8C98B21B76D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{465766BB-7A43-4355-BE51-8C98B21B76D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{465766BB-7A43-4355-BE51-8C98B21B76D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{465766BB-7A43-4355-BE51-8C98B21B76D7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2872D2E5-46D2-477C-9567-E833E9646AF9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2872D2E5-46D2-477C-9567-E833E9646AF9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2872D2E5-46D2-477C-9567-E833E9646AF9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2872D2E5-46D2-477C-9567-E833E9646AF9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{78C76E53-8AA3-4331-8E1C-21EA1CE91AB6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{78C76E53-8AA3-4331-8E1C-21EA1CE91AB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{78C76E53-8AA3-4331-8E1C-21EA1CE91AB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{78C76E53-8AA3-4331-8E1C-21EA1CE91AB6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{338FF971-1280-4295-A204-68B4810E3A8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{338FF971-1280-4295-A204-68B4810E3A8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{338FF971-1280-4295-A204-68B4810E3A8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -63,17 +43,37 @@ Global
 		{E45F17B2-78B1-4BB8-AA4C-0559C41A2B6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E45F17B2-78B1-4BB8-AA4C-0559C41A2B6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E45F17B2-78B1-4BB8-AA4C-0559C41A2B6C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B76A7372-AF54-4384-9B8F-467E5D22A0D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B76A7372-AF54-4384-9B8F-467E5D22A0D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B76A7372-AF54-4384-9B8F-467E5D22A0D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B76A7372-AF54-4384-9B8F-467E5D22A0D4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{91E980D3-0126-4863-8984-1FF453DC13B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91E980D3-0126-4863-8984-1FF453DC13B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91E980D3-0126-4863-8984-1FF453DC13B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{91E980D3-0126-4863-8984-1FF453DC13B0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F0EF0A8F-C79C-4709-96B0-8C16B74B70BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F0EF0A8F-C79C-4709-96B0-8C16B74B70BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F0EF0A8F-C79C-4709-96B0-8C16B74B70BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F0EF0A8F-C79C-4709-96B0-8C16B74B70BB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{250AA299-2FE4-4D96-AFA6-2863EF1AE80E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{250AA299-2FE4-4D96-AFA6-2863EF1AE80E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{250AA299-2FE4-4D96-AFA6-2863EF1AE80E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{250AA299-2FE4-4D96-AFA6-2863EF1AE80E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3490789D-FDAD-4D37-A9EE-AB6EE35764CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3490789D-FDAD-4D37-A9EE-AB6EE35764CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3490789D-FDAD-4D37-A9EE-AB6EE35764CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3490789D-FDAD-4D37-A9EE-AB6EE35764CE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{93901AFB-281F-4499-B54A-00271FC35390} = {5487E6A8-E869-40C3-9F0E-44968338D86F}
-		{41D67F5E-0449-4B87-9EA6-25BDAD1F4C0D} = {5487E6A8-E869-40C3-9F0E-44968338D86F}
-		{864027F8-53BF-461D-97F6-1E7F27567223} = {5487E6A8-E869-40C3-9F0E-44968338D86F}
-		{465766BB-7A43-4355-BE51-8C98B21B76D7} = {5487E6A8-E869-40C3-9F0E-44968338D86F}
-		{78C76E53-8AA3-4331-8E1C-21EA1CE91AB6} = {5487E6A8-E869-40C3-9F0E-44968338D86F}
 		{338FF971-1280-4295-A204-68B4810E3A8A} = {880F98CC-85AE-415C-9BF2-B5C2F7FB4627}
 		{E45F17B2-78B1-4BB8-AA4C-0559C41A2B6C} = {50F5DAFC-E089-415E-8C9D-CA6F95FFD67B}
+		{B76A7372-AF54-4384-9B8F-467E5D22A0D4} = {5487E6A8-E869-40C3-9F0E-44968338D86F}
+		{91E980D3-0126-4863-8984-1FF453DC13B0} = {5487E6A8-E869-40C3-9F0E-44968338D86F}
+		{F0EF0A8F-C79C-4709-96B0-8C16B74B70BB} = {5487E6A8-E869-40C3-9F0E-44968338D86F}
+		{250AA299-2FE4-4D96-AFA6-2863EF1AE80E} = {5487E6A8-E869-40C3-9F0E-44968338D86F}
+		{3490789D-FDAD-4D37-A9EE-AB6EE35764CE} = {5487E6A8-E869-40C3-9F0E-44968338D86F}
 	EndGlobalSection
 EndGlobal
