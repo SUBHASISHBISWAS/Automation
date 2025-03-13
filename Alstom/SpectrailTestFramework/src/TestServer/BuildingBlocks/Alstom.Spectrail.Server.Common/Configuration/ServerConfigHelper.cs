@@ -4,7 +4,7 @@ using Microsoft.Extensions.Configuration;
 
 #endregion
 
-namespace SpectrailTestDataProvider.Shared.Configuration;
+namespace Alstom.Spectrail.Server.Common.Configuration;
 
 /// <summary>
 ///     ✅ ServerConfigHelper dynamically reads configuration settings

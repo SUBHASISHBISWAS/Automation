@@ -1,4 +1,4 @@
-namespace SpectrailTestDataProvider.Shared.Configuration;
+namespace Alstom.Spectrail.Server.Common.Configuration;
 
 public class ICDConfig
 {

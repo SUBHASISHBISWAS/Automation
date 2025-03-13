@@ -25,7 +25,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alstom.Spectrail.ICD.Applic
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alstom.Spectrail.ICD.Domain", "src\TestServer\Services\ICD\Alstom.Spectrail.ICD.Domain\Alstom.Spectrail.ICD.Domain.csproj", "{7929FC3B-953B-43DD-92CF-CB618603F2ED}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.Shared", "src\TestServer\BuildingBlocks\SpectrailTestDataProvider.Shared\SpectrailTestDataProvider.Shared.csproj", "{7306C811-FBEB-48DD-BFF1-F923BE8101BC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alstom.Spectrail.Server.Common", "src\TestServer\BuildingBlocks\Alstom.Spectrail.Server.Common\Alstom.Spectrail.Server.Common.csproj", "{7306C811-FBEB-48DD-BFF1-F923BE8101BC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alstom.Spectrail.TestFramework", "src\Framework\Alstom.Spectrail.TestFramework\Alstom.Spectrail.TestFramework.csproj", "{DED18CF9-1EAD-4BE5-A2AD-7BAAB4215C9B}"
 EndProject

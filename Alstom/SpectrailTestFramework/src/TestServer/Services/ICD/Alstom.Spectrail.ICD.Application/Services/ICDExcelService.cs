@@ -10,7 +10,7 @@ using Alstom.Spectrail.ICD.Application.Registry;
 using ClosedXML.Excel;
 using MediatR;
 using Alstom.Spectrail.ICD.Domain.Common;
-using SpectrailTestDataProvider.Shared.Configuration;
+using Alstom.Spectrail.Server.Common.Configuration;
 
 #endregion
 

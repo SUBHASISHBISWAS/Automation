@@ -3,7 +3,7 @@
 using System.Diagnostics;
 using MediatR;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
-using SpectrailTestDataProvider.Shared.Configuration;
+using Alstom.Spectrail.Server.Common.Configuration;
 
 #endregion
 
