@@ -2,6 +2,7 @@
 
 using MongoDB.Driver;
 using Alstom.Spectrail.ICD.Domain.Common;
+using Alstom.Spectrail.Server.Common.Entities;
 
 #endregion
 

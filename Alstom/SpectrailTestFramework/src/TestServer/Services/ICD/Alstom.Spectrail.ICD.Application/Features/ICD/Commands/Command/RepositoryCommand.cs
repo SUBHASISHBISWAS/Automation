@@ -3,6 +3,7 @@
 using Alstom.Spectrail.ICD.Application.Enums;
 using MediatR;
 using Alstom.Spectrail.ICD.Domain.Common;
+using Alstom.Spectrail.Server.Common.Entities;
 
 #endregion
 

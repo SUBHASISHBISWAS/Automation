@@ -3,6 +3,7 @@
 using System.Linq.Expressions;
 using MediatR;
 using Alstom.Spectrail.ICD.Domain.Common;
+using Alstom.Spectrail.Server.Common.Entities;
 
 #endregion
 

@@ -11,6 +11,7 @@ using ClosedXML.Excel;
 using MediatR;
 using Alstom.Spectrail.ICD.Domain.Common;
 using Alstom.Spectrail.Server.Common.Configuration;
+using Alstom.Spectrail.Server.Common.Entities;
 
 #endregion
 

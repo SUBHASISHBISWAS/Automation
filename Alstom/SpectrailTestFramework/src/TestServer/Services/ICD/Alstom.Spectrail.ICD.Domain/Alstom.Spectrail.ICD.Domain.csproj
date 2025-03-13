@@ -10,4 +10,13 @@
     <PackageReference Include="MongoDB.Bson" Version="3.2.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Common\" />
+    <Folder Include="Contract\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\Alstom.Spectrail.Server.Common\Alstom.Spectrail.Server.Common.csproj" />
+  </ItemGroup>
+
 </Project>
