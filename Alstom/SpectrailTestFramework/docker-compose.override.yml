@@ -37,6 +37,10 @@ services:
       - "SpectrailMongoDatabaseSettings:ConnectionString=mongodb://ICDDB:27017"
       - "SpectrailMongoDatabaseSettings:DatabaseName=ICDDB"
       - "SpectrailMongoDatabaseSettings:CollectionName=ICDDatas"
+      - "Settings__ICD_Files__0=DATA/ICDs/TRDP_ICD_GENERATED.xlsx"
+      - "FeatureFlags__EnableChecksumValidation=true"
+      - "FeatureFlags__EnableEagerLoading=false"
+      - "FeatureFlags__EnableMiddlewarePreloading=true"
     ports:
       - "8080:8080"
       - "8081:8081"
@@ -45,6 +49,8 @@ services:
     volumes:
       - ${APPDATA:-$HOME/.microsoft}/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA:-$HOME/.aspnet}/Https:/home/app/.aspnet/https:ro
+      - ${APPDATA:-$HOME}/SpectrailArtifacts/DATA/ICDs/TRDP_ICD_GENERATED.xlsx:/home/app/SpectrailArtifacts/DATA/ICDs/TRDP_ICD_GENERATED.xlsx:ro"
+      
     networks:
       - alstom_spectrail_server_network
     ## 🔹 Add Restart Policy (Auto-restart on failure)
