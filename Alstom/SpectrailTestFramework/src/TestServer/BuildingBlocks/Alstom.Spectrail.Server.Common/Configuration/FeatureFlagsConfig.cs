@@ -1,7 +1,7 @@
 namespace Alstom.Spectrail.Server.Common.Configuration;
 
 /// <summary>
-/// ✅ Represents feature flags from `appsettings.json`.
+///     ✅ Represents feature flags from `appsettings.json`.
 /// </summary>
 public class FeatureFlagsConfig
 {

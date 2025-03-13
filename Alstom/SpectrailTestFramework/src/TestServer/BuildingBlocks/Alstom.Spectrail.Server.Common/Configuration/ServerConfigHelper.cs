@@ -1,24 +1,24 @@
 #region
 
-using Microsoft.Extensions.Configuration;
 using System.Reflection;
+using Microsoft.Extensions.Configuration;
 
 #endregion
 
 namespace Alstom.Spectrail.Server.Common.Configuration;
 
 /// <summary>
-/// ✅ ServerConfigHelper dynamically reads configuration settings
-/// using strongly typed `ICDConfig` and `FeatureFlagsConfig`.
-/// Implements `IServerConfigHelper` for better testability.
+///     ✅ ServerConfigHelper dynamically reads configuration settings
+///     using strongly typed `ICDConfig` and `FeatureFlagsConfig`.
+///     Implements `IServerConfigHelper` for better testability.
 /// </summary>
 public class ServerConfigHelper : IServerConfigHelper
 {
-    private readonly ICDConfig _icdConfig;
     private readonly FeatureFlagsConfig _featureFlagsConfig;
+    private readonly ICDConfig _icdConfig;
 
     /// <summary>
-    /// ✅ Supports Dependency Injection (Pass IConfiguration)
+    ///     ✅ Supports Dependency Injection (Pass IConfiguration)
     /// </summary>
     public ServerConfigHelper(IConfiguration configuration)
     {
@@ -62,12 +62,13 @@ public class ServerConfigHelper : IServerConfigHelper
     public bool IsFeatureEnabled(string feature)
     {
         // ✅ Use reflection to safely retrieve feature flag values
-        var property = typeof(FeatureFlagsConfig).GetProperty(feature, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+        var property = typeof(FeatureFlagsConfig).GetProperty(feature,
+            BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
         return property != null && (bool)property.GetValue(_featureFlagsConfig);
     }
 
     /// <summary>
-    /// ✅ Converts relative paths to absolute paths for cross-platform compatibility.
+    ///     ✅ Converts relative paths to absolute paths for cross-platform compatibility.
     /// </summary>
     private static string ResolvePath(string path)
     {
