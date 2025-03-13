@@ -29,7 +29,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.S
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alstom.Spectrail.TestFramework", "src\Framework\Alstom.Spectrail.TestFramework\Alstom.Spectrail.TestFramework.csproj", "{DED18CF9-1EAD-4BE5-A2AD-7BAAB4215C9B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTests", "src\Tests\SpectrailTests\SpectrailTests.csproj", "{AB7F8D61-BEBC-4996-8617-702D14E6EE22}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alstom.Spectrail.Tests", "src\Tests\Alstom.Spectrail.Tests\Alstom.Spectrail.Tests.csproj", "{AB7F8D61-BEBC-4996-8617-702D14E6EE22}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

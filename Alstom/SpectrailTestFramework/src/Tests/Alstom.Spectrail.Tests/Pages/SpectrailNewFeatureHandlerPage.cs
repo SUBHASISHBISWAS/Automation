@@ -6,7 +6,7 @@ using Alstom.Spectrail.TestFramework.PageObjects;
 
 #endregion
 
-namespace SpectrailTests.Pages;
+namespace Alstom.Spectrail.Tests.Pages;
 
 public class SpectrailNewFeatureHandlerPage(IPage page, IPageFactory pageFactory) : BasePage(page)
 {

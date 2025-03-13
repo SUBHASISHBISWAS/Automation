@@ -7,12 +7,12 @@ using NUnit.Framework.Interfaces;
 using Serilog;
 using Alstom.Spectrail.TestFramework.Factory;
 using Alstom.Spectrail.TestFramework.Utilities;
-using SpectrailTests.Utility;
+using Alstom.Spectrail.Tests.Utility;
 using TestContext = NUnit.Framework.TestContext;
 
 #endregion
 
-namespace SpectrailTests.Hooks;
+namespace Alstom.Spectrail.Tests.Hooks;
 
 [SetUpFixture]
 public class TestHooks : IAsyncDisposable

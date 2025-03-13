@@ -4,11 +4,11 @@ using Alstom.Spectrail.TestFramework.Actions;
 using Alstom.Spectrail.TestFramework.Attributes;
 using Alstom.Spectrail.TestFramework.Factory;
 using Alstom.Spectrail.TestFramework.Interfaces;
-using SpectrailTests.Pages;
+using Alstom.Spectrail.Tests.Pages;
 
 #endregion
 
-namespace SpectrailTests.Handlers;
+namespace Alstom.Spectrail.Tests.Handlers;
 
 [MapsToPage(typeof(LoginPage))] // ✅ Maps to `LoginPage`
 public class LoginHandler(IPageObject pageObject, IHandlerFactory handlerFactory, ApiServiceFactory apiServiceFactory)

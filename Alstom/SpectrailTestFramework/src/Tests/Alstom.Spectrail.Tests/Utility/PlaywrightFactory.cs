@@ -9,11 +9,11 @@ using Alstom.Spectrail.TestFramework.Decorators;
 using Alstom.Spectrail.TestFramework.Factory;
 using Alstom.Spectrail.TestFramework.Interfaces;
 using Alstom.Spectrail.TestFramework.Utilities;
-using SpectrailTests.Pages;
+using Alstom.Spectrail.Tests.Pages;
 
 #endregion
 
-namespace SpectrailTests.Utility;
+namespace Alstom.Spectrail.Tests.Utility;
 
 public static class PlaywrightFactory
 {
@@ -104,9 +104,9 @@ public static class PlaywrightFactory
     private static void RegisterDynamicHandlerResolution(ServiceCollection services)
     {
         var testAssembly = AppDomain.CurrentDomain.GetAssemblies()
-            .FirstOrDefault(a => a.FullName!.StartsWith("SpectrailTests"));
+            .FirstOrDefault(a => a.FullName!.StartsWith("Alstom.Spectrail.Tests"));
 
-        if (testAssembly == null) throw new InvalidOperationException("Test assembly 'SpectrailTests' not found.");
+        if (testAssembly == null) throw new InvalidOperationException("Test assembly 'Alstom.Spectrail.Tests' not found.");
 
         var handlerTypes = testAssembly.GetTypes()
             .Where(t => typeof(IActionHandler).IsAssignableFrom(t) && !t.IsAbstract);

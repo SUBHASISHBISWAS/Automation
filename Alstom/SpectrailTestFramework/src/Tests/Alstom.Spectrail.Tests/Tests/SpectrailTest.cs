@@ -1,13 +1,13 @@
 ﻿#region
 
+using Alstom.Spectrail.Tests.Handlers;
+using Alstom.Spectrail.Tests.Hooks;
 using NUnit.Allure.Attributes;
 using NUnit.Framework;
-using SpectrailTests.Handlers;
-using SpectrailTests.Hooks;
 
 #endregion
 
-namespace SpectrailTests.Tests;
+namespace Alstom.Spectrail.Tests.Tests;
 
 [TestFixture]
 [Parallelizable(ParallelScope.All)]
