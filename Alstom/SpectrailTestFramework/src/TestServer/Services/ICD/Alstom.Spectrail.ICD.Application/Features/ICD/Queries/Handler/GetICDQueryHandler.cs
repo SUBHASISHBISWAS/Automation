@@ -3,7 +3,7 @@
 using MediatR;
 using Alstom.Spectrail.ICD.Application.Contracts;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Queries.Query;
-using SpectrailTestDataProvider.Domain.Common;
+using Alstom.Spectrail.ICD.Domain.Common;
 
 #endregion
 

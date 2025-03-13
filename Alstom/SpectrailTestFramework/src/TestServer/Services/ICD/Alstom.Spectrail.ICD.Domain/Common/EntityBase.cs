@@ -1,12 +1,12 @@
 #region
 
+using Alstom.Spectrail.ICD.Domain.Contract;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
-using SpectrailTestDataProvider.Domain.Contract;
 
 #endregion
 
-namespace SpectrailTestDataProvider.Domain.Common;
+namespace Alstom.Spectrail.ICD.Domain.Common;
 
 public abstract class EntityBase : IEntityBase
 {

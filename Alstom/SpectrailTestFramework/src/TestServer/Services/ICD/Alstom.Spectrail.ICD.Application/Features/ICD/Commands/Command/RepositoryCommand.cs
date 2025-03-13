@@ -2,7 +2,7 @@
 
 using Alstom.Spectrail.ICD.Application.Enums;
 using MediatR;
-using SpectrailTestDataProvider.Domain.Common;
+using Alstom.Spectrail.ICD.Domain.Common;
 
 #endregion
 

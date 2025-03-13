@@ -2,7 +2,7 @@
 
 using Alstom.Spectrail.ICD.Application.Features.ICD.Queries.Model;
 using AutoMapper;
-using SpectrailTestDataProvider.Domain.Entities.ICD;
+using Alstom.Spectrail.ICD.Domain.Entities.ICD;
 
 #endregion
 

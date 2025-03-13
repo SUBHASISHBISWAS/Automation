@@ -10,7 +10,7 @@ using Alstom.Spectrail.ICD.Application.Services;
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
-using SpectrailTestDataProvider.Domain.Entities.ICD;
+using Alstom.Spectrail.ICD.Domain.Entities.ICD;
 using static System.Reflection.Assembly;
 
 #endregion

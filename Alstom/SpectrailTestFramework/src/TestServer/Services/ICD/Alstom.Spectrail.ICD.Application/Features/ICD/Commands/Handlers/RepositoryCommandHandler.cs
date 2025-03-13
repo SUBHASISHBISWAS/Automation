@@ -5,7 +5,7 @@ using Alstom.Spectrail.ICD.Application.Attributes;
 using Alstom.Spectrail.ICD.Application.Contracts;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
 using MediatR;
-using SpectrailTestDataProvider.Domain.Common;
+using Alstom.Spectrail.ICD.Domain.Common;
 
 #endregion
 

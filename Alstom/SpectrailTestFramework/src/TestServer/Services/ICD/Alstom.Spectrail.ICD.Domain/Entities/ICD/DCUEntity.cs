@@ -1,10 +1,10 @@
 #region
 
-using SpectrailTestDataProvider.Domain.Common;
+using Alstom.Spectrail.ICD.Domain.Common;
 
 #endregion
 
-namespace SpectrailTestDataProvider.Domain.Entities.ICD;
+namespace Alstom.Spectrail.ICD.Domain.Entities.ICD;
 
 public class DCUEntity : EntityBase
 {
