@@ -1,18 +1,16 @@
-﻿using Allure.Commons;
+﻿#region
 
+using Allure.Commons;
 using Microsoft.Extensions.DependencyInjection;
-
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
-
 using Serilog;
-
 using SpectrailTestFramework.Factory;
 using SpectrailTestFramework.Utilities;
-
 using SpectrailTests.Utility;
-
 using TestContext = NUnit.Framework.TestContext;
+
+#endregion
 
 namespace SpectrailTests.Hooks;
 
@@ -70,7 +68,7 @@ public class TestHooks : IAsyncDisposable
     [SetUp]
     public void Setup()
     {
-        string testName = TestContext.CurrentContext.Test.Name;
+        var testName = TestContext.CurrentContext.Test.Name;
         ExtentReportManager.StartTest(testName);
         ExtentReportManager.LogTestInfo($"🚀 Test {testName} Started...");
         Log.Information($"🚀 Test {testName} Started...");
@@ -82,8 +80,8 @@ public class TestHooks : IAsyncDisposable
     [TearDown]
     public async Task Cleanup()
     {
-        string testName = TestContext.CurrentContext.Test.Name;
-        TestStatus testStatus = TestContext.CurrentContext.Result.Outcome.Status;
+        var testName = TestContext.CurrentContext.Test.Name;
+        var testStatus = TestContext.CurrentContext.Result.Outcome.Status;
 
         if (testStatus == TestStatus.Failed)
         {
@@ -109,10 +107,7 @@ public class TestHooks : IAsyncDisposable
         Log.Information("✅ Global Test Cleanup Started.");
         ExtentReportManager.FlushReport();
 
-        if (_serviceProvider.Value != null)
-        {
-            await DisposeAsync();
-        }
+        if (_serviceProvider.Value != null) await DisposeAsync();
 
         Log.Information("✅ Global Test Cleanup Completed.");
     }

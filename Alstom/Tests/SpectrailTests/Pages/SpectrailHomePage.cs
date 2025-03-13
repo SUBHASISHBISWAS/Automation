@@ -1,7 +1,10 @@
-﻿using Microsoft.Playwright;
+﻿#region
 
+using Microsoft.Playwright;
 using SpectrailTestFramework.Interfaces;
 using SpectrailTestFramework.PageObjects;
+
+#endregion
 
 namespace SpectrailTests.Pages;
 
@@ -9,12 +12,13 @@ public class SpectrailHomePage(IPage page, IPageFactory pageFactory) : BasePage(
 {
     private readonly IPageFactory _pageFactory = pageFactory;
 
-    private ILocator _aliviaLabel => Page.GetByRole(AriaRole.Cell, new() { Name = "AVELIA project" });
+    private ILocator _aliviaLabel =>
+        Page.GetByRole(AriaRole.Cell, new PageGetByRoleOptions { Name = "AVELIA project" });
 
-    private ILocator _systemLabel => Page.GetByRole(AriaRole.Link, new() { Name = "System " });
+    private ILocator _systemLabel => Page.GetByRole(AriaRole.Link, new PageGetByRoleOptions { Name = "System " });
 
     private ILocator _inputRequirementsLabel =>
-        Page.GetByRole(AriaRole.Link, new() { Name = "Input Requirements" });
+        Page.GetByRole(AriaRole.Link, new PageGetByRoleOptions { Name = "Input Requirements" });
 
     public async Task GoToAliviaProjectAndVerifyLink()
     {
@@ -47,6 +51,6 @@ public class SpectrailHomePage(IPage page, IPageFactory pageFactory) : BasePage(
 
     public async Task<bool> IsProjectVisible()
     {
-        return await Page.GetByRole(AriaRole.Heading, new() { Name = "Projects" }).IsVisibleAsync();
+        return await Page.GetByRole(AriaRole.Heading, new PageGetByRoleOptions { Name = "Projects" }).IsVisibleAsync();
     }
 }

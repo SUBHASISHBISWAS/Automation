@@ -1,12 +1,11 @@
-﻿using NUnit.Allure.Attributes;
+﻿#region
+
+using NUnit.Allure.Attributes;
 using NUnit.Framework;
-
-using SpectrailTestFramework.Utilities;
-
 using SpectrailTests.Handlers;
 using SpectrailTests.Hooks;
 
-using TestContext = NUnit.Framework.TestContext;
+#endregion
 
 namespace SpectrailTests.Tests;
 
@@ -40,7 +39,7 @@ public class SpectrailTest : TestHooks
     {
         var spectrailNewFeatureHandler = ActionFactory!.GetAction<SpectrailNewFeatureHandler>();
         await spectrailNewFeatureHandler.RunAsync();
-        
+
         /*
         string testName = TestContext.CurrentContext.Test.Name;
         ExtentReportManager.StartTest(testName);
