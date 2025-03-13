@@ -9,7 +9,7 @@ using Alstom.Spectrail.ICD.Domain.Common;
 
 #endregion
 
-namespace SpectrailTestDataProvider.Infrastructure.Persistence.Drivers;
+namespace Alstom.Spectrail.ICD.Infrastructure.Persistence.Drivers;
 
 public class MongoDataProvider<T>(ISpectrailMongoDbContext<T> mongoDataContext) : IDataProvider<T>
     where T : EntityBase

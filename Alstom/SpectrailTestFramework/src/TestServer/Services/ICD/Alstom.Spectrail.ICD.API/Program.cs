@@ -3,7 +3,7 @@
 using Microsoft.OpenApi.Models;
 using Alstom.Spectrail.ICD.API.Middleware;
 using Alstom.Spectrail.ICD.Application;
-using SpectrailTestDataProvider.Infrastructure;
+using Alstom.Spectrail.ICD.Infrastructure;
 using Alstom.Spectrail.Server.Common.Configuration;
 
 #endregion

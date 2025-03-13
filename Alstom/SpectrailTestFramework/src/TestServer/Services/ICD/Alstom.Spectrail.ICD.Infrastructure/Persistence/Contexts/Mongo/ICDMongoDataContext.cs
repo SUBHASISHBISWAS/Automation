@@ -8,7 +8,7 @@ using Alstom.Spectrail.ICD.Domain.Entities.ICD;
 
 #endregion
 
-namespace SpectrailTestDataProvider.Infrastructure.Persistence.Contexts.Mongo;
+namespace Alstom.Spectrail.ICD.Infrastructure.Persistence.Contexts.Mongo;
 
 public class ICDMongoDataContext<T>(
     IOptions<SpectrailMongoDatabaseSettings> databaseSettings)

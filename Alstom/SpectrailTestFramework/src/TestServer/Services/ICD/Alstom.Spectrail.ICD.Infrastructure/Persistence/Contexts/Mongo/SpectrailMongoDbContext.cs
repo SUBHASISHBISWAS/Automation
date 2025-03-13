@@ -8,7 +8,7 @@ using Alstom.Spectrail.ICD.Domain.Common;
 
 #endregion
 
-namespace SpectrailTestDataProvider.Infrastructure.Persistence.Contexts.Mongo;
+namespace Alstom.Spectrail.ICD.Infrastructure.Persistence.Contexts.Mongo;
 
 public abstract class SpectrailMongoDbContext<T> : ISpectrailMongoDbContext<T> where T : EntityBase
 {

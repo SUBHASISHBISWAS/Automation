@@ -4,13 +4,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Alstom.Spectrail.ICD.Application.Contracts;
 using Alstom.Spectrail.ICD.Application.Models;
-using SpectrailTestDataProvider.Infrastructure.Persistence.Contexts.Mongo;
-using SpectrailTestDataProvider.Infrastructure.Persistence.Drivers;
-using SpectrailTestDataProvider.Infrastructure.Repository;
+using Alstom.Spectrail.ICD.Infrastructure.Persistence.Contexts.Mongo;
+using Alstom.Spectrail.ICD.Infrastructure.Persistence.Drivers;
+using Alstom.Spectrail.ICD.Infrastructure.Repository;
 
 #endregion
 
-namespace SpectrailTestDataProvider.Infrastructure;
+namespace Alstom.Spectrail.ICD.Infrastructure;
 
 public static class InfrastructureServiceRegistration
 {

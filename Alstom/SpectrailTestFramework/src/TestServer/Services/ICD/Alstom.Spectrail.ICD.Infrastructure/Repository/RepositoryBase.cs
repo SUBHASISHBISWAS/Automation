@@ -7,7 +7,7 @@ using Alstom.Spectrail.ICD.Domain.Common;
 
 #endregion
 
-namespace SpectrailTestDataProvider.Infrastructure.Repository;
+namespace Alstom.Spectrail.ICD.Infrastructure.Repository;
 
 public class RepositoryBase<T>(IDataProvider<T> dataProvider) : IAsyncRepository<T>
     where T : EntityBase

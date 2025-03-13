@@ -19,7 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\BuildingBlocks\Alstom.Spectrail.Server.Common\Alstom.Spectrail.Server.Common.csproj" />
     <ProjectReference Include="..\Alstom.Spectrail.ICD.Application\Alstom.Spectrail.ICD.Application.csproj" />
-    <ProjectReference Include="..\SpectrailTestDataProvider.Infrastructure\SpectrailTestDataProvider.Infrastructure.csproj" />
+    <ProjectReference Include="..\Alstom.Spectrail.ICD.Infrastructure\Alstom.Spectrail.ICD.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
