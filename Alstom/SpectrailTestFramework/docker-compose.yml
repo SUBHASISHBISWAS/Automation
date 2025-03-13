@@ -11,6 +11,12 @@ services:
   portainer:
     image: portainer/portainer-ce
     
+  alstom.spectrail.icd.api:
+    image: ${DOCKER_REGISTRY-}alstomspectrailicdapi
+    build:
+      context: src/TestServer
+      dockerfile: Services/ICD/Alstom.Spectrail.ICD.API/Dockerfile
+
 volumes:
   mongo_data:
   portainer_data:
