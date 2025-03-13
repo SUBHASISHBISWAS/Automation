@@ -7,10 +7,10 @@ using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Handlers;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Queries.Handler;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Queries.Query;
 using Alstom.Spectrail.ICD.Application.Services;
+using Alstom.Spectrail.ICD.Domain.Entities.ICD;
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
-using Alstom.Spectrail.ICD.Domain.Entities.ICD;
 using static System.Reflection.Assembly;
 
 #endregion

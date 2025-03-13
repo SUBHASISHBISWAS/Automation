@@ -1,7 +1,5 @@
 #region
 
-using System.Reflection;
-using Alstom.Spectrail.ICD.Domain.Common;
 using Alstom.Spectrail.Server.Common.Entities;
 
 #endregion
@@ -35,9 +33,7 @@ public static class EntityRegistry
     public static void RegisterEntity(string sheetName, Type entityType)
     {
         if (typeof(EntityBase).IsAssignableFrom(entityType) && !_entityMappings.ContainsKey(sheetName))
-        {
             _entityMappings[sheetName] = entityType;
-        }
     }
 
     /// <summary>

@@ -7,11 +7,10 @@ using Alstom.Spectrail.ICD.Application.Enums;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Queries.Query;
 using Alstom.Spectrail.ICD.Application.Registry;
-using ClosedXML.Excel;
-using MediatR;
-using Alstom.Spectrail.ICD.Domain.Common;
 using Alstom.Spectrail.Server.Common.Configuration;
 using Alstom.Spectrail.Server.Common.Entities;
+using ClosedXML.Excel;
+using MediatR;
 
 #endregion
 
