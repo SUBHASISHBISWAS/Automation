@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.Domain", "src\TestServer\Services\ICD\SpectrailTestDataProvider.Domain\SpectrailTestDataProvider.Domain.csproj", "{7929FC3B-953B-43DD-92CF-CB618603F2ED}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpectrailTestDataProvider.Shared", "src\TestServer\BuildingBlocks\SpectrailTestDataProvider.Shared\SpectrailTestDataProvider.Shared.csproj", "{7306C811-FBEB-48DD-BFF1-F923BE8101BC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,6 +65,10 @@ Global
 		{7929FC3B-953B-43DD-92CF-CB618603F2ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7929FC3B-953B-43DD-92CF-CB618603F2ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7929FC3B-953B-43DD-92CF-CB618603F2ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7306C811-FBEB-48DD-BFF1-F923BE8101BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7306C811-FBEB-48DD-BFF1-F923BE8101BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7306C811-FBEB-48DD-BFF1-F923BE8101BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7306C811-FBEB-48DD-BFF1-F923BE8101BC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -77,5 +83,6 @@ Global
 		{2CF4A166-6F8F-4054-B62F-F8E5C8177DBD} = {EB996A99-19A2-41BA-8D74-E6279AA09679}
 		{97DDD98C-74A7-4EF2-A53F-9E2122EF45EA} = {EB996A99-19A2-41BA-8D74-E6279AA09679}
 		{7929FC3B-953B-43DD-92CF-CB618603F2ED} = {EB996A99-19A2-41BA-8D74-E6279AA09679}
+		{7306C811-FBEB-48DD-BFF1-F923BE8101BC} = {12A4CCAD-E72B-472D-B279-6B165A11DE5E}
 	EndGlobalSection
 EndGlobal
