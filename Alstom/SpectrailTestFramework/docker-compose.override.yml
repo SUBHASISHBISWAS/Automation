@@ -6,7 +6,8 @@ services:
         - "27017:27017"
     volumes:
         - mongo_data:/data/db
-      
+    networks:
+      - alstom_spectrail_server_network 
   portainer:
     container_name: portainer
     restart: always
@@ -16,7 +17,8 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - portainer_data:/data
-  
+    networks:
+      - alstom_spectrail_server_network
   mongo-express:
     image: mongo-express:latest
     container_name: mongo-express
@@ -29,12 +31,13 @@ services:
       - ME_CONFIG_BASICAUTH=false  # Disable basic auth for simplicity (optional)
     depends_on:
       - ICDDB
-        
+    networks:
+      - alstom_spectrail_server_network    
   alstom.spectrail.icd.api:
     container_name: alstom.spectrail.icd.api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - "SpectrailMongoDatabaseSettings:ConnectionString=mongodb://ICDDB:27017"
+      - "SpectrailMongoDatabaseSettings:ConnectionString=mongodb://ICD-DB:27017"
       - "SpectrailMongoDatabaseSettings:DatabaseName=ICDDB"
       - "SpectrailMongoDatabaseSettings:CollectionName=ICDDatas"
       - "Settings__ICD_Files__0=DATA/ICDs/TRDP_ICD_GENERATED.xlsx"
