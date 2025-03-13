@@ -2,17 +2,11 @@ services:
   ICDDB:
     image: mongo
 
-  spectrailtestserver.api:
-    image: ${DOCKER_REGISTRY-}spectrailtestserver
-    build:
-      context: .
-      dockerfile: SpectrailTestServer/SpectrailTestDataProvider.API/Dockerfile
-      
   portainer:
     image: portainer/portainer-ce
     
   alstom.spectrail.icd.api:
-    image: ${DOCKER_REGISTRY-}alstomspectrailicdapi
+    image: ${DOCKER_REGISTRY-}alstom.spectrail.icd.api
     build:
       context: src/TestServer
       dockerfile: Services/ICD/Alstom.Spectrail.ICD.API/Dockerfile

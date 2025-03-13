@@ -6,20 +6,6 @@ services:
         - "27017:27017"
     volumes:
         - mongo_data:/data/db
-    
-      
-  spectrailtestserver.api:
-    container_name: spectrailtestserver.api
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - "SpectrailMongoDatabaseSettings:ConnectionString=mongodb://ICDDB:27017"
-      - "SpectrailMongoDatabaseSettings:DatabaseName=ICDDB"
-      - "SpectrailMongoDatabaseSettings:CollectionName=ICDDatas"
-    ports:
-      - "8080:8080"
-      - "8081:8081"
-    depends_on:
-      - ICDDB
       
   portainer:
     container_name: portainer
@@ -45,13 +31,17 @@ services:
       - ICDDB
         
   alstom.spectrail.icd.api:
+    container_name: alstom.spectrail.icd.api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_HTTP_PORTS=8080
-      - ASPNETCORE_HTTPS_PORTS=8081
+      - "SpectrailMongoDatabaseSettings:ConnectionString=mongodb://ICDDB:27017"
+      - "SpectrailMongoDatabaseSettings:DatabaseName=ICDDB"
+      - "SpectrailMongoDatabaseSettings:CollectionName=ICDDatas"
     ports:
-      - "8080"
-      - "8081"
+      - "8080:8080"
+      - "8081:8081"
+    depends_on:
+      - ICDDB
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
