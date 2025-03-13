@@ -1,11 +1,11 @@
 ﻿#region
 
-using Microsoft.Playwright;
 using Alstom.Spectrail.TestFramework.Actions;
 using Alstom.Spectrail.TestFramework.Attributes;
 using Alstom.Spectrail.TestFramework.Factory;
 using Alstom.Spectrail.TestFramework.Interfaces;
 using Alstom.Spectrail.Tests.Pages;
+using Microsoft.Playwright;
 
 #endregion
 

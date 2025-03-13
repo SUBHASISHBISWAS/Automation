@@ -1,13 +1,13 @@
 ﻿#region
 
 using Allure.Commons;
+using Alstom.Spectrail.TestFramework.Factory;
+using Alstom.Spectrail.TestFramework.Utilities;
+using Alstom.Spectrail.Tests.Utility;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using Serilog;
-using Alstom.Spectrail.TestFramework.Factory;
-using Alstom.Spectrail.TestFramework.Utilities;
-using Alstom.Spectrail.Tests.Utility;
 using TestContext = NUnit.Framework.TestContext;
 
 #endregion

@@ -1,8 +1,8 @@
 ﻿#region
 
-using Microsoft.Playwright;
 using Alstom.Spectrail.TestFramework.Interfaces;
 using Alstom.Spectrail.TestFramework.PageObjects;
+using Microsoft.Playwright;
 
 #endregion
 

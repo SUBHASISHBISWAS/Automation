@@ -1,7 +1,7 @@
 #region
 
-using Newtonsoft.Json;
 using Alstom.Spectrail.TestFramework.API.Models;
+using Newtonsoft.Json;
 
 #endregion
 
