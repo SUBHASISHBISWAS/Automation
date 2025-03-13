@@ -1,8 +1,10 @@
-﻿using NUnit.Framework;
+﻿#region
 
+using NUnit.Framework;
 using Serilog;
-
 using SpectrailTestFramework.Interfaces;
+
+#endregion
 
 namespace SpectrailTestFramework.Decorators;
 
@@ -17,7 +19,7 @@ public class LoggingDecorator : BaseActionDecorator
 
     public LoggingDecorator(IActionHandler wrappedAction) : base(wrappedAction)
     {
-        string testLogDirectory = Path.Combine(ParentLogDirectory, _testName);
+        var testLogDirectory = Path.Combine(ParentLogDirectory, _testName);
         Directory.CreateDirectory(testLogDirectory);
         _logFilePath = Path.Combine(testLogDirectory, "test.log");
 

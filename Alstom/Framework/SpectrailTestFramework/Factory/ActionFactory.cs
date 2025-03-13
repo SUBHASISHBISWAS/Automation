@@ -1,8 +1,10 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿#region
 
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
-
 using SpectrailTestFramework.Actions;
+
+#endregion
 
 namespace SpectrailTestFramework.Factory;
 
@@ -19,7 +21,7 @@ public class ActionFactory(IServiceProvider serviceProvider)
         try
         {
             // ✅ Retrieve the base handler instance from DI
-            T? actionInstance = _serviceProvider.GetRequiredService<T>();
+            var actionInstance = _serviceProvider.GetRequiredService<T>();
 
             // ✅ Ensure correct return type
             return actionInstance ?? throw new InvalidOperationException(

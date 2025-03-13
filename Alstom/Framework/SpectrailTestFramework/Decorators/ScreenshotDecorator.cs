@@ -1,8 +1,12 @@
-﻿using Microsoft.Playwright;
+﻿#region
+
+using Microsoft.Playwright;
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using Serilog;
 using SpectrailTestFramework.Interfaces;
+
+#endregion
 
 namespace SpectrailTestFramework.Decorators;
 
@@ -15,7 +19,7 @@ public class ScreenshotDecorator : BaseActionDecorator
 
     public ScreenshotDecorator(IActionHandler wrappedAction) : base(wrappedAction)
     {
-        string testScreenshotDirectory = Path.Combine(ScreenshotDirectory, _testName);
+        var testScreenshotDirectory = Path.Combine(ScreenshotDirectory, _testName);
         Directory.CreateDirectory(testScreenshotDirectory);
 
         // ✅ Register middleware at the time of instantiation
@@ -32,7 +36,7 @@ public class ScreenshotDecorator : BaseActionDecorator
                 var page = handler.Page;
                 if (page != null && TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Inconclusive)
                 {
-                    string screenshotPath = Path.Combine(ScreenshotDirectory, TestContext.CurrentContext.Test.Name,
+                    var screenshotPath = Path.Combine(ScreenshotDirectory, TestContext.CurrentContext.Test.Name,
                         "failure.png");
                     await page.ScreenshotAsync(new PageScreenshotOptions { Path = screenshotPath });
                     Log.Information($"📸 Screenshot saved: {screenshotPath}");

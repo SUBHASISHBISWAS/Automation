@@ -1,8 +1,12 @@
-﻿using System.Diagnostics;
+﻿#region
+
+using System.Diagnostics;
 using Microsoft.Playwright;
 using Serilog;
 using SpectrailTestFramework.Interfaces;
 using SpectrailTestFramework.Utilities;
+
+#endregion
 
 namespace SpectrailTestFramework.Actions;
 
@@ -65,7 +69,7 @@ public abstract class BaseActionHandler : IActionHandler
     /// </summary>
     public async Task HandleAsync()
     {
-        int index = -1;
+        var index = -1;
 
         async Task Next()
         {

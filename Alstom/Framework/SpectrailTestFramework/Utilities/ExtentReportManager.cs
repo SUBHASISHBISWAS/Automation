@@ -1,6 +1,10 @@
-﻿using AventStack.ExtentReports;
+﻿#region
+
+using AventStack.ExtentReports;
 using AventStack.ExtentReports.Reporter;
 using AventStack.ExtentReports.Reporter.Config;
+
+#endregion
 
 namespace SpectrailTestFramework.Utilities;
 
@@ -18,7 +22,7 @@ public static class ExtentReportManager
         if (_extentReports != null) return; // ✅ Avoid multiple initialization
 
         Directory.CreateDirectory(ParentDirectory);
-        string reportPath = Path.Combine(ParentDirectory, "ExtentReport.html");
+        var reportPath = Path.Combine(ParentDirectory, "ExtentReport.html");
         ExtentSparkReporter sparkReporter = new(reportPath);
 
         // ✅ **Manually Apply Configurations in Code (No XML)**

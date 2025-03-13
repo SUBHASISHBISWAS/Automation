@@ -1,6 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿#region
 
+using Microsoft.Extensions.DependencyInjection;
 using SpectrailTestFramework.Interfaces;
+
+#endregion
 
 namespace SpectrailTestFramework.Factory;
 

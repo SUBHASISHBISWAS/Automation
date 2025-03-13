@@ -1,4 +1,8 @@
-﻿using Microsoft.Playwright;
+﻿#region
+
+using Microsoft.Playwright;
+
+#endregion
 
 namespace SpectrailTestFramework.Interfaces;
 

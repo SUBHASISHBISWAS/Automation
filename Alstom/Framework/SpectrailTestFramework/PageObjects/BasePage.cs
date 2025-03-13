@@ -1,6 +1,10 @@
-﻿using Microsoft.Playwright;
+﻿#region
+
+using Microsoft.Playwright;
 using SpectrailTestFramework.Interfaces;
 using SpectrailTestFramework.Utilities;
+
+#endregion
 
 namespace SpectrailTestFramework.PageObjects;
 

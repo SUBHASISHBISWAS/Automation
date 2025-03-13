@@ -1,5 +1,9 @@
-﻿using Microsoft.Playwright;
+﻿#region
+
+using Microsoft.Playwright;
 using SpectrailTestFramework.Interfaces;
+
+#endregion
 
 namespace SpectrailTestFramework.Decorators;
 
@@ -35,7 +39,7 @@ public abstract class BaseActionDecorator : IActionHandler
     /// </summary>
     public async Task HandleAsync()
     {
-        int index = -1;
+        var index = -1;
 
         async Task Next()
         {

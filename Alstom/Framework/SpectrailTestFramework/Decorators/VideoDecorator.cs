@@ -1,11 +1,12 @@
-﻿using Microsoft.Playwright;
+﻿#region
 
+using Microsoft.Playwright;
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
-
 using Serilog;
-
 using SpectrailTestFramework.Interfaces;
+
+#endregion
 
 namespace SpectrailTestFramework.Decorators;
 
@@ -50,13 +51,9 @@ public class VideoDecorator : BaseActionDecorator
             finally
             {
                 if (TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Failed)
-                {
                     await SaveVideoAsync(handler); // ✅ Save video if test fails
-                }
                 else
-                {
                     await DeleteVideoAsync(handler); // ✅ Delete video if test passes
-                }
             }
         };
     }
@@ -66,14 +63,14 @@ public class VideoDecorator : BaseActionDecorator
     /// </summary>
     private static async Task StartVideoRecordingAsync(IActionHandler handler)
     {
-        IPage? page = handler.Page;
+        var page = handler.Page;
         if (page == null)
         {
             Log.Warning("⚠️ No Playwright Page found. Video recording skipped.");
             return;
         }
 
-        string videoDirectory = Path.Combine(ParentVideoDirectory, TestContext.CurrentContext.Test.Name);
+        var videoDirectory = Path.Combine(ParentVideoDirectory, TestContext.CurrentContext.Test.Name);
         Directory.CreateDirectory(videoDirectory);
 
         BrowserNewContextOptions options = new()
@@ -82,8 +79,8 @@ public class VideoDecorator : BaseActionDecorator
             RecordVideoSize = new RecordVideoSize { Width = 1280, Height = 720 }
         };
 
-        IBrowserContext videoContext = await page?.Context?.Browser?.NewContextAsync(options);
-        IPage videoPage = await videoContext.NewPageAsync();
+        var videoContext = await page?.Context?.Browser?.NewContextAsync(options);
+        var videoPage = await videoContext.NewPageAsync();
         await videoPage.GotoAsync(page.Url); // ✅ Sync video page with test execution
         handler.Use(async (_, next) => { await next(); }); // ✅ Ensure video context is properly closed
     }
@@ -93,21 +90,21 @@ public class VideoDecorator : BaseActionDecorator
     /// </summary>
     private static async Task SaveVideoAsync(IActionHandler handler)
     {
-        IPage? page = handler.Page;
+        var page = handler.Page;
         if (page == null || page.Video == null)
         {
             Log.Warning($"⚠️ No video recorded for test {TestContext.CurrentContext.Test.Name}");
             return;
         }
 
-        string videoPath = await page.Video.PathAsync();
+        var videoPath = await page.Video.PathAsync();
         if (!File.Exists(videoPath))
         {
             Log.Warning($"⚠️ No video file found for test {TestContext.CurrentContext.Test.Name}");
             return;
         }
 
-        string savedVideoPath =
+        var savedVideoPath =
             Path.Combine(ParentVideoDirectory, TestContext.CurrentContext.Test.Name, "test-failure.webm");
         Directory.CreateDirectory(Path.GetDirectoryName(savedVideoPath)!);
 
@@ -120,13 +117,10 @@ public class VideoDecorator : BaseActionDecorator
     /// </summary>
     private static async Task DeleteVideoAsync(IActionHandler handler)
     {
-        IPage? page = handler.Page;
-        if (page == null || page.Video == null)
-        {
-            return;
-        }
+        var page = handler.Page;
+        if (page == null || page.Video == null) return;
 
-        string videoPath = await page.Video.PathAsync();
+        var videoPath = await page.Video.PathAsync();
         if (File.Exists(videoPath))
         {
             File.Delete(videoPath);
