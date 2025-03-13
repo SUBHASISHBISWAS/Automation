@@ -43,5 +43,34 @@ services:
     depends_on:
       - ICDDB
     volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
-      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+      - ${APPDATA:-$HOME/.microsoft}/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA:-$HOME/.aspnet}/Https:/home/app/.aspnet/https:ro
+    networks:
+      - alstom_spectrail_server_network
+    ## 🔹 Add Restart Policy (Auto-restart on failure)
+    restart: always
+    ## 🔹 Add Health Check (Ensure API is running)
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    ## 🔹 Add Logging Options (Limit log size)
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"  # Max log size
+        max-file: "5"    # Keep last 5 log files
+    
+    ## 🔹 Add Custom Labels (Useful for Monitoring)
+    labels:
+      - "maintainer=SUBHASISH BISWAS"
+      - "app=Spectrail-ICD-API"
+      - "version=1.0"
+      - com.docker.compose.project=SpectrailTestServer
+      
+networks:
+  alstom_spectrail_server_network:
+    name: alstom_spectrail_server_network  # 👈 Assign a specific network name
+    driver: bridge
