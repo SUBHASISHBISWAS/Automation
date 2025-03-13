@@ -1,33 +1,73 @@
 #region
 
 using Microsoft.Extensions.Configuration;
+using System.Reflection;
 
 #endregion
 
 namespace Alstom.Spectrail.Server.Common.Configuration;
 
 /// <summary>
-///     ✅ ServerConfigHelper dynamically reads configuration settings
-///     from appsettings.json, environment variables, and Docker overrides.
+/// ✅ ServerConfigHelper dynamically reads configuration settings
+/// using strongly typed `ICDConfig` and `FeatureFlagsConfig`.
+/// Implements `IServerConfigHelper` for better testability.
 /// </summary>
-public class ServerConfigHelper
+public class ServerConfigHelper : IServerConfigHelper
 {
-    private readonly IConfiguration _configuration;
     private readonly ICDConfig _icdConfig;
+    private readonly FeatureFlagsConfig _featureFlagsConfig;
 
     /// <summary>
-    ///     ✅ Supports Dependency Injection (Pass IConfiguration)
+    /// ✅ Supports Dependency Injection (Pass IConfiguration)
     /// </summary>
     public ServerConfigHelper(IConfiguration configuration)
     {
-        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-        _icdConfig = new ICDConfig();
-        GetSection("Settings").Bind(_icdConfig);
+        ArgumentNullException.ThrowIfNull(configuration);
+
+        // ✅ Bind the "Settings" section to `ICDConfig`
+        _icdConfig = configuration.GetSection("Settings").Get<ICDConfig>()
+                     ?? throw new Exception("❌ Missing `Settings` section in appsettings.json!");
+
+        // ✅ Bind the "FeatureFlags" section to `FeatureFlagsConfig`
+        _featureFlagsConfig = configuration.GetSection("FeatureFlags").Get<FeatureFlagsConfig>()
+                              ?? new FeatureFlagsConfig(); // Defaults to false if missing
     }
 
+    /// <inheritdoc />
+    public string GetICDFolderPath()
+    {
+        if (string.IsNullOrEmpty(_icdConfig.ICD_FOLDER_PATH))
+            throw new Exception("❌ ICD_FOLDER_PATH is missing in appsettings.json!");
+
+        var resolvedPath = ResolvePath(_icdConfig.ICD_FOLDER_PATH);
+        if (!Directory.Exists(resolvedPath))
+            throw new DirectoryNotFoundException($"❌ ICD folder not found: {resolvedPath}");
+
+        return resolvedPath;
+    }
+
+    /// <inheritdoc />
+    public List<string> GetICDFiles()
+    {
+        var icdFolderPath = GetICDFolderPath();
+        var files = Directory.GetFiles(icdFolderPath, "*.xlsx").ToList();
+
+        if (!files.Any())
+            throw new FileNotFoundException($"❌ No ICD Excel files found in {icdFolderPath}");
+
+        return files;
+    }
+
+    /// <inheritdoc />
+    public bool IsFeatureEnabled(string feature)
+    {
+        // ✅ Use reflection to safely retrieve feature flag values
+        var property = typeof(FeatureFlagsConfig).GetProperty(feature, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+        return property != null && (bool)property.GetValue(_featureFlagsConfig);
+    }
 
     /// <summary>
-    ///     ✅ Converts relative paths to absolute paths for cross-platform compatibility.
+    /// ✅ Converts relative paths to absolute paths for cross-platform compatibility.
     /// </summary>
     private static string ResolvePath(string path)
     {
@@ -43,34 +83,5 @@ public class ServerConfigHelper
             : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "SpectrailArtifacts");
 
         return Path.Combine(basePath, path);
-    }
-
-
-    /// <summary>
-    ///     ✅ Retrieves Configuration Sections from `appsettings.json`
-    /// </summary>
-    private IConfigurationSection GetSection(string sectionKey)
-    {
-        var section = _configuration.GetSection(sectionKey);
-        if (!section.Exists())
-            throw new Exception($"❌ Section '{sectionKey}' not found in appsettings.json!");
-        return section;
-    }
-
-    /// <summary>
-    ///     ✅ Retrieves a list of ICD files from `appsettings.json`
-    /// </summary>
-    public List<string>? GetICDFiles()
-    {
-        return _icdConfig.ICD_Files.Select(ResolvePath).ToList();
-    }
-
-    /// <summary>
-    ///     ✅ Checks if a feature flag is enabled (Default = false)
-    /// </summary>
-    public bool IsFeatureEnabled(string feature)
-    {
-        var value = _configuration[$"FeatureFlags:{feature}"];
-        return bool.TryParse(value, out var result) && result;
     }
 }

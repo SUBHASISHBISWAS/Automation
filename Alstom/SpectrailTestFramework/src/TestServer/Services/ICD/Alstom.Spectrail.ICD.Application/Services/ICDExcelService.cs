@@ -20,7 +20,7 @@ namespace Alstom.Spectrail.ICD.Application.Services;
 /// <summary>
 ///     ✅ Manages dynamic reading, checksum validation, and MongoDB storage of Excel data.
 /// </summary>
-public class ICDExcelService(IMediator mediator, ServerConfigHelper configHelper) : IExcelService
+public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelper) : IExcelService
 {
     /// <summary>
     ///     ✅ Reads an Excel file, detects changes, and updates MongoDB.

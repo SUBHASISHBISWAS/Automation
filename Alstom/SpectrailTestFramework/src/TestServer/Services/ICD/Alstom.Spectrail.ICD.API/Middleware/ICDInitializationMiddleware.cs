@@ -15,7 +15,7 @@ namespace Alstom.Spectrail.ICD.API.Middleware;
 public class ICDSeedDataMiddleware(
     RequestDelegate next,
     IServiceScopeFactory scopeFactory,
-    ServerConfigHelper configHelper)
+    IServerConfigHelper configHelper)
 {
     private static bool _initialized;
 

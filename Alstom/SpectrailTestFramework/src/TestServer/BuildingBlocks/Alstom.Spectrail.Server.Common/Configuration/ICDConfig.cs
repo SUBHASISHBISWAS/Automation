@@ -1,6 +1,7 @@
+// ReSharper disable InconsistentNaming
 namespace Alstom.Spectrail.Server.Common.Configuration;
 
 public class ICDConfig
 {
-    public List<string> ICD_Files { get; set; } = new();
+   public string ICD_FOLDER_PATH { get; init; } = string.Empty;
 }

@@ -14,7 +14,7 @@ var services = builder.Services;
 
 // ✅ Add AutoMapper
 services.AddAutoMapper(typeof(Program));
-builder.Services.AddSingleton<ServerConfigHelper>();
+builder.Services.AddSingleton<IServerConfigHelper, ServerConfigHelper>();
 
 // ✅ Add Application & Infrastructure Services
 services.RegisterApplicationServices();

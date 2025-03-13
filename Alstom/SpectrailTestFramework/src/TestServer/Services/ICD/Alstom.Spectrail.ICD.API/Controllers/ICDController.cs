@@ -18,7 +18,7 @@ public class ICDController : ControllerBase
 {
     private readonly IMediator _mediator;
 
-    public ICDController(IMediator mediator, ServerConfigHelper configHelper)
+    public ICDController(IMediator mediator, IServerConfigHelper configHelper)
     {
         _mediator = mediator;
         if (configHelper.IsFeatureEnabled("EnableEagerLoading"))
