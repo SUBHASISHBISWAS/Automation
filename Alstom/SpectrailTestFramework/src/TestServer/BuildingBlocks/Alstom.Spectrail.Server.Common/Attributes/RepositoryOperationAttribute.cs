@@ -1,4 +1,4 @@
-namespace Alstom.Spectrail.ICD.Application.Attributes;
+namespace Alstom.Spectrail.Server.Common.Attributes;
 
 [AttributeUsage(AttributeTargets.Method)]
 public class RepositoryOperationAttribute(string name) : Attribute

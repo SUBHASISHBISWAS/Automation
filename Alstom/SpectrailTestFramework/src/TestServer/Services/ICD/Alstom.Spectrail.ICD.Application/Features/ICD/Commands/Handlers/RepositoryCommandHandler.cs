@@ -1,11 +1,11 @@
 #region
 
 using System.Reflection;
-using Alstom.Spectrail.ICD.Application.Attributes;
 using Alstom.Spectrail.ICD.Application.Contracts;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
 using MediatR;
 using Alstom.Spectrail.ICD.Domain.Common;
+using Alstom.Spectrail.Server.Common.Attributes;
 using Alstom.Spectrail.Server.Common.Entities;
 
 #endregion

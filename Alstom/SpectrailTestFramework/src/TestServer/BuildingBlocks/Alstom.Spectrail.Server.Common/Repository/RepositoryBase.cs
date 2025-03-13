@@ -2,12 +2,11 @@
 
 using System.Linq.Expressions;
 using Alstom.Spectrail.ICD.Application.Contracts;
-using Alstom.Spectrail.ICD.Domain.Common;
 using Alstom.Spectrail.Server.Common.Entities;
 
 #endregion
 
-namespace Alstom.Spectrail.ICD.Infrastructure.Repository;
+namespace Alstom.Spectrail.Server.Common.Repository;
 
 public class RepositoryBase<T>(IDataProvider<T> dataProvider) : IAsyncRepository<T>
     where T : EntityBase

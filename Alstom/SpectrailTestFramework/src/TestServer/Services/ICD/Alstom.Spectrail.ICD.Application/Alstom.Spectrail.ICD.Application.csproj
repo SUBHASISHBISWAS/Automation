@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Folder Include="Attributes\" />
     <Folder Include="Features\ICD\Commands\Models\" />
     <Folder Include="Utility\" />
   </ItemGroup>
