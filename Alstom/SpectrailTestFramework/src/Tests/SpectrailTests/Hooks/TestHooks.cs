@@ -5,8 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using Serilog;
-using SpectrailTestFramework.Factory;
-using SpectrailTestFramework.Utilities;
+using Alstom.Spectrail.TestFramework.Factory;
+using Alstom.Spectrail.TestFramework.Utilities;
 using SpectrailTests.Utility;
 using TestContext = NUnit.Framework.TestContext;
 

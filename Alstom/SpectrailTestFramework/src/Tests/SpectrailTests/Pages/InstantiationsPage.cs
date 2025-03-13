@@ -2,8 +2,8 @@
 
 using Microsoft.Playwright;
 using Serilog;
-using SpectrailTestFramework.Interfaces;
-using SpectrailTestFramework.PageObjects;
+using Alstom.Spectrail.TestFramework.Interfaces;
+using Alstom.Spectrail.TestFramework.PageObjects;
 
 #endregion
 

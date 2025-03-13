@@ -4,11 +4,11 @@ using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Playwright;
 using Serilog;
-using SpectrailTestFramework.Attributes;
-using SpectrailTestFramework.Decorators;
-using SpectrailTestFramework.Factory;
-using SpectrailTestFramework.Interfaces;
-using SpectrailTestFramework.Utilities;
+using Alstom.Spectrail.TestFramework.Attributes;
+using Alstom.Spectrail.TestFramework.Decorators;
+using Alstom.Spectrail.TestFramework.Factory;
+using Alstom.Spectrail.TestFramework.Interfaces;
+using Alstom.Spectrail.TestFramework.Utilities;
 using SpectrailTests.Pages;
 
 #endregion

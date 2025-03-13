@@ -1,9 +1,9 @@
 ﻿#region
 
-using SpectrailTestFramework.Actions;
-using SpectrailTestFramework.Attributes;
-using SpectrailTestFramework.Factory;
-using SpectrailTestFramework.Interfaces;
+using Alstom.Spectrail.TestFramework.Actions;
+using Alstom.Spectrail.TestFramework.Attributes;
+using Alstom.Spectrail.TestFramework.Factory;
+using Alstom.Spectrail.TestFramework.Interfaces;
 using SpectrailTests.Pages;
 
 #endregion

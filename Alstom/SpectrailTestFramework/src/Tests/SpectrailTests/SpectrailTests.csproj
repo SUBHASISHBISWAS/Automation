@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Framework\SpectrailTestFramework\SpectrailTestFramework.csproj" />
+    <ProjectReference Include="..\..\Framework\Alstom.Spectrail.TestFramework\Alstom.Spectrail.TestFramework.csproj" />
   </ItemGroup>
 
   <ItemGroup>
