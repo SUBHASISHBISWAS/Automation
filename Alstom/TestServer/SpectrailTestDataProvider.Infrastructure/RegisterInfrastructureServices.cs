@@ -4,7 +4,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SpectrailTestDataProvider.Application.Contracts;
 using SpectrailTestDataProvider.Application.Models;
-using SpectrailTestDataProvider.Application.Services;
 using SpectrailTestDataProvider.Infrastructure.Persistence.Contexts.Mongo;
 using SpectrailTestDataProvider.Infrastructure.Persistence.Drivers;
 using SpectrailTestDataProvider.Infrastructure.Repository;
@@ -24,7 +23,7 @@ public static class InfrastructureServiceRegistration
         services.AddScoped(typeof(IDataProvider<>), typeof(MongoDataProvider<>));
         services.AddScoped(typeof(IAsyncRepository<>), typeof(ICDRepository<>));
         services.AddScoped(typeof(IICDRepository<>), typeof(ICDRepository<>));
-        
+
         return services;
     }
 }
