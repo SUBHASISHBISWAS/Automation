@@ -3,8 +3,8 @@
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using Alstom.Spectrail.ICD.Application.Models;
-using SpectrailTestDataProvider.Domain.Common;
-using SpectrailTestDataProvider.Domain.Entities.ICD;
+using Alstom.Spectrail.ICD.Domain.Common;
+using Alstom.Spectrail.ICD.Domain.Entities.ICD;
 
 #endregion
 

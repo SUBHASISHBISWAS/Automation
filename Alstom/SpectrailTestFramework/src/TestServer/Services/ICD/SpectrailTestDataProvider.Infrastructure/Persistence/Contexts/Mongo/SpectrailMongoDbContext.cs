@@ -4,7 +4,7 @@ using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using Alstom.Spectrail.ICD.Application.Contracts;
 using Alstom.Spectrail.ICD.Application.Models;
-using SpectrailTestDataProvider.Domain.Common;
+using Alstom.Spectrail.ICD.Domain.Common;
 
 #endregion
 

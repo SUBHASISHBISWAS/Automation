@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Alstom.Spectrail.ICD.Application.Enums;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Queries.Query;
-using SpectrailTestDataProvider.Domain.Entities.ICD;
+using Alstom.Spectrail.ICD.Domain.Entities.ICD;
 using SpectrailTestDataProvider.Shared.Configuration;
 
 #endregion

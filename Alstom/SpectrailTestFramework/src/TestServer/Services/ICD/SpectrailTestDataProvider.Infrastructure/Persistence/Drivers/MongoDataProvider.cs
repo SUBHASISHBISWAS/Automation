@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Alstom.Spectrail.ICD.Application.Contracts;
-using SpectrailTestDataProvider.Domain.Common;
+using Alstom.Spectrail.ICD.Domain.Common;
 
 #endregion
 
