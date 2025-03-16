@@ -17,7 +17,7 @@
 // FileName: ICDController.cs
 // ProjectName: Alstom.Spectrail.ICD.API
 // Created by SUBHASISH BISWAS On: 2025-03-13
-// Updated by SUBHASISH BISWAS On: 2025-03-13
+// Updated by SUBHASISH BISWAS On: 2025-03-16
 //  ******************************************************************************/
 
 #endregion
@@ -58,7 +58,7 @@ public class ICDController : ControllerBase
 
     /// ✅ Fetch all DCU records
     [HttpGet("all")]
-    public async Task<IActionResult> GetAllDCURecords()
+    public async Task<IActionResult> GetAllDCURecords(string? fileName = null)
     {
         var data = await _mediator.Send(new RepositoryQuery<DCUEntity>());
         return Ok(data);

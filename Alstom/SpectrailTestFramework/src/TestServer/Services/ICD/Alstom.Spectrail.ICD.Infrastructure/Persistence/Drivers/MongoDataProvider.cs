@@ -259,9 +259,66 @@ public class MongoDataProvider<T>(IICDDbContext icdDataContext) : IDataProvider<
 
     public async Task<IEnumerable<T>> GetAllAsync(string? fileName = null)
     {
-        GetAllAsync1(fileName);
+        try
+        {
+            /*// ✅ Fetch dynamic objects from GetAllAsync
+            var result = await GetAllAsync1(fileName);
+
+            if (result is not List<object> allDatabaseInstances || !allDatabaseInstances.Any())
+            {
+                Console.WriteLine("⚠️ No data found to convert.");
+                return new List<T>();
+                ;
+            }
+
+            Dictionary<string, List<List<EntityBase>>> databaseResults = new();
+
+            foreach (var dbInstance in allDatabaseInstances)
+            {
+                var dbType = dbInstance.GetType();
+                var dbName = dbType.Name; // Extract database name
+
+                List<List<EntityBase>> entityCollections = new();
+
+                foreach (var property in dbType.GetProperties())
+                {
+                    var entityInstance = property.GetValue(dbInstance);
+                    if (entityInstance == null) continue;
+
+                    var entityType = entityInstance.GetType();
+                    var entitiesProperty = entityType.GetProperty("Entities");
+
+                    if (entitiesProperty != null)
+                    {
+                        var entities = entitiesProperty.GetValue(entityInstance) as IEnumerable<object>;
+                        if (entities != null)
+                        {
+                            var castedEntities = entities
+                                .Where(e => e is EntityBase)
+                                .Cast<EntityBase>()
+                                .ToList();
+
+                            if (castedEntities.Any()) entityCollections.Add(castedEntities);
+                        }
+                    }
+                }
+
+                if (entityCollections.Any()) databaseResults[dbName] = entityCollections;
+            }
+
+            Console.WriteLine("\u2705 Successfully converted to dictionary format.");
+            //return databaseResults;*/
+            return new List<T>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error converting data: {ex.Message}");
+            throw new InvalidOperationException("Error converting output to dictionary format.", ex);
+        }
+
         return new List<T>();
     }
+
 
     /// <summary>
     ///     ✅ Retrieves all records from MongoDB.

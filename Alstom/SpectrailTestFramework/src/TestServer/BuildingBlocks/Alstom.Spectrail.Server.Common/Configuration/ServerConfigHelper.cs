@@ -17,7 +17,7 @@
 // FileName: ServerConfigHelper.cs
 // ProjectName: Alstom.Spectrail.Server.Common
 // Created by SUBHASISH BISWAS On: 2025-03-11
-// Updated by SUBHASISH BISWAS On: 2025-03-13
+// Updated by SUBHASISH BISWAS On: 2025-03-16
 //  ******************************************************************************/
 
 #endregion
@@ -74,9 +74,11 @@ public class ServerConfigHelper : IServerConfigHelper
     public List<string> GetICDFiles()
     {
         var icdFolderPath = GetICDFolderPath();
-        var files = Directory.GetFiles(icdFolderPath, "*.xlsx").ToList();
+        var files = Directory.GetFiles(icdFolderPath, "*.xlsx")
+            .Where(file => !Path.GetFileName(file).StartsWith("~$")) // Ignore temp files
+            .ToList();
 
-        if (!files.Any())
+        if (files.Count == 0)
             throw new FileNotFoundException($"❌ No ICD Excel files found in {icdFolderPath}");
 
         return files;

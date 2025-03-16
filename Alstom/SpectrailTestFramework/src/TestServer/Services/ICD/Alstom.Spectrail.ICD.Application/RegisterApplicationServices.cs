@@ -17,7 +17,7 @@
 // FileName: RegisterApplicationServices.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-12
-// Updated by SUBHASISH BISWAS On: 2025-03-13
+// Updated by SUBHASISH BISWAS On: 2025-03-16
 //  ******************************************************************************/
 
 #endregion
@@ -56,10 +56,17 @@ public static class ApplicationServiceRegistration
         services
             .AddScoped<IRequestHandler<RepositoryQuery<DCUEntity>, IEnumerable<DCUEntity>>,
                 RepositoryQueryHandler<DCUEntity>>();
-
         services
             .AddScoped<IRequestHandler<RepositoryCommand<DCUEntity>, bool>,
                 RepositoryCommandHandler<DCUEntity>>();
+
+        services
+            .AddScoped<IRequestHandler<RepositoryQuery<BCHEntity>, IEnumerable<BCHEntity>>,
+                RepositoryQueryHandler<BCHEntity>>();
+        services
+            .AddScoped<IRequestHandler<RepositoryCommand<BCHEntity>, bool>,
+                RepositoryCommandHandler<BCHEntity>>();
+
         services.AddScoped<IRequestHandler<SeedICDDataCommand, bool>, SeedICDDataCommandHandler>();
         services.AddScoped<IExcelService, ICDExcelService>();
         return services;
