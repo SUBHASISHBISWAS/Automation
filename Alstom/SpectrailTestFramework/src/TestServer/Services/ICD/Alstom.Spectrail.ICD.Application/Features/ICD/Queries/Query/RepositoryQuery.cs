@@ -16,8 +16,8 @@
 // Email: subhasish.biswas@alstomgroup.com
 // FileName: RepositoryQuery.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
-// Created by SUBHASISH BISWAS On: 2025-03-12
-// Updated by SUBHASISH BISWAS On: 2025-03-13
+// Created by SUBHASISH BISWAS On: 2025-03-16
+// Updated by SUBHASISH BISWAS On: 2025-03-17
 //  ******************************************************************************/
 
 #endregion
@@ -37,5 +37,7 @@ public class RepositoryQuery<T>(string? id = null, Expression<Func<T, bool>>? fi
     where T : EntityBase
 {
     public string? Id { get; } = id;
+
+    public string? FileName { get; set; }
     public Expression<Func<T, bool>>? Filter { get; } = filter;
 }

@@ -16,8 +16,8 @@
 // Email: subhasish.biswas@alstomgroup.com
 // FileName: RepositoryQueryHandler.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
-// Created by SUBHASISH BISWAS On: 2025-03-12
-// Updated by SUBHASISH BISWAS On: 2025-03-16
+// Created by SUBHASISH BISWAS On: 2025-03-16
+// Updated by SUBHASISH BISWAS On: 2025-03-17
 //  ******************************************************************************/
 
 #endregion
@@ -47,6 +47,6 @@ public class RepositoryQueryHandler<T>(IAsyncRepository<T> repository)
 
         if (request.Filter != null) return await repository.GetByFilterAsync(request.Filter);
 
-        return await repository.GetAllAsync();
+        return await repository.GetAllAsync(request.FileName);
     }
 }

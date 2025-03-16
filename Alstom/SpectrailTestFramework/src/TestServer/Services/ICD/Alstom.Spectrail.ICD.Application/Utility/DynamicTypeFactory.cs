@@ -17,7 +17,7 @@
 // FileName: DynamicTypeFactory.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-16
-// Updated by SUBHASISH BISWAS On: 2025-03-16
+// Updated by SUBHASISH BISWAS On: 2025-03-17
 //  ******************************************************************************/
 
 #endregion
@@ -27,7 +27,7 @@
 using System.Collections.Concurrent;
 using System.Reflection;
 using System.Reflection.Emit;
-using Alstom.Spectrail.ICD.Domain.Entities.ICD;
+using Alstom.Spectrail.ICD.Application.Registry;
 
 #endregion
 
@@ -36,12 +36,14 @@ public static class DynamicTypeFactory
     private static readonly ConcurrentDictionary<string, Type> _typeCache = new();
 
     /// <summary>
-    ///     ✅ Creates a dynamic type for a database (e.g., trdp_icd_generated) and adds entity properties
+    ///     ✅ Creates a dynamic type for a database collection (e.g., "trdp_icd_generated") with entity properties.
     /// </summary>
     public static Type CreateDatabaseType(string dbName, List<string> entityNames)
     {
         if (_typeCache.TryGetValue(dbName, out var existingType))
             return existingType;
+
+        Console.WriteLine($"📌 Creating dynamic database type: {dbName}");
 
         var assemblyName = new AssemblyName("DynamicMongoEntities");
         var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
@@ -49,25 +51,46 @@ public static class DynamicTypeFactory
 
         var typeBuilder = moduleBuilder.DefineType(dbName, TypeAttributes.Public | TypeAttributes.Class);
 
-        // ✅ Add entity properties dynamically
+        // ✅ Each entity type should be stored as a List<EntityType>
         foreach (var entityName in entityNames)
         {
-            var entityType = CreateEntityType(entityName);
-            AddPropertyToType(typeBuilder, entityName, entityType);
+            var correctEntityType = EntityRegistry.GetEntityType(entityName);
+            if (correctEntityType == null)
+            {
+                Console.WriteLine($"⚠️ Entity type '{entityName}' not found in EntityRegistry. Skipping...");
+                continue;
+            }
+
+            Console.WriteLine($"✅ Adding List<{correctEntityType.Name}> as a property in {dbName}");
+
+            var listType = typeof(List<>).MakeGenericType(correctEntityType);
+            AddPropertyToType(typeBuilder, entityName, listType);
         }
 
         var newType = typeBuilder.CreateType();
         _typeCache[dbName] = newType;
+
+        Console.WriteLine($"✅ Successfully created dynamic database type: {newType.FullName}");
         return newType;
     }
 
     /// <summary>
-    ///     ✅ Creates a dynamic entity type (e.g., DCUEntity) with an `Entities` list
+    ///     ✅ Creates a dynamic entity type (e.g., "BCHEntity") with an `Entities` list.
     /// </summary>
     public static Type CreateEntityType(string entityName)
     {
         if (_typeCache.TryGetValue(entityName, out var existingType))
             return existingType;
+
+        var correctEntityType = EntityRegistry.GetEntityType(entityName);
+        if (correctEntityType != null)
+        {
+            Console.WriteLine($"✅ Using predefined entity type: {correctEntityType.FullName}");
+            _typeCache[entityName] = correctEntityType;
+            return correctEntityType;
+        }
+
+        Console.WriteLine($"⚠️ Entity {entityName} not found in predefined types. Creating dynamically...");
 
         var assemblyName = new AssemblyName("DynamicMongoEntities");
         var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
@@ -75,24 +98,28 @@ public static class DynamicTypeFactory
 
         var typeBuilder = moduleBuilder.DefineType(entityName, TypeAttributes.Public | TypeAttributes.Class);
 
-        // ✅ Define the `Entities` property as a list of the corresponding entity
-        var entityListType =
-            typeof(List<>).MakeGenericType(typeof(DCUEntity)); // You can replace DCUEntity with a generic type
-
-        AddPropertyToType(typeBuilder, "Entities", entityListType);
-
         var newType = typeBuilder.CreateType();
         _typeCache[entityName] = newType;
+
+        Console.WriteLine($"✅ Successfully created dynamic entity type: {newType.FullName}");
         return newType;
     }
 
     /// <summary>
-    ///     ✅ Helper method to add a property dynamically to a type
+    ///     ✅ Retrieves a previously created entity type.
+    /// </summary>
+    public static Type? GetEntityType(string entityName)
+    {
+        _typeCache.TryGetValue(entityName, out var type);
+        return type;
+    }
+
+    /// <summary>
+    ///     ✅ Adds a property dynamically to a type.
     /// </summary>
     private static void AddPropertyToType(TypeBuilder typeBuilder, string propertyName, Type propertyType)
     {
         var fieldBuilder = typeBuilder.DefineField($"_{propertyName}", propertyType, FieldAttributes.Private);
-
         var propertyBuilder = typeBuilder.DefineProperty(propertyName, PropertyAttributes.None, propertyType, null);
 
         var getMethodBuilder = typeBuilder.DefineMethod($"get_{propertyName}",

@@ -16,8 +16,8 @@
 // Email: subhasish.biswas@alstomgroup.com
 // FileName: ICDExcelService.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
-// Created by SUBHASISH BISWAS On: 2025-03-12
-// Updated by SUBHASISH BISWAS On: 2025-03-15
+// Created by SUBHASISH BISWAS On: 2025-03-16
+// Updated by SUBHASISH BISWAS On: 2025-03-17
 //  ******************************************************************************/
 
 #endregion
@@ -58,7 +58,8 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
         var newChecksum = ComputeFileChecksum(filePath);
 
         // ✅ Fetch existing data
-        var existingRecords = await mediator.Send(new RepositoryQuery<T>());
+        var existingRecords = await mediator.Send(new RepositoryQuery<T>
+            { FileName = Path.GetFileNameWithoutExtension(filePath).ToLower() });
         var entityBases = existingRecords.Where(e => e.FileKey == uniqueKey).ToList();
         var existingChecksum = entityBases.FirstOrDefault()?.Checksum;
 

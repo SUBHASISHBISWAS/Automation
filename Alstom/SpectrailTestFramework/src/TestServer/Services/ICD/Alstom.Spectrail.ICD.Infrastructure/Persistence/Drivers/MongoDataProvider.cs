@@ -17,17 +17,17 @@
 // FileName: MongoDataProvider.cs
 // ProjectName: Alstom.Spectrail.ICD.Infrastructure
 // Created by SUBHASISH BISWAS On: 2025-03-04
-// Updated by SUBHASISH BISWAS On: 2025-03-16
+// Updated by SUBHASISH BISWAS On: 2025-03-17
 //  ******************************************************************************/
 
 #endregion
 
 #region
 
+using System.Collections;
 using System.Linq.Expressions;
 using Alstom.Spectrail.ICD.Application.Contracts;
 using Alstom.Spectrail.ICD.Application.Registry;
-using Alstom.Spectrail.ICD.Domain.Entities.ICD;
 using Alstom.Spectrail.Server.Common.Contracts;
 using Alstom.Spectrail.Server.Common.Entities;
 using MongoDB.Bson;
@@ -261,14 +261,46 @@ public class MongoDataProvider<T>(IICDDbContext icdDataContext) : IDataProvider<
     {
         try
         {
-            /*// ✅ Fetch dynamic objects from GetAllAsync
-            var result = await GetAllAsync1(fileName);
+            // ✅ Fetch stored data
+            var storedData = await GetStoredDataAsync();
+
+            // ✅ Extract entity collections for the specified file
+            if (!storedData.TryGetValue(fileName ?? string.Empty, out var entityCollections) ||
+                entityCollections == null)
+            {
+                Console.WriteLine($"⚠️ No data found for file: {fileName}");
+                return new List<T>(); // Return an empty list if no data found
+            }
+
+            // ✅ Flatten the nested lists and filter to the correct type
+            var allEntities = entityCollections
+                .SelectMany(e => e)
+                .Where(entity => entity is T)
+                .Cast<T>()
+                .ToList();
+
+            Console.WriteLine($"✅ Retrieved {allEntities.Count} entities from '{fileName}'");
+
+            return allEntities;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error retrieving entities: {ex.Message}");
+            throw new InvalidOperationException("An unexpected error occurred while retrieving entities.", ex);
+        }
+    }
+
+    private async Task<Dictionary<string, List<List<EntityBase>>>> GetStoredDataAsync(string? fileName = null)
+    {
+        try
+        {
+            // ✅ Fetch dynamic objects from GetAllEntityAsync
+            var result = await GetAllEntityAsync(fileName);
 
             if (result is not List<object> allDatabaseInstances || !allDatabaseInstances.Any())
             {
                 Console.WriteLine("⚠️ No data found to convert.");
-                return new List<T>();
-                ;
+                return new Dictionary<string, List<List<EntityBase>>>();
             }
 
             Dictionary<string, List<List<EntityBase>>> databaseResults = new();
@@ -282,48 +314,43 @@ public class MongoDataProvider<T>(IICDDbContext icdDataContext) : IDataProvider<
 
                 foreach (var property in dbType.GetProperties())
                 {
-                    var entityInstance = property.GetValue(dbInstance);
-                    if (entityInstance == null) continue;
+                    // ✅ Get the List<EntityType> property (e.g., List<DCUEntity>)
+                    var entityList = property.GetValue(dbInstance) as IList;
 
-                    var entityType = entityInstance.GetType();
-                    var entitiesProperty = entityType.GetProperty("Entities");
+                    if (entityList == null) continue;
 
-                    if (entitiesProperty != null)
-                    {
-                        var entities = entitiesProperty.GetValue(entityInstance) as IEnumerable<object>;
-                        if (entities != null)
-                        {
-                            var castedEntities = entities
-                                .Where(e => e is EntityBase)
-                                .Cast<EntityBase>()
-                                .ToList();
+                    var entityType = entityList.GetType().GetGenericArguments()[0]; // Get DCUEntity, BCHEntity, etc.
 
-                            if (castedEntities.Any()) entityCollections.Add(castedEntities);
-                        }
-                    }
+                    // ✅ Convert each entity inside the list to EntityBase
+                    var castedEntities = entityList.Cast<EntityBase>().ToList();
+
+                    if (castedEntities.Any())
+                        entityCollections.Add(castedEntities);
                 }
 
                 if (entityCollections.Any()) databaseResults[dbName] = entityCollections;
             }
 
             Console.WriteLine("\u2705 Successfully converted to dictionary format.");
-            //return databaseResults;*/
-            return new List<T>();
+            return databaseResults;
+        }
+        catch (TypeLoadException ex)
+        {
+            Console.WriteLine($"❌ TypeLoadException: {ex.Message}");
+            throw new InvalidOperationException("Error loading dynamic type. Ensure the type was correctly created.",
+                ex);
         }
         catch (Exception ex)
         {
             Console.WriteLine($"❌ Error converting data: {ex.Message}");
             throw new InvalidOperationException("Error converting output to dictionary format.", ex);
         }
-
-        return new List<T>();
     }
-
 
     /// <summary>
     ///     ✅ Retrieves all records from MongoDB.
     /// </summary>
-    public async Task<object> GetAllAsync1(string? fileName = null)
+    private async Task<object> GetAllEntityAsync(string? fileName = null)
     {
         try
         {
@@ -394,7 +421,17 @@ public class MongoDataProvider<T>(IICDDbContext icdDataContext) : IDataProvider<
                 {
                     if (element.Name == "_id") continue; // Skip `_id`
 
-                    var entityTypeName = element.Name;
+                    var entityTypeName = element.Name; // e.g., "BCHEntity", "DCUEntity"
+
+                    // ✅ Ensure correct entity type is used from EntityRegistry
+                    var correctEntityType = EntityRegistry.GetEntityType(entityTypeName);
+                    if (correctEntityType == null)
+                    {
+                        Console.WriteLine($"❌ Unable to resolve entity type for '{entityTypeName}'. Skipping...");
+                        continue;
+                    }
+
+                    Console.WriteLine($"✅ Using entity type: {correctEntityType.FullName}");
 
                     if (!doc.Contains(entityTypeName) || !doc[entityTypeName].IsBsonDocument)
                     {
@@ -410,21 +447,23 @@ public class MongoDataProvider<T>(IICDDbContext icdDataContext) : IDataProvider<
                         continue;
                     }
 
-                    // ✅ Create a dynamic entity type inside the database type
-                    var dynamicEntityType = DynamicTypeFactory.CreateEntityType(entityTypeName);
-                    var entityInstance = Activator.CreateInstance(dynamicEntityType);
-
+                    // ✅ Deserialize using the correct entity type
                     var entities = entityDoc["Entities"]
                         .AsBsonArray
-                        .Select(e =>
-                            BsonSerializer.Deserialize<DCUEntity>(e.AsBsonDocument)) // Adjust based on entity type
+                        .Select(e => BsonSerializer.Deserialize(e.AsBsonDocument, correctEntityType))
                         .ToList();
 
-                    var entitiesProperty = dynamicEntityType.GetProperty("Entities");
-                    entitiesProperty?.SetValue(entityInstance, entities);
+                    // ✅ Create a strongly typed list dynamically
+                    var genericListType = typeof(List<>).MakeGenericType(correctEntityType);
+                    var stronglyTypedEntities = Activator.CreateInstance(genericListType) as IList;
 
+                    foreach (var entity in entities)
+                        stronglyTypedEntities?.Add(entity);
+
+                    // ✅ Store entity list inside the dynamic database wrapper
                     var dbProperty = dynamicDbType.GetProperty(entityTypeName);
-                    if (dbProperty != null) dbProperty.SetValue(dbInstance, entityInstance);
+                    if (dbProperty != null && stronglyTypedEntities != null)
+                        dbProperty.SetValue(dbInstance, stronglyTypedEntities);
                 }
 
                 allDatabaseInstances.Add(dbInstance);
