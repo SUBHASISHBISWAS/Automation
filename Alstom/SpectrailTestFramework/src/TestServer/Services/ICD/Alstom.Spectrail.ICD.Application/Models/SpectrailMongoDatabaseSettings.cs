@@ -17,7 +17,7 @@
 // FileName: SpectrailMongoDatabaseSettings.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-04
-// Updated by SUBHASISH BISWAS On: 2025-03-13
+// Updated by SUBHASISH BISWAS On: 2025-03-16
 //  ******************************************************************************/
 
 #endregion
@@ -27,7 +27,8 @@ namespace Alstom.Spectrail.ICD.Application.Models;
 public class SpectrailMongoDatabaseSettings
 {
     public string? ConnectionString { get; set; }
-    public string? DatabaseName { get; set; }
+    public string? ICDDatabase { get; set; }
+    public string? ICDEntityRegistry { get; set; }
 
-    public string? CollectionName { get; set; }
+    public string? ICDEntityMapping { get; set; }
 }

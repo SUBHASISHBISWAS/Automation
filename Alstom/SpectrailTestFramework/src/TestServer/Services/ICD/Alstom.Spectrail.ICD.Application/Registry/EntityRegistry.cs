@@ -17,7 +17,7 @@
 // FileName: EntityRegistry.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-12
-// Updated by SUBHASISH BISWAS On: 2025-03-13
+// Updated by SUBHASISH BISWAS On: 2025-03-15
 //  ******************************************************************************/
 
 #endregion
@@ -25,39 +25,99 @@
 #region
 
 using Alstom.Spectrail.Server.Common.Entities;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Driver;
+using static MongoDB.Driver.Builders<Alstom.Spectrail.ICD.Application.Registry.EntityMapping>;
 
 #endregion
 
 namespace Alstom.Spectrail.ICD.Application.Registry;
 
+/// <summary>
+///     ✅ Manages entity mappings stored in MongoDB.
+/// </summary>
 public static class EntityRegistry
 {
-    // ReSharper disable once InconsistentNaming
-    private static readonly Dictionary<string, Type> _entityMappings = new();
+    private static IMongoCollection<EntityMapping>? _collection;
 
     /// <summary>
-    ///     ✅ Auto-registers all entities dynamically.
+    ///     ✅ Initializes MongoDB connection.
     /// </summary>
     static EntityRegistry()
     {
         RegisterEntitiesFromAssembly();
     }
 
-    /// <summary>
-    ///     ✅ Gets the registered entity type by sheet name.
-    /// </summary>
-    public static Type? GetEntityType(string sheetName)
+    public static void Initialize(IMongoCollection<EntityMapping>? collection)
     {
-        return _entityMappings.GetValueOrDefault(sheetName);
+        _collection = collection;
     }
 
     /// <summary>
-    ///     ✅ Registers a single entity dynamically.
+    ///     ✅ Gets the registered entity type using file name and sheet name.
     /// </summary>
-    public static void RegisterEntity(string sheetName, Type entityType)
+    public static Type? GetEntityType(string filePath, string sheetName)
     {
-        if (typeof(EntityBase).IsAssignableFrom(entityType) && !_entityMappings.ContainsKey(sheetName))
-            _entityMappings[sheetName] = entityType;
+        var fileName = Path.GetFileName(filePath).Trim().ToLower(); // ✅ Match file name format
+        var normalizedSheetName = sheetName.Trim().Replace(" ", "").ToLower();
+
+        var filter = Filter.And(
+            Filter.Eq(x => x.FileName, fileName),
+            Filter.Eq(x => x.SheetName, normalizedSheetName)
+        );
+
+        var result = _collection.Find(filter).FirstOrDefault();
+        if (result == null)
+        {
+            Console.WriteLine($"⚠️ Entity not found for {fileName}:{normalizedSheetName}");
+            return null;
+        }
+
+        Console.WriteLine($"🔍 Looking for entity type: {result.EntityName}");
+
+        var entityType = Type.GetType(result.EntityName) ??
+                         AppDomain.CurrentDomain.GetAssemblies()
+                             .SelectMany(a => a.GetTypes())
+                             .FirstOrDefault(t => t.FullName == result.EntityName);
+
+        if (entityType == null)
+            Console.WriteLine($"❌ Failed to resolve entity type: {result.EntityName}");
+        else
+            Console.WriteLine($"✅ Resolved entity type: {entityType.FullName}");
+
+        return entityType;
+    }
+
+    /// <summary>
+    ///     ✅ Registers a single entity dynamically in MongoDB.
+    /// </summary>
+    public static void RegisterEntity(string filePath, string sheetName, Type entityType)
+    {
+        var fileName = Path.GetFileName(filePath).Trim().ToLower();
+        var normalizedSheetName = sheetName.Trim().Replace(" ", "").ToLower();
+        var normalizedEntityName = entityType.FullName;
+
+        var mapping = new EntityMapping
+        {
+            FileName = fileName,
+            SheetName = normalizedSheetName,
+            EntityName = normalizedEntityName ?? throw new InvalidOperationException()
+        };
+
+        var filter = Filter.And(
+            Filter.Eq(x => x.FileName, mapping.FileName),
+            Filter.Eq(x => x.SheetName, mapping.SheetName)
+        );
+
+        var update = Update
+            .Set(x => x.EntityName, mapping.EntityName);
+
+        var options = new UpdateOptions { IsUpsert = true }; // ✅ Upsert instead of insert
+
+        _collection?.UpdateOne(filter, update, options);
+
+        Console.WriteLine($"✅ Registered Entity: {entityType.FullName} for '{fileName}:{normalizedSheetName}'");
     }
 
     /// <summary>
@@ -74,23 +134,33 @@ public static class EntityRegistry
             Console.WriteLine($"🔍 Scanning Assembly: {asm.FullName}");
 
             var entityTypes = asm.GetTypes()
-                .Where(t => t.IsClass && !t.IsAbstract && typeof(EntityBase).IsAssignableFrom(t))
+                .Where(t => t is { IsClass: true, IsAbstract: false } && typeof(EntityBase).IsAssignableFrom(t))
                 .ToList();
 
-            foreach (var type in entityTypes)
-            {
-                var entityName = type.Name.Replace("Entity", "");
-                if (!_entityMappings.TryAdd(entityName, type)) continue;
-                Console.WriteLine($"✅ Registered Entity: {type.Name} as '{entityName}'");
-            }
+            foreach (var entityName in entityTypes.Select(type => type.Name.Replace("Entity", "").Trim().ToLower()))
+                Console.WriteLine($"📌 Detected entity: {entityName}");
         }
     }
 
     /// <summary>
     ///     ✅ Returns all registered entity mappings.
     /// </summary>
-    public static IReadOnlyDictionary<string, Type> GetAllMappings()
+    public static List<EntityMapping> GetAllMappings()
     {
-        return _entityMappings;
+        return _collection.Find(_ => true).ToList();
     }
+}
+
+/// <summary>
+///     ✅ Represents an entity mapping stored in MongoDB.
+/// </summary>
+public class EntityMapping
+{
+    [BsonId] // ✅ Marks _id as MongoDB's primary key (auto-generated)
+    [BsonRepresentation(BsonType.ObjectId)]
+    public string Id { get; set; } = ObjectId.GenerateNewId().ToString(); // ✅ No fixed _id!
+
+    public string FileName { get; init; } = string.Empty;
+    public string SheetName { get; init; } = string.Empty;
+    public string EntityName { get; init; } = string.Empty;
 }

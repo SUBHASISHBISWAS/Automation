@@ -17,7 +17,7 @@
 // FileName: RegisterInfrastructureServices.cs
 // ProjectName: Alstom.Spectrail.ICD.Infrastructure
 // Created by SUBHASISH BISWAS On: 2025-03-11
-// Updated by SUBHASISH BISWAS On: 2025-03-13
+// Updated by SUBHASISH BISWAS On: 2025-03-16
 //  ******************************************************************************/
 
 #endregion
@@ -29,6 +29,7 @@ using Alstom.Spectrail.ICD.Application.Models;
 using Alstom.Spectrail.ICD.Infrastructure.Persistence.Contexts.Mongo;
 using Alstom.Spectrail.ICD.Infrastructure.Persistence.Drivers;
 using Alstom.Spectrail.ICD.Infrastructure.Repository;
+using Alstom.Spectrail.Server.Common.Contracts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -43,7 +44,7 @@ public static class InfrastructureServiceRegistration
     {
         services.Configure<SpectrailMongoDatabaseSettings>(options =>
             configuration.GetSection("SpectrailMongoDatabaseSettings").Bind(options));
-        services.AddScoped(typeof(ISpectrailMongoDbContext<>), typeof(ICDMongoDataContext<>));
+        services.AddScoped<IICDDbContext, ICDMongoDataContext>();
         services.AddScoped(typeof(IDataProvider<>), typeof(MongoDataProvider<>));
         services.AddScoped(typeof(IAsyncRepository<>), typeof(ICDRepository<>));
         services.AddScoped(typeof(IICDRepository<>), typeof(ICDRepository<>));

@@ -17,7 +17,7 @@
 // FileName: SpectrailMongoDbContext.cs
 // ProjectName: Alstom.Spectrail.ICD.Infrastructure
 // Created by SUBHASISH BISWAS On: 2025-03-04
-// Updated by SUBHASISH BISWAS On: 2025-03-13
+// Updated by SUBHASISH BISWAS On: 2025-03-16
 //  ******************************************************************************/
 
 #endregion
@@ -26,7 +26,6 @@
 
 using Alstom.Spectrail.ICD.Application.Contracts;
 using Alstom.Spectrail.ICD.Application.Models;
-using Alstom.Spectrail.Server.Common.Entities;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 
@@ -34,18 +33,16 @@ using MongoDB.Driver;
 
 namespace Alstom.Spectrail.ICD.Infrastructure.Persistence.Contexts.Mongo;
 
-public abstract class SpectrailMongoDbContext<T> : ISpectrailMongoDbContext<T> where T : EntityBase
+public abstract class SpectrailMongoDbContext : ISpectrailMongoDbContext
 {
     protected SpectrailMongoDbContext(IOptions<SpectrailMongoDatabaseSettings> databaseSettings)
     {
         ArgumentNullException.ThrowIfNull(databaseSettings);
         SpectrailDatabaseSettings = databaseSettings.Value;
-        var client = new MongoClient(SpectrailDatabaseSettings.ConnectionString);
-        var database = client.GetDatabase(SpectrailDatabaseSettings.DatabaseName);
-        SpectrailData = database.GetCollection<T>(typeof(T).Name);
+        Client = new MongoClient(SpectrailDatabaseSettings.ConnectionString);
     }
 
-    private SpectrailMongoDatabaseSettings SpectrailDatabaseSettings { get; }
+    protected MongoClient Client { get; }
 
-    public IMongoCollection<T>? SpectrailData { get; set; }
+    protected SpectrailMongoDatabaseSettings SpectrailDatabaseSettings { get; }
 }

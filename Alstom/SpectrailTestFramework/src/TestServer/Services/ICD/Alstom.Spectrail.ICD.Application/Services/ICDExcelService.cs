@@ -17,7 +17,7 @@
 // FileName: ICDExcelService.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-12
-// Updated by SUBHASISH BISWAS On: 2025-03-13
+// Updated by SUBHASISH BISWAS On: 2025-03-15
 //  ******************************************************************************/
 
 #endregion
@@ -54,21 +54,28 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
         if (string.IsNullOrEmpty(filePath) || string.IsNullOrEmpty(sheetName))
             throw new ArgumentNullException("❌ File path or sheet name cannot be null!");
 
+        var uniqueKey = $"{Path.GetFileNameWithoutExtension(filePath)}_{sheetName}";
         var newChecksum = ComputeFileChecksum(filePath);
 
         // ✅ Fetch existing data
         var existingRecords = await mediator.Send(new RepositoryQuery<T>());
-        var entityBases = existingRecords.ToList();
+        var entityBases = existingRecords.Where(e => e.FileKey == uniqueKey).ToList();
         var existingChecksum = entityBases.FirstOrDefault()?.Checksum;
 
         // ✅ Skip processing if checksum validation is enabled and file is unchanged
         if (configHelper.IsFeatureEnabled("EnableChecksumValidation") && existingChecksum == newChecksum)
         {
-            Console.WriteLine($"✅ No changes detected for {sheetName}. Using existing data.");
-            return entityBases.ToList();
+            Console.WriteLine($"✅ No changes detected for {uniqueKey}. Using existing data.");
+            return entityBases;
         }
 
         var newRecords = ReadExcel<T>(filePath, sheetName);
+        newRecords.ForEach(record =>
+        {
+            record.FileKey = uniqueKey;
+            record.FileName = Path.GetFileNameWithoutExtension(filePath);
+            record.SheetName = sheetName;
+        });
         newRecords.ForEach(record => record.Checksum = newChecksum);
 
         // ✅ Use `RepositoryCommand<T>` for efficient batch operations
@@ -76,16 +83,8 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
                                configHelper.IsFeatureEnabled("EnableMiddlewarePreloading");
         await ExecuteRepositoryCommand(isFeatureEnabled, newRecords);
 
-        Console.WriteLine($"✅ Successfully processed {newRecords.Count} records from {sheetName}.");
+        Console.WriteLine($"✅ Successfully processed {newRecords.Count} records from {uniqueKey}.");
         return newRecords;
-    }
-
-    /// <summary>
-    ///     ✅ Retrieves stored data from MongoDB using RepositoryQuery.
-    /// </summary>
-    public async Task<List<T>> GetStoredDataAsync<T>() where T : EntityBase, new()
-    {
-        return (await mediator.Send(new RepositoryQuery<T>())).ToList();
     }
 
     /// <summary>
@@ -117,20 +116,11 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
     }
 
     /// <summary>
-    ///     ✅ Executes repository operations dynamically.
+    ///     ✅ Retrieves stored data from MongoDB using RepositoryQuery.
     /// </summary>
-    private async Task ExecuteRepositoryCommand<T>(bool isEagerLoading, List<T> newRecords) where T : EntityBase
+    public async Task<List<T>> GetStoredDataAsync<T>() where T : EntityBase, new()
     {
-        if (isEagerLoading)
-        {
-            await mediator.Send(new RepositoryCommand<T>(RepositoryOperation.DeleteAll));
-            await mediator.Send(new RepositoryCommand<T>(RepositoryOperation.SeedData, entities: newRecords));
-        }
-        else
-        {
-            foreach (var record in newRecords)
-                await mediator.Send(new RepositoryCommand<T>(RepositoryOperation.Add, record));
-        }
+        return (await mediator.Send(new RepositoryQuery<T>())).ToList();
     }
 
     /// <summary>
@@ -144,40 +134,28 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
         using var workbook = new XLWorkbook(filePath);
         foreach (var worksheet in workbook.Worksheets)
         {
-            var sheetName = worksheet.Name;
-            var entityType = EntityRegistry.GetEntityType(sheetName);
+            var sheetName = worksheet.Name.Trim().Replace(" ", "").ToLower();
+            Console.WriteLine($"📌 Processing sheet: {sheetName}");
 
-            if (entityType == null || !typeof(EntityBase).IsAssignableFrom(entityType))
+            var entityType = AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(a => a.GetTypes())
+                .FirstOrDefault(t =>
+                    t.IsClass && !t.IsAbstract && typeof(EntityBase).IsAssignableFrom(t) &&
+                    t.Name.Replace("Entity", "").Trim().ToLower() == sheetName);
+
+            if (entityType == null)
             {
-                Console.WriteLine($"⚠️ No valid entity mapped for sheet: {sheetName}. Skipping...");
+                Console.WriteLine($"⚠️ No registered entity for sheet: {sheetName}. Skipping...");
                 continue;
             }
 
-            // ✅ Ensure entity type is properly instantiated before proceeding
-            try
-            {
-                await InvokeGenericMethod(nameof(ReadExcelAndStoreAsync), entityType, filePath, sheetName);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"❌ Error processing sheet '{sheetName}': {ex.Message}");
-            }
+            // ✅ Register dynamically when processing the file
+            EntityRegistry.RegisterEntity(filePath, sheetName, entityType);
+            Console.WriteLine($"✅ Registered Entity: {entityType.FullName} for '{filePath}:{sheetName}'");
+
+            // 🚀 Now process the sheet
+            await InvokeGenericMethod(nameof(ReadExcelAndStoreAsync), entityType, filePath, sheetName);
         }
-    }
-
-    /// <summary>
-    ///     ✅ Dynamically invokes a generic method.
-    /// </summary>
-    private async Task InvokeGenericMethod(string methodName, Type entityType, params object[] parameters)
-    {
-        var method = typeof(ICDExcelService)
-            .GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public)?
-            .MakeGenericMethod(entityType);
-
-        if (method == null)
-            throw new InvalidOperationException($"❌ Method '{methodName}' not found in {nameof(ICDExcelService)}.");
-
-        await (Task)method.Invoke(this, parameters)!;
     }
 
     /// <summary>
@@ -206,43 +184,27 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
                 {
                     var cellValue = ExtractCellValue(row.Cell(colIndex + 1));
                     if (cellValue != null)
-                        try
-                        {
-                            var targetType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+                    {
+                        var targetType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+                        var sanitizedValue = cellValue.ToString()?.Trim();
 
-                            // ✅ Normalize cell value
-                            var sanitizedValue = cellValue.ToString()?.Trim();
+                        if (string.IsNullOrEmpty(sanitizedValue)) continue;
 
-                            // ✅ Skip conversion if value is empty
-                            if (string.IsNullOrEmpty(sanitizedValue)) continue;
-
-                            // ✅ Handle Enum values safely
-                            if (property.PropertyType.IsEnum)
-                            {
-                                if (Enum.TryParse(property.PropertyType, sanitizedValue, true, out var enumValue))
-                                    property.SetValue(entity, enumValue);
-                                else
-                                    Console.WriteLine(
-                                        $"⚠️ Invalid enum value '{sanitizedValue}' for property '{property.Name}'.");
-                            }
-                            else
-                            {
-                                property.SetValue(entity, Convert.ChangeType(sanitizedValue, targetType));
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine(
-                                $"⚠️ Error converting column '{headers[colIndex]}' value '{cellValue}' to property '{property.Name}': {ex.Message}");
-                        }
+                        if (property.PropertyType.IsEnum && Enum.TryParse(property.PropertyType, sanitizedValue, true,
+                                out var enumValue))
+                            property.SetValue(entity, enumValue);
+                        else
+                            property.SetValue(entity, Convert.ChangeType(sanitizedValue, targetType));
+                    }
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine(
-                        $"⚠️ Error mapping column '{headers[colIndex]}' to property '{property.Name}': {ex.Message}");
+                        $"⚠️ Mapping error: Column '{headers[colIndex]}' → Property '{property.Name}': {ex.Message}");
                 }
             }
 
+            entity.FileKey = $"{Path.GetFileNameWithoutExtension(filePath)}_{sheetName}";
             entity.Checksum = ComputeFileChecksum(filePath);
             entities.Add(entity);
         }
@@ -263,5 +225,37 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
             XLDataType.DateTime => cell.GetDateTime(),
             _ => cell.Value
         };
+    }
+
+    /// <summary>
+    ///     ✅ Executes repository operations dynamically.
+    /// </summary>
+    private async Task ExecuteRepositoryCommand<T>(bool isEagerLoading, List<T> newRecords) where T : EntityBase
+    {
+        if (isEagerLoading)
+        {
+            await mediator.Send(new RepositoryCommand<T>(RepositoryOperation.DeleteAll));
+            await mediator.Send(new RepositoryCommand<T>(RepositoryOperation.SeedData, entities: newRecords));
+        }
+        else
+        {
+            foreach (var record in newRecords)
+                await mediator.Send(new RepositoryCommand<T>(RepositoryOperation.Add, record));
+        }
+    }
+
+    /// <summary>
+    ///     ✅ Dynamically invokes a generic method.
+    /// </summary>
+    private async Task InvokeGenericMethod(string methodName, Type entityType, params object[] parameters)
+    {
+        var method = typeof(ICDExcelService)
+            .GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public)?
+            .MakeGenericMethod(entityType);
+
+        if (method == null)
+            throw new InvalidOperationException($"❌ Method '{methodName}' not found in {nameof(ICDExcelService)}.");
+
+        await (Task)method.Invoke(this, parameters)!;
     }
 }

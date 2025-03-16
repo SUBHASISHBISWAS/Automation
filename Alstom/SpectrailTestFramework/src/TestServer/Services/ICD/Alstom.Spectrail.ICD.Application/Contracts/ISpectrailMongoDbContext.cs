@@ -17,21 +17,19 @@
 // FileName: ISpectrailMongoDbContext.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-04
-// Updated by SUBHASISH BISWAS On: 2025-03-13
+// Updated by SUBHASISH BISWAS On: 2025-03-16
 //  ******************************************************************************/
 
 #endregion
 
 #region
 
-using Alstom.Spectrail.Server.Common.Entities;
-using MongoDB.Driver;
+using Alstom.Spectrail.Server.Common.Contracts;
 
 #endregion
 
 namespace Alstom.Spectrail.ICD.Application.Contracts;
 
-public interface ISpectrailMongoDbContext<T> : IDataContext<T> where T : EntityBase
+public interface ISpectrailMongoDbContext : IDataContext
 {
-    IMongoCollection<T>? SpectrailData { get; }
 }

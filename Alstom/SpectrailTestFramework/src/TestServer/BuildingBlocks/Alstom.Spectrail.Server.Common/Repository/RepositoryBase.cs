@@ -17,7 +17,7 @@
 // FileName: RepositoryBase.cs
 // ProjectName: Alstom.Spectrail.Server.Common
 // Created by SUBHASISH BISWAS On: 2025-03-04
-// Updated by SUBHASISH BISWAS On: 2025-03-13
+// Updated by SUBHASISH BISWAS On: 2025-03-16
 //  ******************************************************************************/
 
 #endregion
@@ -26,6 +26,7 @@
 
 using System.Linq.Expressions;
 using Alstom.Spectrail.ICD.Application.Contracts;
+using Alstom.Spectrail.Server.Common.Contracts;
 using Alstom.Spectrail.Server.Common.Entities;
 
 #endregion
@@ -35,11 +36,6 @@ namespace Alstom.Spectrail.Server.Common.Repository;
 public class RepositoryBase<T>(IDataProvider<T> dataProvider) : IAsyncRepository<T>
     where T : EntityBase
 {
-    public async Task<IEnumerable<T>> GetAllAsync()
-    {
-        return await dataProvider.GetAllAsync();
-    }
-
     public async Task<T> GetByIdAsync(string id)
     {
         return await dataProvider.GetByIdAsync(id);
@@ -73,13 +69,19 @@ public class RepositoryBase<T>(IDataProvider<T> dataProvider) : IAsyncRepository
         await dataProvider.AddManyAsync(entities);
     }
 
-    public async Task SeedDataAsync(IEnumerable<T> entities)
+    public async Task SeedDataAsync(IEnumerable<T>? entities)
     {
-        await dataProvider.AddManyAsync(entities);
+        ArgumentNullException.ThrowIfNull(entities);
+        await dataProvider.SeedDataAsync(entities);
     }
 
     public async Task<bool> DeleteAllAsync()
     {
         return await dataProvider.DeleteAllAsync();
+    }
+
+    public async Task<IEnumerable<T>> GetAllAsync()
+    {
+        return await dataProvider.GetAllAsync();
     }
 }

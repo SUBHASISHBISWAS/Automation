@@ -17,7 +17,7 @@
 // FileName: IDataProvider.cs
 // ProjectName: Alstom.Spectrail.Server.Common
 // Created by SUBHASISH BISWAS On: 2025-03-04
-// Updated by SUBHASISH BISWAS On: 2025-03-13
+// Updated by SUBHASISH BISWAS On: 2025-03-16
 //  ******************************************************************************/
 
 #endregion
@@ -29,11 +29,11 @@ using Alstom.Spectrail.Server.Common.Entities;
 
 #endregion
 
-namespace Alstom.Spectrail.ICD.Application.Contracts;
+namespace Alstom.Spectrail.Server.Common.Contracts;
 
 public interface IDataProvider<T> where T : EntityBase
 {
-    Task<IEnumerable<T>> GetAllAsync();
+    Task<IEnumerable<T>> GetAllAsync(string? fileName = null);
     Task<T> GetByIdAsync(string id);
     Task<IEnumerable<T>> GetByFilterAsync(Expression<Func<T, bool>> filter);
     Task AddAsync(T entity);
@@ -45,6 +45,8 @@ public interface IDataProvider<T> where T : EntityBase
     /// </summary>
     Task AddManyAsync(IEnumerable<T> entities);
 
+
+    Task SeedDataAsync(IEnumerable<T> entities);
 
     /// <summary>
     ///     ✅ Deletes all records in the collection.

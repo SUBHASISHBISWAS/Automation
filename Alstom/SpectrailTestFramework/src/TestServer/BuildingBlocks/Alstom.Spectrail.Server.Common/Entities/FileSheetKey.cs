@@ -14,20 +14,27 @@
 //  /*******************************************************************************
 // AuthorName: SUBHASISH BISWAS
 // Email: subhasish.biswas@alstomgroup.com
-// FileName: IDataContext.cs
+// FileName: FileSheetKey.cs
 // ProjectName: Alstom.Spectrail.Server.Common
-// Created by SUBHASISH BISWAS On: 2025-03-04
+// Created by SUBHASISH BISWAS On: 2025-03-15
 // Updated by SUBHASISH BISWAS On: 2025-03-15
 //  ******************************************************************************/
 
 #endregion
 
-#region
-
-#endregion
-
-namespace Alstom.Spectrail.Server.Common.Contracts;
-
-public interface IDataContext
+public class FileSheetKey
 {
+    public string FileName { get; set; } = string.Empty;
+    public string SheetName { get; set; } = string.Empty;
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is not FileSheetKey other) return false;
+        return FileName == other.FileName && SheetName == other.SheetName;
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(FileName, SheetName);
+    }
 }

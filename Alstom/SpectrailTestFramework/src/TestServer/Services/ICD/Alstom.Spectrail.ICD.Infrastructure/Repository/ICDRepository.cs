@@ -17,7 +17,7 @@
 // FileName: ICDRepository.cs
 // ProjectName: Alstom.Spectrail.ICD.Infrastructure
 // Created by SUBHASISH BISWAS On: 2025-03-04
-// Updated by SUBHASISH BISWAS On: 2025-03-13
+// Updated by SUBHASISH BISWAS On: 2025-03-16
 //  ******************************************************************************/
 
 #endregion
@@ -25,6 +25,7 @@
 #region
 
 using Alstom.Spectrail.ICD.Application.Contracts;
+using Alstom.Spectrail.Server.Common.Contracts;
 using Alstom.Spectrail.Server.Common.Entities;
 using Alstom.Spectrail.Server.Common.Repository;
 

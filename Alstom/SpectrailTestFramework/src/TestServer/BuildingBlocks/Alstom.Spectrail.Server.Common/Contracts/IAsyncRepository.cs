@@ -17,7 +17,7 @@
 // FileName: IAsyncRepository.cs
 // ProjectName: Alstom.Spectrail.Server.Common
 // Created by SUBHASISH BISWAS On: 2025-03-04
-// Updated by SUBHASISH BISWAS On: 2025-03-13
+// Updated by SUBHASISH BISWAS On: 2025-03-16
 //  ******************************************************************************/
 
 #endregion
@@ -59,7 +59,7 @@ public interface IAsyncRepository<T> where T : EntityBase
     Task AddManyAsync(IEnumerable<T> entities);
 
     [RepositoryOperation("SeedData")]
-    Task SeedDataAsync(IEnumerable<T> entities);
+    Task SeedDataAsync(IEnumerable<T>? entities);
 
     /// <summary>
     ///     ✅ Deletes all records in the collection.

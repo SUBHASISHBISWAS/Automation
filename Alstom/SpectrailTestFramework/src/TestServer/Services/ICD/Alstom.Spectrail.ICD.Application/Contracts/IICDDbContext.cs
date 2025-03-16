@@ -14,20 +14,28 @@
 //  /*******************************************************************************
 // AuthorName: SUBHASISH BISWAS
 // Email: subhasish.biswas@alstomgroup.com
-// FileName: IDataContext.cs
-// ProjectName: Alstom.Spectrail.Server.Common
-// Created by SUBHASISH BISWAS On: 2025-03-04
-// Updated by SUBHASISH BISWAS On: 2025-03-15
+// FileName: IICDDbContext.cs
+// ProjectName: Alstom.Spectrail.ICD.Application
+// Created by SUBHASISH BISWAS On: 2025-03-16
+// Updated by SUBHASISH BISWAS On: 2025-03-16
 //  ******************************************************************************/
 
 #endregion
 
 #region
 
+using Alstom.Spectrail.ICD.Application.Registry;
+using MongoDB.Driver;
+
 #endregion
 
-namespace Alstom.Spectrail.Server.Common.Contracts;
+namespace Alstom.Spectrail.ICD.Application.Contracts;
 
-public interface IDataContext
+public interface IICDDbContext : ISpectrailMongoDbContext
 {
+    IMongoDatabase ICDDatabase { get; init; }
+
+    IMongoDatabase ICDEntityRegistry { get; init; }
+
+    IMongoCollection<EntityMapping>? ICDEntityMapping { get; }
 }
