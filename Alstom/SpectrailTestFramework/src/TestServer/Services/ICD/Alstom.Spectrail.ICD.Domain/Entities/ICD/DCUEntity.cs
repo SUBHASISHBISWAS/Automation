@@ -17,7 +17,7 @@
 // FileName: DCUEntity.cs
 // ProjectName: Alstom.Spectrail.ICD.Domain
 // Created by SUBHASISH BISWAS On: 2025-03-04
-// Updated by SUBHASISH BISWAS On: 2025-03-13
+// Updated by SUBHASISH BISWAS On: 2025-03-17
 //  ******************************************************************************/
 
 #endregion
@@ -33,7 +33,7 @@ namespace Alstom.Spectrail.ICD.Domain.Entities.ICD;
 public class DCUEntity : EntityBase
 {
     public string? VariableAddress { get; set; }
-    public string? SignalOffset { get; set; }
+    public int? SignalOffset { get; set; }
     public string? SignalName { get; set; }
     public string? ControlBuildType { get; set; }
     public string? ComplexNetworkType { get; set; }

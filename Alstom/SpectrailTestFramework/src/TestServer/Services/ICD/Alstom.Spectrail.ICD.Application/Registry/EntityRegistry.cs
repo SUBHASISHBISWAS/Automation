@@ -17,7 +17,7 @@
 // FileName: EntityRegistry.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-12
-// Updated by SUBHASISH BISWAS On: 2025-03-15
+// Updated by SUBHASISH BISWAS On: 2025-03-17
 //  ******************************************************************************/
 
 #endregion
@@ -57,35 +57,36 @@ public static class EntityRegistry
     /// <summary>
     ///     ✅ Gets the registered entity type using file name and sheet name.
     /// </summary>
-    public static Type? GetEntityType(string filePath, string sheetName)
+    /// <summary>
+    ///     ✅ Retrieves the registered entity type using the entity type name.
+    /// </summary>
+    public static Type? GetEntityType(string entityTypeName)
     {
-        var fileName = Path.GetFileName(filePath).Trim().ToLower(); // ✅ Match file name format
-        var normalizedSheetName = sheetName.Trim().Replace(" ", "").ToLower();
-
-        var filter = Filter.And(
-            Filter.Eq(x => x.FileName, fileName),
-            Filter.Eq(x => x.SheetName, normalizedSheetName)
-        );
-
-        var result = _collection.Find(filter).FirstOrDefault();
-        if (result == null)
+        if (string.IsNullOrEmpty(entityTypeName))
         {
-            Console.WriteLine($"⚠️ Entity not found for {fileName}:{normalizedSheetName}");
+            Console.WriteLine("⚠️ Entity type name cannot be null or empty.");
             return null;
         }
 
-        Console.WriteLine($"🔍 Looking for entity type: {result.EntityName}");
+        Console.WriteLine($"🔍 Searching Entity Type: {entityTypeName}");
 
-        var entityType = Type.GetType(result.EntityName) ??
+        var fullyQualifiedName = GetFullyQualifiedEntityName(entityTypeName);
+
+        Console.WriteLine($"📌 Found mapping: {fullyQualifiedName}");
+
+        // ✅ Resolve the type from the current application domain
+        var entityType = Type.GetType(fullyQualifiedName) ??
                          AppDomain.CurrentDomain.GetAssemblies()
                              .SelectMany(a => a.GetTypes())
-                             .FirstOrDefault(t => t.FullName == result.EntityName);
+                             .FirstOrDefault(t => t.FullName == fullyQualifiedName);
 
         if (entityType == null)
-            Console.WriteLine($"❌ Failed to resolve entity type: {result.EntityName}");
-        else
-            Console.WriteLine($"✅ Resolved entity type: {entityType.FullName}");
+        {
+            Console.WriteLine($"❌ Failed to resolve entity type: {fullyQualifiedName}");
+            return null;
+        }
 
+        Console.WriteLine($"✅ Successfully resolved: {entityType.FullName}");
         return entityType;
     }
 
@@ -142,12 +143,41 @@ public static class EntityRegistry
         }
     }
 
+
     /// <summary>
     ///     ✅ Returns all registered entity mappings.
     /// </summary>
     public static List<EntityMapping> GetAllMappings()
     {
         return _collection.Find(_ => true).ToList();
+    }
+
+    /// <summary>
+    ///     ✅ Retrieves the fully qualified entity name from MongoDB.
+    /// </summary>
+    /// <summary>
+    ///     ✅ Retrieves the fully qualified entity name from MongoDB based on the short entity name.
+    /// </summary>
+    public static string? GetFullyQualifiedEntityName(string shortEntityName)
+    {
+        if (_collection == null)
+        {
+            Console.WriteLine("❌ EntityRegistry collection is not initialized.");
+            return null;
+        }
+
+        // ✅ Find entity where the fully qualified name ends with short entity name (case-insensitive)
+        var filter = Filter.Regex(x => x.EntityName, new BsonRegularExpression($@"\.{shortEntityName}$", "i"));
+        var result = _collection.Find(filter).FirstOrDefault();
+
+        if (result == null)
+        {
+            Console.WriteLine($"⚠️ No match found for '{shortEntityName}' in EntityRegistry.");
+            return null;
+        }
+
+        Console.WriteLine($"📌 Found fully qualified name: {result.EntityName}");
+        return result.EntityName; // ✅ Example: "Alstom.Spectrail.ICD.Domain.Entities.ICD.BCHEntity"
     }
 }
 

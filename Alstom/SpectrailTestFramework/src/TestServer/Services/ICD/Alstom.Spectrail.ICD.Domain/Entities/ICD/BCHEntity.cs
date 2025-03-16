@@ -17,7 +17,7 @@
 // FileName: BCHEntity.cs
 // ProjectName: Alstom.Spectrail.ICD.Domain
 // Created by SUBHASISH BISWAS On: 2025-03-16
-// Updated by SUBHASISH BISWAS On: 2025-03-16
+// Updated by SUBHASISH BISWAS On: 2025-03-17
 //  ******************************************************************************/
 
 #endregion
@@ -60,8 +60,8 @@ public class BCHEntity : EntityBase
 
     [BsonElement("ReceiverEquipment")] public string? ReceiverEquipment { get; set; }
 
-    [BsonElement("ReceiverFunctionOrCANOPENCOBID")]
-    public string? ReceiverFunctionOrCANOPENCOBID { get; set; }
+    [BsonElement("ReceiverFunctionorLSequipmentorCANOPENCOBID")]
+    public string? ReceiverFunctionorLSequipmentorCANOPENCOBID { get; set; }
 
     [BsonElement("MultiplierValue")] public double? MultiplierValue { get; set; }
 
