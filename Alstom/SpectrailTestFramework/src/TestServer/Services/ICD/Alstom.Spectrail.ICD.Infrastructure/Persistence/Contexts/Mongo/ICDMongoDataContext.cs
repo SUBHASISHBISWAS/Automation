@@ -17,7 +17,7 @@
 // FileName: ICDMongoDataContext.cs
 // ProjectName: Alstom.Spectrail.ICD.Infrastructure
 // Created by SUBHASISH BISWAS On: 2025-03-04
-// Updated by SUBHASISH BISWAS On: 2025-03-16
+// Updated by SUBHASISH BISWAS On: 2025-03-17
 //  ******************************************************************************/
 
 #endregion
@@ -26,9 +26,9 @@
 
 using Alstom.Spectrail.ICD.Application.Contracts;
 using Alstom.Spectrail.ICD.Application.Models;
-using Alstom.Spectrail.ICD.Application.Registry;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using EntityMapping = Alstom.Spectrail.ICD.Application.Models.EntityMapping;
 
 #endregion
 
@@ -45,12 +45,43 @@ public class ICDMongoDataContext
             ICDEntityRegistry.GetCollection<EntityMapping>(SpectrailDatabaseSettings
                 .ICDEntityMapping);
 
-        EntityRegistry.Initialize(ICDEntityMapping);
-
         ICDDatabase = Client.GetDatabase(SpectrailDatabaseSettings.ICDDatabase);
     }
 
     public IMongoDatabase ICDDatabase { get; init; }
     public IMongoDatabase ICDEntityRegistry { get; init; }
     public IMongoCollection<EntityMapping>? ICDEntityMapping { get; }
+
+    /// <summary>
+    ///     ✅ Ensures collections exist for registered entities.
+    /// </summary>
+    public void EnsureCollectionsExist()
+    {
+        if (ICDEntityMapping == null)
+        {
+            Console.WriteLine("⚠️ Entity Mapping Collection is null. Skipping collection initialization.");
+            return;
+        }
+
+        var existingCollections = ICDDatabase.ListCollectionNames().ToList();
+        var entityMappings = ICDEntityMapping.Find(_ => true).ToList();
+
+        foreach (var mapping in entityMappings)
+        {
+            var collectionName = mapping.EntityName
+                .Split('.').Last() // Extract "DCUEntity" from "Alstom.Spectrail.ICD.Domain.Entities.ICD.DCUEntity"
+                .Replace("Entity", "") // Normalize naming convention
+                .ToLower();
+
+            if (!existingCollections.Contains(collectionName))
+            {
+                ICDDatabase.CreateCollection(collectionName);
+                Console.WriteLine($"✅ Created MongoDB collection: {collectionName}");
+            }
+            else
+            {
+                Console.WriteLine($"🔍 Collection '{collectionName}' already exists.");
+            }
+        }
+    }
 }

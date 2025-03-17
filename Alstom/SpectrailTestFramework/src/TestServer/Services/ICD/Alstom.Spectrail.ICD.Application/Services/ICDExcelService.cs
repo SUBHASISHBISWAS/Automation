@@ -30,7 +30,6 @@ using Alstom.Spectrail.ICD.Application.Contracts;
 using Alstom.Spectrail.ICD.Application.Enums;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Queries.Query;
-using Alstom.Spectrail.ICD.Application.Registry;
 using Alstom.Spectrail.Server.Common.Configuration;
 using Alstom.Spectrail.Server.Common.Entities;
 using ClosedXML.Excel;
@@ -151,7 +150,7 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
             }
 
             // ✅ Register dynamically when processing the file
-            EntityRegistry.RegisterEntity(filePath, sheetName, entityType);
+            //EntityRegistry.RegisterEntity(filePath, sheetName, entityType);
             Console.WriteLine($"✅ Registered Entity: {entityType.FullName} for '{filePath}:{sheetName}'");
 
             // 🚀 Now process the sheet

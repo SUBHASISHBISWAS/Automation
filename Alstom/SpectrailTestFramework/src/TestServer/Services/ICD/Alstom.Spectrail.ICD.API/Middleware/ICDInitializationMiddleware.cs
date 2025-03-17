@@ -17,7 +17,7 @@
 // FileName: ICDInitializationMiddleware.cs
 // ProjectName: Alstom.Spectrail.ICD.API
 // Created by SUBHASISH BISWAS On: 2025-03-12
-// Updated by SUBHASISH BISWAS On: 2025-03-13
+// Updated by SUBHASISH BISWAS On: 2025-03-17
 //  ******************************************************************************/
 
 #endregion
@@ -26,6 +26,8 @@
 
 using System.Diagnostics;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
+using Alstom.Spectrail.ICD.Application.Registry;
+using Alstom.Spectrail.ICD.Infrastructure.Persistence.Contexts.Mongo;
 using Alstom.Spectrail.Server.Common.Configuration;
 using MediatR;
 
@@ -33,9 +35,6 @@ using MediatR;
 
 namespace Alstom.Spectrail.ICD.API.Middleware;
 
-/// <summary>
-///     ✅ Middleware to Seed ICD Data on Application Startup based on Feature Flags
-/// </summary>
 public class ICDSeedDataMiddleware(
     RequestDelegate next,
     IServiceScopeFactory scopeFactory,
@@ -47,21 +46,36 @@ public class ICDSeedDataMiddleware(
     {
         if (!_initialized && configHelper.IsFeatureEnabled("EnableMiddlewarePreloading"))
         {
-            Debug.WriteLine("🚀 Middleware Preloading Enabled: Seeding ICD Data...");
+            Debug.WriteLine("🚀 Middleware Preloading Enabled: Initializing MongoDB & Registering Entities...");
 
             using var scope = scopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<ICDMongoDataContext>();
             var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-            var success = await mediator.Send(new SeedICDDataCommand());
+            try
+            {
+                // ✅ Step 1: Ensure MongoDB is initialized
+                Debug.WriteLine("🔍 Ensuring MongoDB collections exist...");
+                var entityRegistry = scope.ServiceProvider.GetRequiredService<EntityRegistry>();
+                entityRegistry.RegisterEntity();
+                Debug.WriteLine("✅ Entities are Register Now!");
 
-            if (success)
-            {
-                _initialized = true;
-                Debug.WriteLine("✅ ICD Data Seeding Completed via Middleware!");
+                // ✅ Step 2: Send Seed Command
+                var success = await mediator.Send(new SeedICDDataCommand());
+
+                if (success)
+                {
+                    _initialized = true;
+                    Debug.WriteLine("✅ ICD Data Seeding Completed via Middleware!");
+                }
+                else
+                {
+                    Debug.WriteLine("⚠️ ICD Data Seeding Failed via Middleware!");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                Debug.WriteLine("⚠️ ICD Data Seeding Failed via Middleware!");
+                Debug.WriteLine($"❌ Error in Middleware: {ex.Message}");
             }
         }
 

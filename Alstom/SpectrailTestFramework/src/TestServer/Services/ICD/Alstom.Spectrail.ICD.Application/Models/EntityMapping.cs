@@ -14,9 +14,9 @@
 //  /*******************************************************************************
 // AuthorName: SUBHASISH BISWAS
 // Email: subhasish.biswas@alstomgroup.com
-// FileName: IICDDbContext.cs
+// FileName: EntityMapping.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
-// Created by SUBHASISH BISWAS On: 2025-03-16
+// Created by SUBHASISH BISWAS On: 2025-03-17
 // Updated by SUBHASISH BISWAS On: 2025-03-17
 //  ******************************************************************************/
 
@@ -24,18 +24,23 @@
 
 #region
 
-using Alstom.Spectrail.ICD.Application.Models;
-using MongoDB.Driver;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 #endregion
 
-namespace Alstom.Spectrail.ICD.Application.Contracts;
+namespace Alstom.Spectrail.ICD.Application.Models;
 
-public interface IICDDbContext : ISpectrailMongoDbContext
+/// <summary>
+///     ✅ Represents an entity mapping stored in MongoDB.
+/// </summary>
+public class EntityMapping
 {
-    IMongoDatabase ICDDatabase { get; init; }
+    [BsonId] // ✅ Marks _id as MongoDB's primary key (auto-generated)
+    [BsonRepresentation(BsonType.ObjectId)]
+    public string Id { get; set; } = ObjectId.GenerateNewId().ToString(); // ✅ No fixed _id!
 
-    IMongoDatabase ICDEntityRegistry { get; init; }
-
-    IMongoCollection<EntityMapping>? ICDEntityMapping { get; }
+    public string FileName { get; init; } = string.Empty;
+    public string SheetName { get; init; } = string.Empty;
+    public string EntityName { get; init; } = string.Empty;
 }

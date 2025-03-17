@@ -16,7 +16,7 @@
 // Email: subhasish.biswas@alstomgroup.com
 // FileName: EntityRegistry.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
-// Created by SUBHASISH BISWAS On: 2025-03-12
+// Created by SUBHASISH BISWAS On: 2025-03-17
 // Updated by SUBHASISH BISWAS On: 2025-03-17
 //  ******************************************************************************/
 
@@ -24,11 +24,14 @@
 
 #region
 
+using Alstom.Spectrail.ICD.Application.Contracts;
+using Alstom.Spectrail.ICD.Application.Models;
+using Alstom.Spectrail.Server.Common.Configuration;
 using Alstom.Spectrail.Server.Common.Entities;
+using ClosedXML.Excel;
 using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
-using static MongoDB.Driver.Builders<Alstom.Spectrail.ICD.Application.Registry.EntityMapping>;
+using static MongoDB.Driver.Builders<Alstom.Spectrail.ICD.Application.Models.EntityMapping>;
 
 #endregion
 
@@ -37,22 +40,22 @@ namespace Alstom.Spectrail.ICD.Application.Registry;
 /// <summary>
 ///     ✅ Manages entity mappings stored in MongoDB.
 /// </summary>
-public static class EntityRegistry
+public class EntityRegistry
 {
     private static IMongoCollection<EntityMapping>? _collection;
+    private static IServerConfigHelper? _configHelper;
+    private static readonly Dictionary<string, Type> _entityTypeCache = new();
 
     /// <summary>
     ///     ✅ Initializes MongoDB connection.
     /// </summary>
-    static EntityRegistry()
+    public EntityRegistry(IICDDbContext dbContext, IServerConfigHelper configHelper)
     {
+        _collection = dbContext.ICDEntityMapping;
+        _configHelper = configHelper;
         RegisterEntitiesFromAssembly();
     }
 
-    public static void Initialize(IMongoCollection<EntityMapping>? collection)
-    {
-        _collection = collection;
-    }
 
     /// <summary>
     ///     ✅ Gets the registered entity type using file name and sheet name.
@@ -93,32 +96,67 @@ public static class EntityRegistry
     /// <summary>
     ///     ✅ Registers a single entity dynamically in MongoDB.
     /// </summary>
-    public static void RegisterEntity(string filePath, string sheetName, Type entityType)
+    public void RegisterEntity()
     {
-        var fileName = Path.GetFileName(filePath).Trim().ToLower();
-        var normalizedSheetName = sheetName.Trim().Replace(" ", "").ToLower();
-        var normalizedEntityName = entityType.FullName;
+        var icdFiles = _configHelper!.GetICDFiles();
+        foreach (var filePath in icdFiles)
+            try
+            {
+                if (!File.Exists(filePath))
+                    throw new FileNotFoundException($"❌ File not found: {filePath}");
+                using var workbook = new XLWorkbook(filePath);
+                var fileName = Path.GetFileName(filePath).Trim().ToLower();
+                foreach (var worksheet in workbook.Worksheets)
+                {
+                    var normalizedSheetName = worksheet.Name.Trim().Replace(" ", "").ToLower();
+                    Console.WriteLine($"📌 Processing sheet: {normalizedSheetName}");
 
-        var mapping = new EntityMapping
-        {
-            FileName = fileName,
-            SheetName = normalizedSheetName,
-            EntityName = normalizedEntityName ?? throw new InvalidOperationException()
-        };
+                    // ✅ Step 1: Check Cache First
+                    Console.WriteLine(_entityTypeCache.TryGetValue(normalizedSheetName, out var cachedType)
+                        ? $"✅ Resolved from cache: {cachedType.FullName}"
+                        : $"❌ Not able to Resolve from cache: {normalizedSheetName}");
+                    if (cachedType == null)
+                    {
+                        Console.WriteLine($"⚠️ No registered entity for sheet: {normalizedSheetName}. Skipping...");
+                        continue;
+                    }
 
-        var filter = Filter.And(
-            Filter.Eq(x => x.FileName, mapping.FileName),
-            Filter.Eq(x => x.SheetName, mapping.SheetName)
-        );
+                    var normalizedEntityName = cachedType.FullName;
+                    var mapping = new EntityMapping
+                    {
+                        FileName = fileName,
+                        SheetName = normalizedSheetName,
+                        EntityName = normalizedEntityName
+                    };
 
-        var update = Update
-            .Set(x => x.EntityName, mapping.EntityName);
+                    var filter = Filter.And(
+                        Filter.Eq(x => x.FileName, mapping.FileName),
+                        Filter.Eq(x => x.SheetName, mapping.SheetName)
+                    );
 
-        var options = new UpdateOptions { IsUpsert = true }; // ✅ Upsert instead of insert
+                    var update = Update
+                        .Set(x => x.EntityName, mapping.EntityName);
 
-        _collection?.UpdateOne(filter, update, options);
+                    var options = new UpdateOptions { IsUpsert = true }; // ✅ Upsert instead of insert
 
-        Console.WriteLine($"✅ Registered Entity: {entityType.FullName} for '{fileName}:{normalizedSheetName}'");
+                    _collection?.UpdateOne(filter, update, options);
+                    Console.WriteLine(
+                        $"✅ Registered Entity: {cachedType.FullName} for '{fileName}:{normalizedSheetName}'");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error processing {filePath}: {ex.Message}");
+            }
+    }
+
+    /// <summary>
+    ///     ✅ Caches resolved entity types in memory for faster lookups.
+    /// </summary>
+    private static void CacheEntityType(string entityTypeName, Type entityType)
+    {
+        if (!_entityTypeCache.TryAdd(entityTypeName, entityType)) return;
+        Console.WriteLine($"🛠 Cached entity type: {entityType.FullName}");
     }
 
     /// <summary>
@@ -138,8 +176,12 @@ public static class EntityRegistry
                 .Where(t => t is { IsClass: true, IsAbstract: false } && typeof(EntityBase).IsAssignableFrom(t))
                 .ToList();
 
-            foreach (var entityName in entityTypes.Select(type => type.Name.Replace("Entity", "").Trim().ToLower()))
-                Console.WriteLine($"📌 Detected entity: {entityName}");
+            foreach (var type in entityTypes)
+            {
+                var shortName = type.Name.Replace("Entity", "").Trim().ToLower();
+                Console.WriteLine($"📌 Detected entity: {shortName}");
+                CacheEntityType(shortName, type); // ✅ Cache entity types
+            }
         }
     }
 
@@ -179,18 +221,4 @@ public static class EntityRegistry
         Console.WriteLine($"📌 Found fully qualified name: {result.EntityName}");
         return result.EntityName; // ✅ Example: "Alstom.Spectrail.ICD.Domain.Entities.ICD.BCHEntity"
     }
-}
-
-/// <summary>
-///     ✅ Represents an entity mapping stored in MongoDB.
-/// </summary>
-public class EntityMapping
-{
-    [BsonId] // ✅ Marks _id as MongoDB's primary key (auto-generated)
-    [BsonRepresentation(BsonType.ObjectId)]
-    public string Id { get; set; } = ObjectId.GenerateNewId().ToString(); // ✅ No fixed _id!
-
-    public string FileName { get; init; } = string.Empty;
-    public string SheetName { get; init; } = string.Empty;
-    public string EntityName { get; init; } = string.Empty;
 }

@@ -17,7 +17,7 @@
 // FileName: Program.cs
 // ProjectName: Alstom.Spectrail.ICD.API
 // Created by SUBHASISH BISWAS On: 2025-03-11
-// Updated by SUBHASISH BISWAS On: 2025-03-13
+// Updated by SUBHASISH BISWAS On: 2025-03-17
 //  ******************************************************************************/
 
 #endregion
@@ -26,7 +26,10 @@
 
 using Alstom.Spectrail.ICD.API.Middleware;
 using Alstom.Spectrail.ICD.Application;
+using Alstom.Spectrail.ICD.Application.Models;
+using Alstom.Spectrail.ICD.Application.Registry;
 using Alstom.Spectrail.ICD.Infrastructure;
+using Alstom.Spectrail.ICD.Infrastructure.Persistence.Contexts.Mongo;
 using Alstom.Spectrail.Server.Common.Configuration;
 using Microsoft.OpenApi.Models;
 
@@ -39,6 +42,18 @@ var services = builder.Services;
 // ✅ Add AutoMapper
 services.AddAutoMapper(typeof(Program));
 builder.Services.AddSingleton<IServerConfigHelper, ServerConfigHelper>();
+
+// ✅ Register MongoDB settings
+builder.Services.Configure<SpectrailMongoDatabaseSettings>(
+    builder.Configuration.GetSection("SpectrailMongoDatabaseSettings"));
+
+// ✅ Register MongoDB Context
+builder.Services.AddSingleton<ICDMongoDataContext>();
+
+// ✅ Register Entity Registry (Depends on Mongo Context)
+builder.Services.AddSingleton<EntityRegistry>(sp => new EntityRegistry(sp.GetRequiredService<ICDMongoDataContext>(),
+    sp.GetRequiredService<IServerConfigHelper>()));
+
 
 // ✅ Add Application & Infrastructure Services
 services.RegisterApplicationServices();
