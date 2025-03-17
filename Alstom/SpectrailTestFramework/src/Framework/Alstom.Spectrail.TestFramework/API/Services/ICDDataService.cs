@@ -17,7 +17,7 @@
 // FileName: ICDDataService.cs
 // ProjectName: Alstom.Spectrail.TestFramework
 // Created by SUBHASISH BISWAS On: 2025-03-13
-// Updated by SUBHASISH BISWAS On: 2025-03-13
+// Updated by SUBHASISH BISWAS On: 2025-03-17
 //  ******************************************************************************/
 
 #endregion
@@ -37,11 +37,11 @@ public class ICDDataService(ApiClient client) : IApiService
 {
     public async Task<List<ICDRecord>?> GetICDDataAsync()
     {
-        var request = new RestRequest("/import-excel?filePath=C:\\Data\\DCU_Data.xlsx&sheetName=Sheet1");
+        var request = new RestRequest("/all?fileName=trdp_icd_generated");
         var response = await client.ExecuteAsync(request);
 
-        request = new RestRequest("/all");
-        response = await client.ExecuteAsync(request);
+        //request = new RestRequest("/all");
+        //response = await client.ExecuteAsync(request);
 
         if (!response.IsSuccessful) throw new Exception($"❌ API Error: {response.ErrorMessage}");
 

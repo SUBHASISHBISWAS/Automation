@@ -200,7 +200,7 @@ public class EntityRegistry
     /// <summary>
     ///     ✅ Retrieves the fully qualified entity name from MongoDB based on the short entity name.
     /// </summary>
-    public static string? GetFullyQualifiedEntityName(string shortEntityName)
+    private static string? GetFullyQualifiedEntityName(string shortEntityName)
     {
         if (_collection == null)
         {
