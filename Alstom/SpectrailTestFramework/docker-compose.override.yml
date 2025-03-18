@@ -88,8 +88,8 @@ services:
     ports:
       - "8010:80"
     volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
-      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+      - ${APPDATA:-$HOME/.microsoft}/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA:-$HOME/.aspnet}/Https:/home/app/.aspnet/https:ro
     networks:
       - alstom_spectrail_server_network
 networks:
