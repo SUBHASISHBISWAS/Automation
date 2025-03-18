@@ -12,7 +12,7 @@ services:
     container_name: portainer
     restart: always
     ports:
-      - "7070:8000"
+      - "7070:7070"
       - "9000:9000"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -45,8 +45,7 @@ services:
       - "FeatureFlags__EnableEagerLoading=false"
       - "FeatureFlags__EnableMiddlewarePreloading=true"
     ports:
-      - "8080:8080"
-      - "8081:8081"
+      - "8001:80"
     depends_on:
       - ICDDB
     volumes:
@@ -86,7 +85,7 @@ services:
     depends_on:
       - alstom.spectrail.icd.api
     ports:
-      - "8010:80"
+      - "8000:80"
     volumes:
       - ${APPDATA:-$HOME/.microsoft}/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA:-$HOME/.aspnet}/Https:/home/app/.aspnet/https:ro
