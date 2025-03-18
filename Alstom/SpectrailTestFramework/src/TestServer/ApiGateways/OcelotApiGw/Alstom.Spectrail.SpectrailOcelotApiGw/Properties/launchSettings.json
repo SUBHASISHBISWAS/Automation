@@ -19,7 +19,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-    "OcelotApiGw": {
+    "SpectrailOcelotApiGw": {
       "commandName": "Project",
       "launchBrowser": true,
       "environmentVariables": {

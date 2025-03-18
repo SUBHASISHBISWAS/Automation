@@ -18,6 +18,20 @@
       "FileCacheOptions": {
         "TtlSeconds": 30
       }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/ICD/all/{fileName}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "host.docker.internal",
+          "Port": "8000"
+        }
+      ],
+      "UpstreamPathTemplate": "/ICD/all/{fileName}",
+      "UpstreamHttpMethod": [
+        "GET"
+      ]
     }
   ],
   "GlobalConfiguration": {

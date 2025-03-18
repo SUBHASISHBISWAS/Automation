@@ -28,7 +28,7 @@
           "Port": "8000"
         }
       ],
-      "UpstreamPathTemplate": "/Catalog/GetProductByCategory/{category}",
+      "UpstreamPathTemplate": "/ICD/all/{fileName}",
       "UpstreamHttpMethod": [
         "GET"
       ]
