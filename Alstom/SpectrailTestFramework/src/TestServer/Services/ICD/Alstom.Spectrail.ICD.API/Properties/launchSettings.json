@@ -1,16 +1,6 @@
 {
   "profiles": {
-    "http": {
-      "commandName": "Project",
-      "launchBrowser": true,
-      "launchUrl": "swagger",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "dotnetRunMessages": true,
-      "applicationUrl": "http://localhost:5001"
-    },
-    "SeectrailTestSever.API": {
+    "Alstom.Spectrail.ICD.API": {
       "commandName": "Project",
       "launchBrowser": true,
       "launchUrl": "swagger",

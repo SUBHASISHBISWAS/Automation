@@ -33,6 +33,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alstom.Spectrail.Tests", "s
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ICD", "ICD", "{FA551BAD-0BCE-495E-B718-B400D5425416}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alstom.Spectrail.SpectrailOcelotApiGw", "src\TestServer\ApiGateways\OcelotApiGw\Alstom.Spectrail.SpectrailOcelotApiGw\Alstom.Spectrail.SpectrailOcelotApiGw.csproj", "{954B293E-2A5A-4CDD-A659-C6D78B595463}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -71,6 +73,10 @@ Global
 		{AB7F8D61-BEBC-4996-8617-702D14E6EE22}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AB7F8D61-BEBC-4996-8617-702D14E6EE22}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AB7F8D61-BEBC-4996-8617-702D14E6EE22}.Release|Any CPU.Build.0 = Release|Any CPU
+		{954B293E-2A5A-4CDD-A659-C6D78B595463}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{954B293E-2A5A-4CDD-A659-C6D78B595463}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{954B293E-2A5A-4CDD-A659-C6D78B595463}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{954B293E-2A5A-4CDD-A659-C6D78B595463}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -87,5 +93,6 @@ Global
 		{97DDD98C-74A7-4EF2-A53F-9E2122EF45EA} = {FA551BAD-0BCE-495E-B718-B400D5425416}
 		{7929FC3B-953B-43DD-92CF-CB618603F2ED} = {FA551BAD-0BCE-495E-B718-B400D5425416}
 		{2CF4A166-6F8F-4054-B62F-F8E5C8177DBD} = {FA551BAD-0BCE-495E-B718-B400D5425416}
+		{954B293E-2A5A-4CDD-A659-C6D78B595463} = {140349DE-64E5-485C-971B-BA35995B96B3}
 	EndGlobalSection
 EndGlobal
