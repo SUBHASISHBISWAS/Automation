@@ -11,6 +11,13 @@ services:
       context: src/TestServer
       dockerfile: Services/ICD/Alstom.Spectrail.ICD.API/Dockerfile
 
+  alstom.spectrail.spectrailocelotapigw:
+    image: ${DOCKER_REGISTRY-}alstomspectrailspectrailocelotapigw
+    build:
+      context: .
+      dockerfile: src/TestServer/ApiGateways/OcelotApiGw/Alstom.Spectrail.SpectrailOcelotApiGw/Dockerfile
+
 volumes:
   mongo_data:
   portainer_data:
+

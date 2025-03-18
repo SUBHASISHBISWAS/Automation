@@ -5,7 +5,8 @@
       "commandVersion": "1.0",
       "serviceActions": {
         "spectrailtestdataprovider.api": "StartDebugging",
-        "alstom.spectrail.icd.api": "StartDebugging"
+        "alstom.spectrail.icd.api": "StartDebugging",
+        "alstom.spectrail.spectrailocelotapigw": "StartDebugging"
       }
     }
   }
