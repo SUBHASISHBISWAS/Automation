@@ -64,9 +64,10 @@ public class SpectrailNewFeatureHandler(
     protected override async Task ExecuteAsync()
     {
         // ✅ Fetch Data from User Service
-        var icdDataService = _apiServiceFactory.GetService("CustomColumnDataService") as CustomColumnDataService ??
-                             throw new ArgumentNullException(nameof(CustomColumnDataService))
+        var customColumnDataService =
+                _apiServiceFactory.GetService("CustomColumnDataService") as CustomColumnDataService ??
+                throw new ArgumentNullException(nameof(CustomColumnDataService))
             ;
-        var userResponse = await icdDataService.GetDCUAsync(_fileName);
+        var userResponse = await customColumnDataService.GetDCUAsync(_fileName);
     }
 }
