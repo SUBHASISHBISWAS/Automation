@@ -16,8 +16,8 @@
 // Email: subhasish.biswas@alstomgroup.com
 // FileName: EntityRegistry.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
-// Created by SUBHASISH BISWAS On: 2025-03-17
-// Updated by SUBHASISH BISWAS On: 2025-03-17
+// Created by SUBHASISH BISWAS On: 2025-03-20
+// Updated by SUBHASISH BISWAS On: 2025-03-20
 //  ******************************************************************************/
 
 #endregion
@@ -93,8 +93,10 @@ public class EntityRegistry
         return entityType;
     }
 
+
     /// <summary>
     ///     ✅ Registers a single entity dynamically in MongoDB.
+    ///     ✅ Now updates only if changes are found.
     /// </summary>
     public void RegisterEntity()
     {
@@ -104,6 +106,7 @@ public class EntityRegistry
             {
                 if (!File.Exists(filePath))
                     throw new FileNotFoundException($"❌ File not found: {filePath}");
+
                 using var workbook = new XLWorkbook(filePath);
                 var fileName = Path.GetFileName(filePath).Trim().ToLower();
                 foreach (var worksheet in workbook.Worksheets)
@@ -112,10 +115,7 @@ public class EntityRegistry
                     Console.WriteLine($"📌 Processing sheet: {normalizedSheetName}");
 
                     // ✅ Step 1: Check Cache First
-                    Console.WriteLine(_entityTypeCache.TryGetValue(normalizedSheetName, out var cachedType)
-                        ? $"✅ Resolved from cache: {cachedType.FullName}"
-                        : $"❌ Not able to Resolve from cache: {normalizedSheetName}");
-                    if (cachedType == null)
+                    if (!_entityTypeCache.TryGetValue(normalizedSheetName, out var cachedType))
                     {
                         Console.WriteLine($"⚠️ No registered entity for sheet: {normalizedSheetName}. Skipping...");
                         continue;
@@ -134,14 +134,22 @@ public class EntityRegistry
                         Filter.Eq(x => x.SheetName, mapping.SheetName)
                     );
 
-                    var update = Update
-                        .Set(x => x.EntityName, mapping.EntityName);
+                    // ✅ Check if an update is actually needed
+                    var existingEntity = _collection?.Find(filter).FirstOrDefault();
+                    if (existingEntity != null && existingEntity.EntityName == mapping.EntityName)
+                    {
+                        Console.WriteLine(
+                            $"✅ Already Registered: {cachedType.FullName} for '{fileName}:{normalizedSheetName}'");
+                        continue;
+                    }
 
-                    var options = new UpdateOptions { IsUpsert = true }; // ✅ Upsert instead of insert
+                    // ✅ If change detected, update the entity mapping
+                    var update = Update.Set(x => x.EntityName, mapping.EntityName);
+                    var options = new UpdateOptions { IsUpsert = true };
 
                     _collection?.UpdateOne(filter, update, options);
                     Console.WriteLine(
-                        $"✅ Registered Entity: {cachedType.FullName} for '{fileName}:{normalizedSheetName}'");
+                        $"✅ Updated Entity: {cachedType.FullName} for '{fileName}:{normalizedSheetName}'");
                 }
             }
             catch (Exception ex)

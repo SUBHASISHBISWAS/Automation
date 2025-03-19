@@ -14,35 +14,11 @@
 //  /*******************************************************************************
 // AuthorName: SUBHASISH BISWAS
 // Email: subhasish.biswas@alstomgroup.com
-// FileName: ICDInitializationMiddleware.cs
+// FileName: EntityRegistrationMiddleware.cs
 // ProjectName: Alstom.Spectrail.ICD.API
-// Created by SUBHASISH BISWAS On: 2025-03-12
+// Created by SUBHASISH BISWAS On: 2025-03-20
 // Updated by SUBHASISH BISWAS On: 2025-03-20
 //  ******************************************************************************/
-
-#endregion
-
-/*#region ©COPYRIGHT
-
-// /*******************************************************************************
-//  *   © COPYRIGHT ALSTOM SA 2025 - ALL RIGHTS RESERVED
-//  *
-//  *  This file is part of the Alstom Spectrail project.
-//  *  Unauthorized copying, modification, distribution, or use of this file,
-//  *  via any medium, is strictly prohibited.
-//  *
-//  *  Proprietary and confidential.
-//  *  Created and maintained by Alstom for internal use in the Spectrail project.
-//  *****************************************************************************#1#
-//
-//  /*******************************************************************************
-// AuthorName: SUBHASISH BISWAS
-// Email: subhasish.biswas@alstomgroup.com
-// FileName: ICDInitializationMiddleware.cs
-// ProjectName: Alstom.Spectrail.ICD.API
-// Created by SUBHASISH BISWAS On: 2025-03-12
-// Updated by SUBHASISH BISWAS On: 2025-03-20
-//  *****************************************************************************#1#
 
 #endregion
 
@@ -69,7 +45,7 @@ namespace Alstom.Spectrail.ICD.API.Middleware;
 ///     ✅ Ensures **MongoDB schema is up-to-date** without redundant executions.
 ///     ✅ Uses **Redis** for caching previous states.
 /// </summary>
-public class ICDRegistryMiddleware
+public class EntityRegistrationMiddleware
 {
     private readonly string _folderPath;
     private readonly RequestDelegate _next;
@@ -80,7 +56,7 @@ public class ICDRegistryMiddleware
     private readonly string _redisKey_RegistryCompleted = "EntityRegistryCompleted";
     private readonly IServiceScopeFactory _scopeFactory;
 
-    public ICDRegistryMiddleware(RequestDelegate next, IServiceScopeFactory scopeFactory,
+    public EntityRegistrationMiddleware(RequestDelegate next, IServiceScopeFactory scopeFactory,
         IServerConfigHelper configHelper, IConnectionMultiplexer redis)
     {
         _next = next;
@@ -94,13 +70,14 @@ public class ICDRegistryMiddleware
         var hasFolderChanged = await HasFolderChanged();
         var hasNewEntities = await HasNewEntities();
         var isRegistryCompleted = await _redisDb.StringGetAsync(_redisKey_RegistryCompleted) == "true";
+        using var scope = _scopeFactory.CreateScope();
+        var entityRegistry = scope.ServiceProvider.GetRequiredService<EntityRegistry>();
 
         if ((hasNewEntities || hasFolderChanged) && !isRegistryCompleted)
         {
             Debug.WriteLine("🚀 Changes detected! Running entity registration and data seeding...");
 
-            using var scope = _scopeFactory.CreateScope();
-            var entityRegistry = scope.ServiceProvider.GetRequiredService<EntityRegistry>();
+
             var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
             try
@@ -224,4 +201,4 @@ public class ICDRegistryMiddleware
         var finalHashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(hashStringBuilder.ToString()));
         return BitConverter.ToString(finalHashBytes).Replace("-", "").ToLower();
     }
-}*/
+}

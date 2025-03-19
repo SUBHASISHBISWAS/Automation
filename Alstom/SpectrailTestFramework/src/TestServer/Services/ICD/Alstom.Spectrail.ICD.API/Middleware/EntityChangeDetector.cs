@@ -14,9 +14,9 @@
 //  /*******************************************************************************
 // AuthorName: SUBHASISH BISWAS
 // Email: subhasish.biswas@alstomgroup.com
-// FileName: ICDInitializationMiddleware.cs
+// FileName: EntityChangeDetector.cs
 // ProjectName: Alstom.Spectrail.ICD.API
-// Created by SUBHASISH BISWAS On: 2025-03-12
+// Created by SUBHASISH BISWAS On: 2025-03-20
 // Updated by SUBHASISH BISWAS On: 2025-03-20
 //  ******************************************************************************/
 
@@ -38,9 +38,9 @@
 //  /*******************************************************************************
 // AuthorName: SUBHASISH BISWAS
 // Email: subhasish.biswas@alstomgroup.com
-// FileName: ICDInitializationMiddleware.cs
+// FileName: EntityChangeDetector.cs
 // ProjectName: Alstom.Spectrail.ICD.API
-// Created by SUBHASISH BISWAS On: 2025-03-12
+// Created by SUBHASISH BISWAS On: 2025-03-20
 // Updated by SUBHASISH BISWAS On: 2025-03-20
 //  *****************************************************************************#1#
 
@@ -48,14 +48,10 @@
 
 #region
 
-using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
-using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
-using Alstom.Spectrail.ICD.Application.Registry;
 using Alstom.Spectrail.Server.Common.Configuration;
 using Alstom.Spectrail.Server.Common.Entities;
-using MediatR;
 using Newtonsoft.Json;
 using StackExchange.Redis;
 
@@ -64,100 +60,36 @@ using StackExchange.Redis;
 namespace Alstom.Spectrail.ICD.API.Middleware;
 
 /// <summary>
-///     ✅ Middleware that combines `EntityRegistrationMiddleware` and `ICDSeedDataMiddleware`.
-///     ✅ Detects both **file changes** and **new entity additions**.
-///     ✅ Ensures **MongoDB schema is up-to-date** without redundant executions.
-///     ✅ Uses **Redis** for caching previous states.
+///     ✅ Utility class for detecting file changes and new entities.
+///     ✅ Provides reusable Redis methods for both middlewares.
 /// </summary>
-public class ICDRegistryMiddleware
+public class EntityChangeDetector(IConnectionMultiplexer redis, IServerConfigHelper configHelper)
 {
-    private readonly string _folderPath;
-    private readonly RequestDelegate _next;
-    private readonly IDatabase _redisDb;
-    private readonly string _redisKey_EntityList = "RegisteredEntities";
-
-    private readonly string _redisKey_FolderHash = "LastFolderHash";
-    private readonly string _redisKey_RegistryCompleted = "EntityRegistryCompleted";
-    private readonly IServiceScopeFactory _scopeFactory;
-
-    public ICDRegistryMiddleware(RequestDelegate next, IServiceScopeFactory scopeFactory,
-        IServerConfigHelper configHelper, IConnectionMultiplexer redis)
-    {
-        _next = next;
-        _scopeFactory = scopeFactory;
-        _redisDb = redis.GetDatabase();
-        _folderPath = configHelper.GetICDFolderPath();
-    }
-
-    public async Task Invoke(HttpContext context)
-    {
-        var hasFolderChanged = await HasFolderChanged();
-        var hasNewEntities = await HasNewEntities();
-        var isRegistryCompleted = await _redisDb.StringGetAsync(_redisKey_RegistryCompleted) == "true";
-
-        if ((hasNewEntities || hasFolderChanged) && !isRegistryCompleted)
-        {
-            Debug.WriteLine("🚀 Changes detected! Running entity registration and data seeding...");
-
-            using var scope = _scopeFactory.CreateScope();
-            var entityRegistry = scope.ServiceProvider.GetRequiredService<EntityRegistry>();
-            var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-
-            try
-            {
-                // ✅ Step 1: Register Entities (Only if needed)
-                if (hasNewEntities)
-                {
-                    Debug.WriteLine("🔍 New entities detected. Registering...");
-                    entityRegistry.RegisterEntity();
-                }
-
-                // ✅ Step 2: Seed MongoDB Data
-                var success = await mediator.Send(new SeedICDDataCommand());
-
-                if (success)
-                {
-                    await _redisDb.StringSetAsync(_redisKey_RegistryCompleted, "true", TimeSpan.FromHours(12));
-                    Debug.WriteLine("✅ MongoDB Seeding Completed!");
-                }
-                else
-                {
-                    Debug.WriteLine("⚠️ MongoDB Seeding Failed!");
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"❌ Error in Middleware: {ex.Message}");
-            }
-        }
-        else
-        {
-            Debug.WriteLine("✅ No changes detected. Skipping registration.");
-        }
-
-        await _next(context);
-    }
+    private readonly string _folderHashKey = "LastFolderHash";
+    private readonly string _folderPath = configHelper.GetICDFolderPath();
+    private readonly IDatabase _redisDb = redis.GetDatabase();
+    private readonly string _registeredEntitiesKey = "RegisteredEntities";
 
     /// <summary>
-    ///     ✅ Checks if folder contents have changed using Redis cache.
+    ///     ✅ Checks if folder contents have changed by comparing hash values.
     /// </summary>
-    private async Task<bool> HasFolderChanged()
+    public async Task<bool> HasFolderChangedAsync()
     {
-        string? lastHash = await _redisDb.StringGetAsync(_redisKey_FolderHash);
+        string? lastHash = await _redisDb.StringGetAsync(_folderHashKey);
         var currentHash = ComputeFolderHash(_folderPath);
 
         if (lastHash == currentHash) return false;
 
-        await _redisDb.StringSetAsync(_redisKey_FolderHash, currentHash);
+        await _redisDb.StringSetAsync(_folderHashKey, currentHash);
         return true;
     }
 
     /// <summary>
     ///     ✅ Detects if new entities have been added dynamically.
     /// </summary>
-    private async Task<bool> HasNewEntities()
+    public async Task<bool> HasNewEntitiesAsync()
     {
-        string? lastRegisteredEntitiesJson = await _redisDb.StringGetAsync(_redisKey_EntityList);
+        string? lastRegisteredEntitiesJson = await _redisDb.StringGetAsync(_registeredEntitiesKey);
         var lastRegisteredEntities = lastRegisteredEntitiesJson != null
             ? JsonConvert.DeserializeObject<HashSet<string>>(lastRegisteredEntitiesJson)
             : new HashSet<string>();
@@ -168,7 +100,7 @@ public class ICDRegistryMiddleware
         {
             // ✅ Update Redis with the latest entity list
             var newEntityListJson = JsonConvert.SerializeObject(currentEntities);
-            await _redisDb.StringSetAsync(_redisKey_EntityList, newEntityListJson);
+            await _redisDb.StringSetAsync(_registeredEntitiesKey, newEntityListJson);
             return true;
         }
 

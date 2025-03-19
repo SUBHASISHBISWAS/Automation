@@ -17,7 +17,7 @@
 // FileName: Program.cs
 // ProjectName: Alstom.Spectrail.ICD.API
 // Created by SUBHASISH BISWAS On: 2025-03-11
-// Updated by SUBHASISH BISWAS On: 2025-03-17
+// Updated by SUBHASISH BISWAS On: 2025-03-20
 //  ******************************************************************************/
 
 #endregion
@@ -32,6 +32,7 @@ using Alstom.Spectrail.ICD.Infrastructure;
 using Alstom.Spectrail.ICD.Infrastructure.Persistence.Contexts.Mongo;
 using Alstom.Spectrail.Server.Common.Configuration;
 using Microsoft.OpenApi.Models;
+using StackExchange.Redis;
 
 #endregion
 
@@ -40,6 +41,7 @@ var configuration = builder.Configuration;
 var services = builder.Services;
 
 // ✅ Add AutoMapper
+
 services.AddAutoMapper(typeof(Program));
 builder.Services.AddSingleton<IServerConfigHelper, ServerConfigHelper>();
 
@@ -54,7 +56,11 @@ builder.Services.AddSingleton<ICDMongoDataContext>();
 builder.Services.AddSingleton<EntityRegistry>(sp => new EntityRegistry(sp.GetRequiredService<ICDMongoDataContext>(),
     sp.GetRequiredService<IServerConfigHelper>()));
 
-
+services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var config = configuration["RedisConfig:ConnectionString"] ?? "localhost:6379,abortConnect=false";
+    return ConnectionMultiplexer.Connect(config);
+});
 // ✅ Add Application & Infrastructure Services
 services.RegisterApplicationServices();
 services.RegisterInfrastructureServices(configuration);
@@ -71,7 +77,9 @@ services.AddSwaggerGen(c =>
 // ✅ Build App
 var app = builder.Build();
 
-app.UseMiddleware<ICDSeedDataMiddleware>();
+// ✅ Register EntityRegistrationMiddleware (Executes once)
+app.UseMiddleware<EntityRegistrationMiddleware>();
+
 
 // ✅ Configure Middleware
 if (app.Environment.IsDevelopment())
