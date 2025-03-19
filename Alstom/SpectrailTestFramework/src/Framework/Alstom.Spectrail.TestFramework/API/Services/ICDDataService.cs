@@ -35,9 +35,9 @@ namespace Alstom.Spectrail.TestFramework.API.Services;
 
 public class ICDDataService(ApiClient client) : IApiService
 {
-    public async Task<List<ICDRecord>?> GetICDDataAsync(string? fileName = null)
+    public async Task<List<ICDRecord>?> GetDCUDataAsync(string? fileName = null)
     {
-        var request = new RestRequest($"/all?fileName={fileName}");
+        var request = new RestRequest($"/DCURecords?fileName={fileName}");
         var response = await client.ExecuteAsync(request);
 
         //request = new RestRequest("/all");

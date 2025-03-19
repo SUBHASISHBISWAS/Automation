@@ -1,7 +1,7 @@
 {
   "Routes": [
     {
-      "DownstreamPathTemplate": "/api/v1/ICD/all?fileName={fileName}",
+      "DownstreamPathTemplate": "/api/v1/ICD/DCURecords?fileName={fileName}",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -9,7 +9,7 @@
           "Port": "5000"
         }
       ],
-      "UpstreamPathTemplate": "/ICD/all?fileName={fileName}",
+      "UpstreamPathTemplate": "/ICD/DCURecords?fileName={fileName}",
       "UpstreamHttpMethod": [
         "GET"
       ]

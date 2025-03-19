@@ -57,8 +57,8 @@ public class ICDController : ControllerBase
     }
 
     /// ✅ Fetch all DCU records
-    [HttpGet("all")]
-    public async Task<IActionResult> GetAllDCURecords([FromQuery] string? fileName)
+    [HttpGet("DCURecords")]
+    public async Task<IActionResult> GetAllDCURecordsForFile([FromQuery] string? fileName)
     {
         if (string.IsNullOrEmpty(fileName)) return BadRequest("❌ File name is required.");
 
