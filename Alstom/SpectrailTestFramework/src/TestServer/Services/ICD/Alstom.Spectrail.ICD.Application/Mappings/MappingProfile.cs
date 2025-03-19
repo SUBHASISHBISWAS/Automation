@@ -17,15 +17,13 @@
 // FileName: MappingProfile.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-04
-// Updated by SUBHASISH BISWAS On: 2025-03-13
+// Updated by SUBHASISH BISWAS On: 2025-03-19
 //  ******************************************************************************/
 
 #endregion
 
 #region
 
-using Alstom.Spectrail.ICD.Application.Features.ICD.Queries.Model;
-using Alstom.Spectrail.ICD.Domain.Entities.ICD;
 using AutoMapper;
 
 #endregion
@@ -34,8 +32,4 @@ namespace Alstom.Spectrail.ICD.Application.Mappings;
 
 public class MappingProfile : Profile
 {
-    public MappingProfile()
-    {
-        CreateMap<DCUEntity, DCUEntityVm>().ReverseMap();
-    }
 }

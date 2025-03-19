@@ -17,7 +17,7 @@
 // FileName: RepositoryQueryHandler.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-16
-// Updated by SUBHASISH BISWAS On: 2025-03-17
+// Updated by SUBHASISH BISWAS On: 2025-03-19
 //  ******************************************************************************/
 
 #endregion
@@ -27,13 +27,14 @@
 using Alstom.Spectrail.ICD.Application.Contracts;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Queries.Query;
 using Alstom.Spectrail.Server.Common.Entities;
+using AutoMapper;
 using MediatR;
 
 #endregion
 
 namespace Alstom.Spectrail.ICD.Application.Features.ICD.Queries.Handler;
 
-public class RepositoryQueryHandler<T>(IAsyncRepository<T> repository)
+public class RepositoryQueryHandler<T>(IAsyncRepository<T> repository, IMapper mapper)
     : IRequestHandler<RepositoryQuery<T>, IEnumerable<T>>
     where T : EntityBase
 {

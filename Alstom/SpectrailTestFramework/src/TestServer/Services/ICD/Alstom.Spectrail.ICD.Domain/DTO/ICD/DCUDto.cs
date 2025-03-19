@@ -14,28 +14,16 @@
 //  /*******************************************************************************
 // AuthorName: SUBHASISH BISWAS
 // Email: subhasish.biswas@alstomgroup.com
-// FileName: MappingProfile.cs
-// ProjectName: Alstom.Spectrail.ICD.API
-// Created by SUBHASISH BISWAS On: 2025-03-04
+// FileName: DCUDto.cs
+// ProjectName: Alstom.Spectrail.ICD.Domain
+// Created by SUBHASISH BISWAS On: 2025-03-19
 // Updated by SUBHASISH BISWAS On: 2025-03-19
 //  ******************************************************************************/
 
 #endregion
 
-#region
+namespace Alstom.Spectrail.ICD.Domain.DTO.ICD;
 
-using Alstom.Spectrail.ICD.Domain.DTO.ICD;
-using Alstom.Spectrail.ICD.Domain.Entities.ICD;
-using AutoMapper;
-
-#endregion
-
-namespace Alstom.Spectrail.ICD.API.Mappings;
-
-public class MappingProfile : Profile
+public class DCUDto : CustomColumnDto
 {
-    public MappingProfile()
-    {
-        CreateMap<DCUEntity, DCUDto>().ReverseMap();
-    }
 }

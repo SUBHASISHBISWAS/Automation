@@ -14,7 +14,7 @@
 //  /*******************************************************************************
 // AuthorName: SUBHASISH BISWAS
 // Email: subhasish.biswas@alstomgroup.com
-// FileName: ICDController.cs
+// FileName: CustomColumnController.cs
 // ProjectName: Alstom.Spectrail.ICD.API
 // Created by SUBHASISH BISWAS On: 2025-03-13
 // Updated by SUBHASISH BISWAS On: 2025-03-19
@@ -27,8 +27,10 @@
 using Alstom.Spectrail.ICD.Application.Enums;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Queries.Query;
+using Alstom.Spectrail.ICD.Domain.DTO.ICD;
 using Alstom.Spectrail.ICD.Domain.Entities.ICD;
 using Alstom.Spectrail.Server.Common.Configuration;
+using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -39,13 +41,15 @@ namespace Alstom.Spectrail.ICD.API.Controllers;
 
 [ApiController]
 [Route("api/v1/[Controller]")]
-public class ICDController : ControllerBase
+public class CustomColumnController : ControllerBase
 {
+    private readonly IMapper _mapper;
     private readonly IMediator _mediator;
 
-    public ICDController(IMediator mediator, IServerConfigHelper configHelper)
+    public CustomColumnController(IMediator mediator, IServerConfigHelper configHelper, IMapper mapper)
     {
         _mediator = mediator;
+        _mapper = mapper;
         if (configHelper.IsFeatureEnabled("EnableEagerLoading"))
             Task.Run(async () =>
             {
@@ -57,16 +61,15 @@ public class ICDController : ControllerBase
     }
 
     /// ✅ Fetch all DCU records
-    [HttpGet("DCURecords")]
-    public async Task<IActionResult> GetAllDCURecordsForFile([FromQuery] string? fileName)
+    [HttpGet("DCU")]
+    public async Task<ActionResult<List<DCUDto>>> GetDCU([FromQuery] string? fileName)
     {
         if (string.IsNullOrEmpty(fileName)) return BadRequest("❌ File name is required.");
 
         var data = await _mediator.Send(new RepositoryQuery<DCUEntity> { FileName = fileName });
 
         if (!data.Any()) return NotFound($"⚠️ No records found for file: {fileName}");
-
-        return Ok(data);
+        return Ok(_mapper.Map<List<DCUDto>>(data));
     }
 
     [HttpGet("AllDCURecords")]

@@ -14,8 +14,8 @@
 //  /*******************************************************************************
 // AuthorName: SUBHASISH BISWAS
 // Email: subhasish.biswas@alstomgroup.com
-// FileName: MappingProfile.cs
-// ProjectName: Alstom.Spectrail.ICD.API
+// FileName: CustomColumnDto.cs
+// ProjectName: Alstom.Spectrail.ICD.Domain
 // Created by SUBHASISH BISWAS On: 2025-03-04
 // Updated by SUBHASISH BISWAS On: 2025-03-19
 //  ******************************************************************************/
@@ -24,18 +24,28 @@
 
 #region
 
-using Alstom.Spectrail.ICD.Domain.DTO.ICD;
-using Alstom.Spectrail.ICD.Domain.Entities.ICD;
-using AutoMapper;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 #endregion
 
-namespace Alstom.Spectrail.ICD.API.Mappings;
+namespace Alstom.Spectrail.ICD.Domain.DTO.ICD;
 
-public class MappingProfile : Profile
+public class CustomColumnDto
 {
-    public MappingProfile()
-    {
-        CreateMap<DCUEntity, DCUDto>().ReverseMap();
-    }
+    [BsonElement("RootProducerFunction")] public string? RootProducerFunction { get; set; }
+
+    [BsonElement("MaxValue")] public string? MaxValue { get; set; }
+
+    [BsonElement("DataFlows")] public string? DataFlows { get; set; }
+
+    [BsonElement("ProducerFunction")] public string? ProducerFunction { get; set; }
+
+    [BsonElement("ConsumerFunction")] public string? ConsumerFunction { get; set; }
+
+    [BsonElement("EventName")] public string? EventName { get; set; }
+
+    [BsonElement("RootConsumerFunction")] public string? RootConsumerFunction { get; set; }
+
+    [BsonRepresentation(BsonType.String)] public string? MinValue { get; set; }
 }

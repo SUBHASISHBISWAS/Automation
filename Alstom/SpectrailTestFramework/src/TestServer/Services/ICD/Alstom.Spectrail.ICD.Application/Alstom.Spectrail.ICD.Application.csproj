@@ -9,6 +9,7 @@
   <ItemGroup>
     <Folder Include="Attributes\" />
     <Folder Include="Features\ICD\Commands\Models\" />
+      <Folder Include="Features\ICD\Queries\Model\"/>
   </ItemGroup>
 
   <ItemGroup>
