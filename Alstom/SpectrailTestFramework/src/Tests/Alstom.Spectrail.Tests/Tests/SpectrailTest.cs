@@ -17,7 +17,7 @@
 // FileName: SpectrailTest.cs
 // ProjectName: Alstom.Spectrail.Tests
 // Created by SUBHASISH BISWAS On: 2025-02-19
-// Updated by SUBHASISH BISWAS On: 2025-03-13
+// Updated by SUBHASISH BISWAS On: 2025-03-19
 //  ******************************************************************************/
 
 #endregion
@@ -62,7 +62,7 @@ public class SpectrailTest : TestHooks
     public async Task Open_Instantiation_EditVariable()
     {
         var spectrailNewFeatureHandler = ActionFactory!.GetAction<SpectrailNewFeatureHandler>();
-        await spectrailNewFeatureHandler.RunAsync();
+        await spectrailNewFeatureHandler.WithFileName("trdp_icd_generated").RunAsync();
 
         /*
         string testName = TestContext.CurrentContext.Test.Name;

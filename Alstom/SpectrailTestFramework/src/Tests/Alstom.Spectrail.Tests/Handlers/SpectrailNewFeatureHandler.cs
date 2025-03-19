@@ -17,7 +17,7 @@
 // FileName: SpectrailNewFeatureHandler.cs
 // ProjectName: Alstom.Spectrail.Tests
 // Created by SUBHASISH BISWAS On: 2025-03-13
-// Updated by SUBHASISH BISWAS On: 2025-03-13
+// Updated by SUBHASISH BISWAS On: 2025-03-19
 //  ******************************************************************************/
 
 #endregion
@@ -52,12 +52,21 @@ public class SpectrailNewFeatureHandler(
         throw new ArgumentException(
             "Invalid PageObject type.");
 
+    private string _fileName = string.Empty;
+
+    public SpectrailNewFeatureHandler WithFileName(string fileName)
+    {
+        ArgumentNullException.ThrowIfNull(fileName);
+        _fileName = fileName;
+        return this;
+    }
+
     protected override async Task ExecuteAsync()
     {
         // ✅ Fetch Data from User Service
         var icdDataService = _apiServiceFactory.GetService("ICDDataService") as ICDDataService ??
                              throw new ArgumentNullException(nameof(ICDDataService))
             ;
-        var userResponse = await icdDataService.GetICDDataAsync();
+        var userResponse = await icdDataService.GetICDDataAsync(_fileName);
     }
 }
