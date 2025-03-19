@@ -17,7 +17,7 @@
 // FileName: DynamicTypeFactory.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-16
-// Updated by SUBHASISH BISWAS On: 2025-03-17
+// Updated by SUBHASISH BISWAS On: 2025-03-19
 //  ******************************************************************************/
 
 #endregion
@@ -30,6 +30,8 @@ using System.Reflection.Emit;
 using Alstom.Spectrail.ICD.Application.Registry;
 
 #endregion
+
+namespace Alstom.Spectrail.ICD.Application.Utility;
 
 public static class DynamicTypeFactory
 {

@@ -17,14 +17,13 @@
 // FileName: IDUEntity.cs
 // ProjectName: Alstom.Spectrail.ICD.Domain
 // Created by SUBHASISH BISWAS On: 2025-03-18
-// Updated by SUBHASISH BISWAS On: 2025-03-18
+// Updated by SUBHASISH BISWAS On: 2025-03-19
 //  ******************************************************************************/
 
 #endregion
 
-/*public class IDUEntity : EntityBase
+namespace Alstom.Spectrail.ICD.Domain.Entities.ICD;
+
+public class IDUEntity : CustomColumnEntity
 {
-    public string ModbusAddress { get; set; }
-    public int ChannelCount { get; set; }
-    public string SignalName { get; set; }
-}*/
+}
