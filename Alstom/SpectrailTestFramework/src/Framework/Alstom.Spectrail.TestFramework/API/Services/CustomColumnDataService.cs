@@ -14,7 +14,7 @@
 //  /*******************************************************************************
 // AuthorName: SUBHASISH BISWAS
 // Email: subhasish.biswas@alstomgroup.com
-// FileName: ICDDataService.cs
+// FileName: CustomColumnDataService.cs
 // ProjectName: Alstom.Spectrail.TestFramework
 // Created by SUBHASISH BISWAS On: 2025-03-13
 // Updated by SUBHASISH BISWAS On: 2025-03-19
@@ -25,19 +25,19 @@
 #region
 
 using Alstom.Spectrail.TestFramework.API.APIClient;
+using Alstom.Spectrail.TestFramework.API.Models;
 using Newtonsoft.Json;
 using RestSharp;
-using SpectrailTestDataProvider.Domain.Entities.ICD;
 
 #endregion
 
 namespace Alstom.Spectrail.TestFramework.API.Services;
 
-public class ICDDataService(ApiClient client) : IApiService
+public class CustomColumnDataService(ApiClient client) : IApiService
 {
-    public async Task<List<ICDRecord>?> GetDCUDataAsync(string? fileName = null)
+    public async Task<List<CustomColumnRecords>?> GetDCUAsync(string? fileName = null)
     {
-        var request = new RestRequest($"/DCURecords?fileName={fileName}");
+        var request = new RestRequest($"/DCU?fileName={fileName}");
         var response = await client.ExecuteAsync(request);
 
         //request = new RestRequest("/all");
@@ -45,8 +45,8 @@ public class ICDDataService(ApiClient client) : IApiService
 
         if (!response.IsSuccessful) throw new Exception($"❌ API Error: {response.ErrorMessage}");
 
-        // ✅ Deserialize API response to List<ICDRecord>
-        return JsonConvert.DeserializeObject<List<ICDRecord>>(response.Content ??
-                                                              throw new InvalidOperationException());
+        // ✅ Deserialize API response to List<CustomColumnRecords>
+        return JsonConvert.DeserializeObject<List<CustomColumnRecords>>(response.Content ??
+                                                                        throw new InvalidOperationException());
     }
 }
