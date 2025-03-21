@@ -17,7 +17,7 @@
 // FileName: EntityRegistry.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-21
-// Updated by SUBHASISH BISWAS On: 2025-03-21
+// Updated by SUBHASISH BISWAS On: 2025-03-22
 //  ******************************************************************************/
 
 #endregion
@@ -28,9 +28,11 @@ using System.Reflection;
 using System.Reflection.Emit;
 using Alstom.Spectrail.ICD.Application.Contracts;
 using Alstom.Spectrail.ICD.Application.Models;
+using Alstom.Spectrail.ICD.Domain.DTO.ICD;
 using Alstom.Spectrail.ICD.Domain.Entities.ICD;
 using Alstom.Spectrail.Server.Common.Configuration;
 using Alstom.Spectrail.Server.Common.Entities;
+using AutoMapper;
 using ClosedXML.Excel;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson;
@@ -46,14 +48,17 @@ public class EntityRegistry
     private static IMongoCollection<EntityMapping>? _collection;
     private static IServerConfigHelper? _configHelper;
     private static IServiceCollection? _services;
+    private static IMapperConfigurationExpression? _mapperConfig;
     private static readonly Dictionary<string, Type> _entityTypeCache = new();
     private static readonly Dictionary<string, Type> _dynamicTypesCache = new();
 
-    public EntityRegistry(IICDDbContext dbContext, IServerConfigHelper configHelper, IServiceCollection services)
+    public EntityRegistry(IICDDbContext dbContext, IServerConfigHelper configHelper, IServiceCollection services,
+        IMapperConfigurationExpression mapperConfig)
     {
         _collection = dbContext.ICDEntityMapping;
         _configHelper = configHelper;
         _services = services;
+        _mapperConfig = mapperConfig;
     }
 
     public static Type? GetEntityType(string entityTypeName)
@@ -109,7 +114,9 @@ public class EntityRegistry
                         continue;
                     }
 
+
                     var entityType = GetEntityType(sheetName) ?? GenerateDynamicEntity(sheetName);
+                    _mapperConfig!.CreateMap(entityType, typeof(CustomColumnDto)).ReverseMap();
                     CacheEntityType(sheetName, entityType);
 
                     var mapping = new EntityMapping

@@ -17,7 +17,7 @@
 // FileName: Program.cs
 // ProjectName: Alstom.Spectrail.ICD.API
 // Created by SUBHASISH BISWAS On: 2025-03-11
-// Updated by SUBHASISH BISWAS On: 2025-03-21
+// Updated by SUBHASISH BISWAS On: 2025-03-22
 //  ******************************************************************************/
 
 #endregion
@@ -33,6 +33,7 @@ using Alstom.Spectrail.ICD.Infrastructure.Persistence.Contexts.Mongo;
 using Alstom.Spectrail.Server.Common.Configuration;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using AutoMapper;
 using Microsoft.OpenApi.Models;
 using StackExchange.Redis;
 
@@ -50,33 +51,8 @@ builder.Host.ConfigureContainer<ContainerBuilder>(container =>
     container.RegisterType<EntityRegistryOrchestrator>()
         .AsSelf()
         .InstancePerLifetimeScope();
-
-
-    /*var tempProvider = builder.Services.BuildServiceProvider();
-    var registry = tempProvider.GetRequiredService<EntityRegistry>();
-
-    var dynamicTypes = registry.RegisterEntity(); // This builds types & updates the DB
-
-    container.RegisterType<RepositoryQueryHandler>()
-        .As<IRequestHandler<RepositoryQuery, IEnumerable<EntityBase>>>()
-        .InstancePerLifetimeScope();
-
-    foreach (var entityType in dynamicTypes)
-    {
-        var commandType = typeof(RepositoryCommand<>).MakeGenericType(entityType);
-        var commandHandlerType = typeof(RepositoryCommandHandler<>).MakeGenericType(entityType);
-        var commandInterface = typeof(IRequestHandler<,>).MakeGenericType(commandType, typeof(bool));
-
-        container.RegisterType(commandHandlerType)
-            .As(commandInterface)
-            .InstancePerLifetimeScope();
-
-        Console.WriteLine($"✅ Registered {commandHandlerType.Name} into Autofac");
-    }*/
 });
 
-// ✅ Register core services
-services.AddAutoMapper(typeof(Program));
 
 services.AddSingleton<IServerConfigHelper, ServerConfigHelper>();
 
@@ -85,12 +61,18 @@ services.Configure<SpectrailMongoDatabaseSettings>(
 
 services.AddSingleton<ICDMongoDataContext>();
 
+var mapperConfigExpression = new MapperConfigurationExpression();
+services.AddSingleton<IMapper>(sp =>
+{
+    var config = new MapperConfiguration(mapperConfigExpression);
+    return config.CreateMapper(sp.GetRequiredService);
+});
 services.AddSingleton<EntityRegistry>(sp =>
-    new EntityRegistry(
-        sp.GetRequiredService<ICDMongoDataContext>(),
-        sp.GetRequiredService<IServerConfigHelper>(),
-        services // Passed for dynamic registration
-    ));
+        new EntityRegistry(
+            sp.GetRequiredService<ICDMongoDataContext>(),
+            sp.GetRequiredService<IServerConfigHelper>(),
+            services, mapperConfigExpression) // Passed for dynamic registration
+);
 
 //services.AddScoped<EntityRegistryOrchestrator>();
 

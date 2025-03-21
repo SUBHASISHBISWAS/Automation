@@ -17,7 +17,7 @@
 // FileName: CustomColumnDto.cs
 // ProjectName: Alstom.Spectrail.ICD.Domain
 // Created by SUBHASISH BISWAS On: 2025-03-04
-// Updated by SUBHASISH BISWAS On: 2025-03-19
+// Updated by SUBHASISH BISWAS On: 2025-03-22
 //  ******************************************************************************/
 
 #endregion

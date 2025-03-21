@@ -17,7 +17,7 @@
 // FileName: CustomColumnController.cs
 // ProjectName: Alstom.Spectrail.ICD.API
 // Created by SUBHASISH BISWAS On: 2025-03-21
-// Updated by SUBHASISH BISWAS On: 2025-03-21
+// Updated by SUBHASISH BISWAS On: 2025-03-22
 //  ******************************************************************************/
 
 #endregion
@@ -62,7 +62,7 @@ public class CustomColumnController : ControllerBase
 
     /// ✅ Fetch all DCU records
     [HttpGet("DCU")]
-    public async Task<ActionResult<List<DCUDto>>> GetDCU([FromQuery] string? fileName)
+    public async Task<ActionResult<List<CustomColumnDto>>> GetDCU([FromQuery] string? fileName)
     {
         if (string.IsNullOrEmpty(fileName)) return BadRequest("❌ File name is required.");
 
@@ -73,7 +73,7 @@ public class CustomColumnController : ControllerBase
         });
 
         if (!data.Any()) return NotFound($"⚠️ No records found for file: {fileName}");
-        return Ok(_mapper.Map<List<DCUDto>>(data));
+        return Ok(_mapper.Map<List<CustomColumnDto>>(data));
     }
 
     [HttpGet("AllDCURecords")]
