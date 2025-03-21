@@ -51,6 +51,7 @@ builder.Host.ConfigureContainer<ContainerBuilder>(container =>
         .AsSelf()
         .InstancePerLifetimeScope();
 
+
     /*var tempProvider = builder.Services.BuildServiceProvider();
     var registry = tempProvider.GetRequiredService<EntityRegistry>();
 

@@ -217,6 +217,7 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
     {
         if (isEagerLoading)
         {
+            //mediator.SendRepositoryCommandAsync();
             await mediator.Send(new RepositoryCommand<T>(RepositoryOperation.DeleteAll));
             await mediator.Send(new RepositoryCommand<T>(RepositoryOperation.SeedData, entities: newRecords));
         }
