@@ -198,7 +198,7 @@ public class EntityRegistry
         Console.WriteLine($"🧠 Cached: {entityType.FullName}");
     }
 
-    public static Type GenerateDynamicEntity(string entityName)
+    private static Type GenerateDynamicEntity(string entityName)
     {
         // Normalize to PascalCase and append 'Entity'
         var pascalName = char.ToUpper(entityName[0]) + entityName[1..].ToLower();

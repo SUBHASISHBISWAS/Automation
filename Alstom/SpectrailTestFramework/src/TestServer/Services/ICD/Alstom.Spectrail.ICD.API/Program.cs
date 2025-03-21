@@ -26,19 +26,13 @@
 
 using Alstom.Spectrail.ICD.API.Middleware;
 using Alstom.Spectrail.ICD.Application;
-using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
-using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Handlers;
-using Alstom.Spectrail.ICD.Application.Features.ICD.Queries.Handler;
-using Alstom.Spectrail.ICD.Application.Features.ICD.Queries.Query;
 using Alstom.Spectrail.ICD.Application.Models;
 using Alstom.Spectrail.ICD.Application.Registry;
 using Alstom.Spectrail.ICD.Infrastructure;
 using Alstom.Spectrail.ICD.Infrastructure.Persistence.Contexts.Mongo;
 using Alstom.Spectrail.Server.Common.Configuration;
-using Alstom.Spectrail.Server.Common.Entities;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
-using MediatR;
 using Microsoft.OpenApi.Models;
 using StackExchange.Redis;
 
@@ -57,7 +51,7 @@ builder.Host.ConfigureContainer<ContainerBuilder>(container =>
         .AsSelf()
         .InstancePerLifetimeScope();
 
-    var tempProvider = builder.Services.BuildServiceProvider();
+    /*var tempProvider = builder.Services.BuildServiceProvider();
     var registry = tempProvider.GetRequiredService<EntityRegistry>();
 
     var dynamicTypes = registry.RegisterEntity(); // This builds types & updates the DB
@@ -77,7 +71,7 @@ builder.Host.ConfigureContainer<ContainerBuilder>(container =>
             .InstancePerLifetimeScope();
 
         Console.WriteLine($"✅ Registered {commandHandlerType.Name} into Autofac");
-    }
+    }*/
 });
 
 // ✅ Register core services
