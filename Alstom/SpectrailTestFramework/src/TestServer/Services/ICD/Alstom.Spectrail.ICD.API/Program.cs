@@ -77,6 +77,7 @@ builder.Host.ConfigureContainer<ContainerBuilder>(container =>
 
 // ✅ Register core services
 services.AddAutoMapper(typeof(Program));
+
 services.AddSingleton<IServerConfigHelper, ServerConfigHelper>();
 
 services.Configure<SpectrailMongoDatabaseSettings>(

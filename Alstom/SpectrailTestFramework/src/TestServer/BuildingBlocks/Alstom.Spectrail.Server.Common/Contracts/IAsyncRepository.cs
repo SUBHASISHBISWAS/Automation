@@ -32,22 +32,22 @@ using Alstom.Spectrail.Server.Common.Entities;
 
 namespace Alstom.Spectrail.Server.Common.Contracts;
 
-public interface IAsyncRepository<T> where T : EntityBase
+public interface IAsyncRepository
 {
     [RepositoryOperation("GetAll")]
-    Task<IEnumerable<T>> GetAllAsync(string? fileName = null, string? sheetName = null);
+    Task<IEnumerable<EntityBase>> GetAllAsync(string? fileName = null, string? sheetName = null);
 
     [RepositoryOperation("GetById")]
-    Task<T> GetByIdAsync(string id);
+    Task<EntityBase> GetByIdAsync(string id);
 
     [RepositoryOperation("GetByFilter")]
-    Task<IEnumerable<T>> GetByFilterAsync(Expression<Func<T, bool>> filter);
+    Task<IEnumerable<EntityBase>> GetByFilterAsync(Expression<Func<EntityBase, bool>> filter);
 
     [RepositoryOperation("Add")]
-    Task AddAsync(T entity);
+    Task AddAsync(EntityBase entity);
 
     [RepositoryOperation("Update")]
-    Task<bool> UpdateAsync(string id, T entity);
+    Task<bool> UpdateAsync(string id, EntityBase entity);
 
     [RepositoryOperation("Delete")]
     Task<bool> DeleteAsync(string id);
@@ -56,10 +56,10 @@ public interface IAsyncRepository<T> where T : EntityBase
     ///     ✅ Adds multiple records efficiently in batch.
     /// </summary>
     [RepositoryOperation("AddMany")]
-    Task AddManyAsync(IEnumerable<T> entities);
+    Task AddManyAsync(IEnumerable<EntityBase> entities);
 
     [RepositoryOperation("SeedData")]
-    Task SeedDataAsync(IEnumerable<T>? entities);
+    Task SeedDataAsync(IEnumerable<EntityBase>? entities);
 
     /// <summary>
     ///     ✅ Deletes all records in the collection.

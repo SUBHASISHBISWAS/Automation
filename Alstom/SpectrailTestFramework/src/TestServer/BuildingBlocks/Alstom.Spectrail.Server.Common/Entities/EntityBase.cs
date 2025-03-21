@@ -17,7 +17,7 @@
 // FileName: EntityBase.cs
 // ProjectName: Alstom.Spectrail.Server.Common
 // Created by SUBHASISH BISWAS On: 2025-03-11
-// Updated by SUBHASISH BISWAS On: 2025-03-15
+// Updated by SUBHASISH BISWAS On: 2025-03-21
 //  ******************************************************************************/
 
 #endregion
@@ -32,7 +32,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace Alstom.Spectrail.Server.Common.Entities;
 
-public abstract class EntityBase : IEntityBase
+public class EntityBase : IEntityBase
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]

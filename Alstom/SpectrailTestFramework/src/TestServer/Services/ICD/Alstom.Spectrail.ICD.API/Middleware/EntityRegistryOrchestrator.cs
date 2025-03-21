@@ -66,6 +66,7 @@ public class EntityRegistryOrchestrator(
             // 🔁 Register entities and get list of dynamic types
             var dynamicTypes = entityRegistry.RegisterEntity();
 
+
             // 🔄 Register handlers via Autofac dynamically
             rootScope.BeginLifetimeScope(builder =>
             {

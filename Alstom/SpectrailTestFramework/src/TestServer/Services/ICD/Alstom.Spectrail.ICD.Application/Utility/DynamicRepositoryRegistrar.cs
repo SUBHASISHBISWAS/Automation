@@ -17,7 +17,7 @@
 // FileName: DynamicRepositoryRegistrar.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-21
-// Updated by SUBHASISH BISWAS On: 2025-03-21
+// Updated by SUBHASISH BISWAS On: 2025-03-22
 //  ******************************************************************************/
 
 #endregion
@@ -49,8 +49,8 @@ public static class DynamicRepositoryRegistrar
         foreach (var entityType in dynamicTypes)
             try
             {
-                var commandType = typeof(RepositoryCommand<>).MakeGenericType(entityType);
-                var commandHandlerType = typeof(RepositoryCommandHandler<>).MakeGenericType(entityType);
+                var commandType = typeof(RepositoryCommand);
+                var commandHandlerType = typeof(RepositoryCommandHandler);
                 var commandInterface = typeof(IRequestHandler<,>).MakeGenericType(commandType, typeof(bool));
 
                 builder

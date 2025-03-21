@@ -17,7 +17,7 @@
 // FileName: ICDRepository.cs
 // ProjectName: Alstom.Spectrail.ICD.Infrastructure
 // Created by SUBHASISH BISWAS On: 2025-03-04
-// Updated by SUBHASISH BISWAS On: 2025-03-16
+// Updated by SUBHASISH BISWAS On: 2025-03-21
 //  ******************************************************************************/
 
 #endregion
@@ -26,14 +26,13 @@
 
 using Alstom.Spectrail.ICD.Application.Contracts;
 using Alstom.Spectrail.Server.Common.Contracts;
-using Alstom.Spectrail.Server.Common.Entities;
 using Alstom.Spectrail.Server.Common.Repository;
 
 #endregion
 
 namespace Alstom.Spectrail.ICD.Infrastructure.Repository;
 
-public class ICDRepository<T>(IDataProvider<T> dataProvider)
-    : RepositoryBase<T>(dataProvider), IICDRepository<T> where T : EntityBase
+public class ICDRepository(IDataProvider dataProvider)
+    : RepositoryBase(dataProvider), IICDRepository
 {
 }

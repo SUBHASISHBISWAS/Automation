@@ -17,7 +17,7 @@
 // FileName: RepositoryCommand.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-12
-// Updated by SUBHASISH BISWAS On: 2025-03-13
+// Updated by SUBHASISH BISWAS On: 2025-03-21
 //  ******************************************************************************/
 
 #endregion
@@ -32,10 +32,11 @@ using MediatR;
 
 namespace Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
 
-public class RepositoryCommand<T> : IRequest<bool> where T : EntityBase
+public class RepositoryCommand : IRequest<bool>
 {
     // ✅ Constructor supporting Enum
-    public RepositoryCommand(RepositoryOperation operation, T? entity = null, IEnumerable<T>? entities = null,
+    public RepositoryCommand(RepositoryOperation operation, EntityBase? entity = null,
+        IEnumerable<EntityBase>? entities = null,
         string? id = null)
     {
         Operation = operation.ToString();
@@ -45,7 +46,8 @@ public class RepositoryCommand<T> : IRequest<bool> where T : EntityBase
     }
 
     // ✅ Constructor supporting String for backward compatibility
-    public RepositoryCommand(string operation, T? entity = null, IEnumerable<T>? entities = null, string? id = null)
+    public RepositoryCommand(string operation, EntityBase? entity = null, IEnumerable<EntityBase>? entities = null,
+        string? id = null)
     {
         Operation = operation;
         Entity = entity;
@@ -54,7 +56,7 @@ public class RepositoryCommand<T> : IRequest<bool> where T : EntityBase
     }
 
     public string Operation { get; }
-    public T? Entity { get; }
-    public IEnumerable<T>? Entities { get; }
+    public EntityBase? Entity { get; }
+    public IEnumerable<EntityBase>? Entities { get; }
     public string? Id { get; }
 }

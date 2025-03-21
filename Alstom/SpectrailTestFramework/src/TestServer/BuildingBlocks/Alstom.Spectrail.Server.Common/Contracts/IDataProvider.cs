@@ -31,22 +31,22 @@ using Alstom.Spectrail.Server.Common.Entities;
 
 namespace Alstom.Spectrail.Server.Common.Contracts;
 
-public interface IDataProvider<T> where T : EntityBase
+public interface IDataProvider
 {
-    Task<IEnumerable<T>> GetAllAsync(string? fileName = null, string? sheetName = null);
-    Task<T> GetByIdAsync(string id);
-    Task<IEnumerable<T>> GetByFilterAsync(Expression<Func<T, bool>> filter);
-    Task AddAsync(T entity);
-    Task<bool> UpdateAsync(string id, T entity);
+    Task<IEnumerable<EntityBase>> GetAllAsync(string? fileName = null, string? sheetName = null);
+    Task<EntityBase> GetByIdAsync(string id);
+    Task<IEnumerable<EntityBase>> GetByFilterAsync(Expression<Func<EntityBase, bool>> filter);
+    Task AddAsync(EntityBase entity);
+    Task<bool> UpdateAsync(string id, EntityBase entity);
     Task<bool> DeleteAsync(string id);
 
     /// <summary>
     ///     ✅ Adds multiple records efficiently in batch.
     /// </summary>
-    Task AddManyAsync(IEnumerable<T> entities);
+    Task AddManyAsync(IEnumerable<EntityBase> entities);
 
 
-    Task SeedDataAsync(IEnumerable<T> entities);
+    Task SeedDataAsync(IEnumerable<EntityBase> entities);
 
     /// <summary>
     ///     ✅ Deletes all records in the collection.

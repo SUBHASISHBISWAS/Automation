@@ -28,17 +28,16 @@ using System.Reflection;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
 using Alstom.Spectrail.Server.Common.Attributes;
 using Alstom.Spectrail.Server.Common.Contracts;
-using Alstom.Spectrail.Server.Common.Entities;
 using MediatR;
 
 #endregion
 
 namespace Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Handlers;
 
-public class RepositoryCommandHandler<T>(IAsyncRepository<T> repository) : IRequestHandler<RepositoryCommand<T>, bool>
-    where T : EntityBase
+public class RepositoryCommandHandler(IAsyncRepository repository) : IRequestHandler<RepositoryCommand, bool>
+
 {
-    private static readonly Dictionary<string, MethodInfo> _methodCache = typeof(IAsyncRepository<T>)
+    private static readonly Dictionary<string, MethodInfo> _methodCache = typeof(IAsyncRepository)
         .GetMethods()
         .ToDictionary(
             m => m.GetCustomAttribute<RepositoryOperationAttribute>()?.Name ??
@@ -46,7 +45,7 @@ public class RepositoryCommandHandler<T>(IAsyncRepository<T> repository) : IRequ
             m => m
         );
 
-    public async Task<bool> Handle(RepositoryCommand<T> request, CancellationToken cancellationToken)
+    public async Task<bool> Handle(RepositoryCommand request, CancellationToken cancellationToken)
     {
         try
         {

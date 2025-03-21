@@ -17,7 +17,7 @@
 // FileName: RepositoryQueryHandler.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-21
-// Updated by SUBHASISH BISWAS On: 2025-03-21
+// Updated by SUBHASISH BISWAS On: 2025-03-22
 //  ******************************************************************************/
 
 #endregion
@@ -50,7 +50,7 @@ public class RepositoryQueryHandler(
             throw new InvalidOperationException($"❌ Unable to resolve type for '{request.SheetName}'");
 
         // 🧪 Get repository of type IAsyncRepository<entityType>
-        var repoInterfaceType = typeof(IAsyncRepository<>).MakeGenericType(entityType);
+        var repoInterfaceType = typeof(IAsyncRepository);
         var repository = serviceProvider.GetService(repoInterfaceType);
         if (repository is null)
             throw new InvalidOperationException($"❌ Repository not registered for type '{entityType.Name}'");

@@ -37,88 +37,10 @@ using MongoDB.Driver;
 
 namespace Alstom.Spectrail.ICD.Infrastructure.Persistence.Drivers;
 
-public class MongoDataProvider<T>(IICDDbContext icdDataContext) : IDataProvider<T>
-    where T : EntityBase
+public class MongoDataProvider(IICDDbContext icdDataContext) : IDataProvider
+
 {
     private readonly IMongoDatabase _icdDatabase = icdDataContext.ICDDatabase;
-
-
-    /// <summary>
-    ///     ✅ Retrieves a record by ID.
-    /// </summary>
-    public async Task<T> GetByIdAsync(string id)
-    {
-        /*try
-        {
-            Debug.Assert(_collection is not null, $"{nameof(_collection)} is null");
-            var filter = Builders<T>.Filter.Eq("_id", ObjectId.Parse(id)); // Use `_id`
-            return await _collection.Find(filter).FirstOrDefaultAsync();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"❌ Error fetching record with ID {id}: {ex.Message}");
-            throw new InvalidOperationException($"Error retrieving record with ID {id}.", ex);
-        }*/
-
-        return default!;
-    }
-
-    /// <summary>
-    ///     ✅ Retrieves records based on a filter.
-    /// </summary>
-    public async Task<IEnumerable<T>> GetByFilterAsync(Expression<Func<T, bool>> filter)
-    {
-        /*try
-        {
-            Debug.Assert(_collection is not null, $"{nameof(_collection)} is null");
-            return await _collection.Find(filter).ToListAsync();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"❌ Error fetching records with filter: {ex.Message}");
-            throw new InvalidOperationException("Error retrieving records based on the provided filter.", ex);
-        }*/
-        return new List<T>();
-    }
-
-    /// <summary>
-    ///     ✅ Adds a new record to MongoDB.
-    /// </summary>
-    public async Task AddAsync(T entity)
-    {
-        /*try
-        {
-            Debug.Assert(_collection is not null, $"{nameof(_collection)} is null");
-            await _collection.InsertOneAsync(entity);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"❌ Error inserting record: {ex.Message}");
-            throw new InvalidOperationException("Error adding record to MongoDB.", ex);
-        }*/
-    }
-
-    /// <summary>
-    ///     ✅ Updates a record by ID.
-    /// </summary>
-    public async Task<bool> UpdateAsync(string id, T entity)
-    {
-        /*try
-        {
-            Debug.Assert(_collection is not null, $"{nameof(_collection)} is null");
-
-            var filter = Builders<T>.Filter.Eq("Id", id);
-            var result = await _collection.ReplaceOneAsync(filter, entity);
-
-            return result.IsAcknowledged && result.ModifiedCount > 0;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"❌ Error updating record with ID {id}: {ex.Message}");
-            throw new InvalidOperationException($"Error updating record with ID {id}.", ex);
-        }*/
-        return false;
-    }
 
     /// <summary>
     ///     ✅ Deletes a record by ID.
@@ -163,13 +85,84 @@ public class MongoDataProvider<T>(IICDDbContext icdDataContext) : IDataProvider<
         return false;
     }
 
+    public async Task<IEnumerable<EntityBase>> GetAllAsync(string? fileName = null, string? sheetName = null)
+    {
+        try
+        {
+            // ✅ Fetch stored data
+            var storedData = await GetStoredDataAsync();
+
+            // ✅ Extract entity collections for the specified file
+            if (!storedData.TryGetValue(fileName ?? string.Empty, out var entityCollections) ||
+                entityCollections == null)
+            {
+                Console.WriteLine($"⚠️ No data found for file: {fileName}");
+                return new List<EntityBase>(); // Return an empty list if no data found
+            }
+
+
+            // ✅ Flatten the nested lists and filter to the correct type
+            var allEntities = entityCollections
+                .SelectMany(e => e)
+                .Where(entity => entity.SheetName == sheetName)
+                .ToList();
+
+            Console.WriteLine($"✅ Retrieved {allEntities.Count} entities from '{fileName}'");
+
+            return allEntities;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error retrieving entities: {ex.Message}");
+            throw new InvalidOperationException("An unexpected error occurred while retrieving entities.", ex);
+        }
+    }
+
+
+    /// <summary>
+    ///     ✅ Retrieves a record by ID.
+    /// </summary>
+    public async Task<EntityBase> GetByIdAsync(string id)
+    {
+        /*try
+        {
+            Debug.Assert(_collection is not null, $"{nameof(_collection)} is null");
+            var filter = Builders<T>.Filter.Eq("_id", ObjectId.Parse(id)); // Use `_id`
+            return await _collection.Find(filter).FirstOrDefaultAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error fetching record with ID {id}: {ex.Message}");
+            throw new InvalidOperationException($"Error retrieving record with ID {id}.", ex);
+        }*/
+
+        return default!;
+    }
+
+    /// <summary>
+    ///     ✅ Adds a new record to MongoDB.
+    /// </summary>
+    public async Task AddAsync(EntityBase entity)
+    {
+        /*try
+        {
+            Debug.Assert(_collection is not null, $"{nameof(_collection)} is null");
+            await _collection.InsertOneAsync(entity);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error inserting record: {ex.Message}");
+            throw new InvalidOperationException("Error adding record to MongoDB.", ex);
+        }*/
+    }
+
     /// <summary>
     ///     ✅ Adds multiple records efficiently in batch.
     /// </summary>
     /// <summary>
     ///     ✅ Adds multiple records efficiently in batch.
     /// </summary>
-    public async Task AddManyAsync(IEnumerable<T> entities)
+    public async Task AddManyAsync(IEnumerable<EntityBase> entities)
     {
         try
         {
@@ -198,19 +191,19 @@ public class MongoDataProvider<T>(IICDDbContext icdDataContext) : IDataProvider<
     /// <summary>
     ///     ✅ Seeds data dynamically based on `FileKey`
     /// </summary>
-    public async Task SeedDataAsync(IEnumerable<T> entities)
+    public async Task SeedDataAsync(IEnumerable<EntityBase> entities)
     {
         try
         {
             if (entities == null || !entities.Any())
                 throw new ArgumentNullException(nameof(entities), "⚠️ No entities to insert.");
 
-            // ✅ Group entities by `FileKey` (FileName_SheetName)
+            // ✅ Group entities by FileKey (FileName_SheetName)
             var groupedEntities = entities.GroupBy(e => e.FileName);
 
             foreach (var group in groupedEntities)
             {
-                // ✅ Extract Collection Name (FileName without extension)
+                // ✅ Extract Collection Name
                 var collectionName = Path.GetFileNameWithoutExtension(group.Key)?.Replace(" ", "_").ToLower();
                 if (string.IsNullOrEmpty(collectionName))
                 {
@@ -218,14 +211,14 @@ public class MongoDataProvider<T>(IICDDbContext icdDataContext) : IDataProvider<
                     continue;
                 }
 
-                var collection = _icdDatabase.GetCollection<BsonDocument>(collectionName);
-
-                // ✅ Extract Entity Type (DCUEntity, IDUEntity, etc.)
-                var entityTypeName = typeof(T).Name;
+                // ✅ Get actual runtime type from first entity
+                var entityType = group.First().GetType();
+                var entityTypeName = entityType.Name;
 
                 Console.WriteLine($"📌 Storing {group.Count()} records in '{collectionName} -> {entityTypeName}'");
 
-                // ✅ Construct the document in the correct structure
+                var collection = _icdDatabase.GetCollection<BsonDocument>(collectionName);
+
                 var filter = Builders<BsonDocument>.Filter.Exists(entityTypeName);
                 var update = Builders<BsonDocument>.Update
                     .PushEach($"{entityTypeName}.Entities", group.Select(e => e.ToBsonDocument()).ToList());
@@ -257,38 +250,44 @@ public class MongoDataProvider<T>(IICDDbContext icdDataContext) : IDataProvider<
         }
     }
 
-    public async Task<IEnumerable<T>> GetAllAsync(string? fileName = null, string? sheetName = null)
+    /// <summary>
+    ///     ✅ Retrieves records based on a filter.
+    /// </summary>
+    public async Task<IEnumerable<EntityBase>> GetByFilterAsync(Expression<Func<EntityBase, bool>> filter)
     {
-        try
+        /*try
         {
-            // ✅ Fetch stored data
-            var storedData = await GetStoredDataAsync();
-
-            // ✅ Extract entity collections for the specified file
-            if (!storedData.TryGetValue(fileName ?? string.Empty, out var entityCollections) ||
-                entityCollections == null)
-            {
-                Console.WriteLine($"⚠️ No data found for file: {fileName}");
-                return new List<T>(); // Return an empty list if no data found
-            }
-
-
-            // ✅ Flatten the nested lists and filter to the correct type
-            var allEntities = entityCollections
-                .SelectMany(e => e)
-                .Where(entity => entity.SheetName == sheetName)
-                .Cast<T>()
-                .ToList();
-
-            Console.WriteLine($"✅ Retrieved {allEntities.Count} entities from '{fileName}'");
-
-            return allEntities;
+            Debug.Assert(_collection is not null, $"{nameof(_collection)} is null");
+            return await _collection.Find(filter).ToListAsync();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ Error retrieving entities: {ex.Message}");
-            throw new InvalidOperationException("An unexpected error occurred while retrieving entities.", ex);
+            Console.WriteLine($"❌ Error fetching records with filter: {ex.Message}");
+            throw new InvalidOperationException("Error retrieving records based on the provided filter.", ex);
+        }*/
+        return new List<EntityBase>();
+    }
+
+    /// <summary>
+    ///     ✅ Updates a record by ID.
+    /// </summary>
+    public async Task<bool> UpdateAsync(string id, EntityBase entity)
+    {
+        /*try
+        {
+            Debug.Assert(_collection is not null, $"{nameof(_collection)} is null");
+
+            var filter = Builders<T>.Filter.Eq("Id", id);
+            var result = await _collection.ReplaceOneAsync(filter, entity);
+
+            return result.IsAcknowledged && result.ModifiedCount > 0;
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error updating record with ID {id}: {ex.Message}");
+            throw new InvalidOperationException($"Error updating record with ID {id}.", ex);
+        }*/
+        return false;
     }
 
     private async Task<Dictionary<string, List<List<EntityBase>>>> GetStoredDataAsync(string? fileName = null)

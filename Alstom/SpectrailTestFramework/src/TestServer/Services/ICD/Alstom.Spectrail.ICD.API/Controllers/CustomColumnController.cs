@@ -100,7 +100,7 @@ public class CustomColumnController : ControllerBase
     [HttpPost("add")]
     public async Task<IActionResult> AddDCURecord([FromBody] DCUEntity entity)
     {
-        var result = await _mediator.Send(new RepositoryCommand<DCUEntity>(RepositoryOperation.Add, entity));
+        var result = await _mediator.Send(new RepositoryCommand(RepositoryOperation.Add, entity));
         return result ? Ok("✅ Record Added!") : BadRequest("❌ Failed to Add!");
     }
 
@@ -109,7 +109,7 @@ public class CustomColumnController : ControllerBase
     public async Task<IActionResult> AddManyDCURecords([FromBody] List<DCUEntity> entities)
     {
         var result =
-            await _mediator.Send(new RepositoryCommand<DCUEntity>(RepositoryOperation.AddMany, entities: entities));
+            await _mediator.Send(new RepositoryCommand(RepositoryOperation.AddMany, entities: entities));
         return result ? Ok("✅ Records Added!") : BadRequest("❌ Failed to Add!");
     }
 
@@ -117,7 +117,7 @@ public class CustomColumnController : ControllerBase
     [HttpPut("update/{id}")]
     public async Task<IActionResult> UpdateDCURecord(string id, [FromBody] DCUEntity entity)
     {
-        var result = await _mediator.Send(new RepositoryCommand<DCUEntity>(RepositoryOperation.Update, entity, id: id));
+        var result = await _mediator.Send(new RepositoryCommand(RepositoryOperation.Update, entity, id: id));
         return result ? Ok("✅ Record Updated!") : BadRequest("❌ Failed to Update!");
     }
 
@@ -125,7 +125,7 @@ public class CustomColumnController : ControllerBase
     [HttpDelete("delete/{id}")]
     public async Task<IActionResult> DeleteDCURecord(string id)
     {
-        var result = await _mediator.Send(new RepositoryCommand<DCUEntity>(RepositoryOperation.Delete, id: id));
+        var result = await _mediator.Send(new RepositoryCommand(RepositoryOperation.Delete, id: id));
         return result ? Ok("✅ Record Deleted!") : BadRequest("❌ Failed to Delete!");
     }
 
@@ -133,7 +133,7 @@ public class CustomColumnController : ControllerBase
     [HttpDelete("delete-all")]
     public async Task<IActionResult> DeleteAllDCURecords()
     {
-        var result = await _mediator.Send(new RepositoryCommand<DCUEntity>(RepositoryOperation.DeleteAll));
+        var result = await _mediator.Send(new RepositoryCommand(RepositoryOperation.DeleteAll));
         return result ? Ok("✅ All Records Deleted!") : BadRequest("❌ Failed to Delete!");
     }
 

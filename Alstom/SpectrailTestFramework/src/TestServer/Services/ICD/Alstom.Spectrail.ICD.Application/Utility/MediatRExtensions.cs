@@ -51,7 +51,7 @@ public static class MediatRExtensions
         if (entityType is null)
             throw new InvalidOperationException($"❌ Cannot resolve type for: {mapping.EntityName}");
 
-        var commandType = typeof(RepositoryCommand<>).MakeGenericType(entityType);
+        var commandType = typeof(RepositoryCommand);
         var command = Activator.CreateInstance(commandType)!;
         commandType.GetProperty("FileName")?.SetValue(command, fileName);
 
