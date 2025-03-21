@@ -30,7 +30,7 @@ using Alstom.Spectrail.Server.Common.Entities;
 
 #endregion
 
-namespace Alstom.Spectrail.ICD.Application.Contracts;
+namespace Alstom.Spectrail.Server.Common.Contracts;
 
 public interface IAsyncRepository<T> where T : EntityBase
 {

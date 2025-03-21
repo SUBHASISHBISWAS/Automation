@@ -25,7 +25,6 @@
 #region
 
 using System.Linq.Expressions;
-using Alstom.Spectrail.ICD.Application.Contracts;
 using Alstom.Spectrail.Server.Common.Contracts;
 using Alstom.Spectrail.Server.Common.Entities;
 
