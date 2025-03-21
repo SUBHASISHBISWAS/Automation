@@ -62,7 +62,7 @@ public class RepositoryQueryHandler(
         if (!string.IsNullOrEmpty(request.Id))
         {
             method = repoInterfaceType.GetMethod("GetByIdAsync")!;
-            result = await (dynamic)method.Invoke(repository, new object[] { request.Id })!;
+            result = await (dynamic)method.Invoke(repository, [request.Id])!;
             return new List<EntityBase> { (EntityBase)result! };
         }
 
