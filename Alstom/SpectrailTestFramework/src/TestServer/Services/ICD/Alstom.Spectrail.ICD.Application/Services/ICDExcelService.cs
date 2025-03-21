@@ -59,7 +59,10 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
 
         // ✅ Fetch existing data
         var existingRecords = await mediator.Send(new RepositoryQuery
-            { FileName = Path.GetFileNameWithoutExtension(filePath).ToLower() });
+        {
+            FileName = Path.GetFileNameWithoutExtension(filePath).ToLower(),
+            SheetName = sheetName.ToLower()
+        });
         var entityBases = existingRecords.Where(e => e.FileKey == uniqueKey).ToList();
         var existingChecksum = entityBases.FirstOrDefault()?.Checksum;
 

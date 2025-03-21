@@ -26,11 +26,19 @@
 
 using Alstom.Spectrail.ICD.API.Middleware;
 using Alstom.Spectrail.ICD.Application;
+using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
+using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Handlers;
+using Alstom.Spectrail.ICD.Application.Features.ICD.Queries.Handler;
+using Alstom.Spectrail.ICD.Application.Features.ICD.Queries.Query;
 using Alstom.Spectrail.ICD.Application.Models;
 using Alstom.Spectrail.ICD.Application.Registry;
 using Alstom.Spectrail.ICD.Infrastructure;
 using Alstom.Spectrail.ICD.Infrastructure.Persistence.Contexts.Mongo;
 using Alstom.Spectrail.Server.Common.Configuration;
+using Alstom.Spectrail.Server.Common.Entities;
+using Autofac;
+using Autofac.Extensions.DependencyInjection;
+using MediatR;
 using Microsoft.OpenApi.Models;
 using StackExchange.Redis;
 
@@ -40,62 +48,107 @@ var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 var services = builder.Services;
 
-// ✅ Add AutoMapper
+// 🔁 Use Autofac instead of built-in DI
+builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
+builder.Host.ConfigureContainer<ContainerBuilder>(container =>
+{
+    // Autofac registration for orchestrator with ILifetimeScope support
+    container.RegisterType<EntityRegistryOrchestrator>()
+        .AsSelf()
+        .InstancePerLifetimeScope();
 
+    var tempProvider = builder.Services.BuildServiceProvider();
+    var registry = tempProvider.GetRequiredService<EntityRegistry>();
+
+    var dynamicTypes = registry.RegisterEntity(); // This builds types & updates the DB
+
+    container.RegisterType<RepositoryQueryHandler>()
+        .As<IRequestHandler<RepositoryQuery, IEnumerable<EntityBase>>>()
+        .InstancePerLifetimeScope();
+
+    foreach (var entityType in dynamicTypes)
+    {
+        var commandType = typeof(RepositoryCommand<>).MakeGenericType(entityType);
+        var commandHandlerType = typeof(RepositoryCommandHandler<>).MakeGenericType(entityType);
+        var commandInterface = typeof(IRequestHandler<,>).MakeGenericType(commandType, typeof(bool));
+
+        container.RegisterType(commandHandlerType)
+            .As(commandInterface)
+            .InstancePerLifetimeScope();
+
+        Console.WriteLine($"✅ Registered {commandHandlerType.Name} into Autofac");
+    }
+});
+
+// ✅ Register core services
 services.AddAutoMapper(typeof(Program));
-builder.Services.AddSingleton<IServerConfigHelper, ServerConfigHelper>();
+services.AddSingleton<IServerConfigHelper, ServerConfigHelper>();
 
-// ✅ Register MongoDB settings
-builder.Services.Configure<SpectrailMongoDatabaseSettings>(
+services.Configure<SpectrailMongoDatabaseSettings>(
     builder.Configuration.GetSection("SpectrailMongoDatabaseSettings"));
 
-// ✅ Register MongoDB Context
-builder.Services.AddSingleton<ICDMongoDataContext>();
+services.AddSingleton<ICDMongoDataContext>();
 
-// ✅ Register Entity Registry (Depends on Mongo Context)
-builder.Services.AddSingleton<EntityRegistry>(sp => new EntityRegistry(sp.GetRequiredService<ICDMongoDataContext>(),
-    sp.GetRequiredService<IServerConfigHelper>(), services));
-var tempProvider = builder.Services.BuildServiceProvider();
-var registry = tempProvider.GetRequiredService<EntityRegistry>();
-// Manually trigger dynamic entity registration
-registry.RegisterEntity();
+services.AddSingleton<EntityRegistry>(sp =>
+    new EntityRegistry(
+        sp.GetRequiredService<ICDMongoDataContext>(),
+        sp.GetRequiredService<IServerConfigHelper>(),
+        services // Passed for dynamic registration
+    ));
 
-services.AddSingleton<IConnectionMultiplexer>(sp =>
+//services.AddScoped<EntityRegistryOrchestrator>();
+
+services.AddSingleton<IConnectionMultiplexer>(_ =>
 {
-    var config = configuration["RedisConfig:ConnectionString"] ?? "localhost:6379,abortConnect=false";
-    return ConnectionMultiplexer.Connect(config);
+    var connString = configuration["RedisConfig:ConnectionString"] ?? "localhost:6379,abortConnect=false";
+    return ConnectionMultiplexer.Connect(connString);
 });
-// ✅ Add Application & Infrastructure Services
+
+// ✅ Register application and infrastructure services
 services.RegisterApplicationServices();
 services.RegisterInfrastructureServices(configuration);
 
+// ✅ Run Entity Registry & Seed Data before app starts
+await using (var tempProvider = services.BuildServiceProvider())
+{
+    tempProvider.GetRequiredService<EntityRegistry>();
+}
 
-// ✅ Add Controllers & Swagger
+// ✅ Register controllers and Swagger
 services.AddControllers();
 services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Alstom.Spectrail.ICD.API", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Alstom.Spectrail.ICD.API",
+        Version = "v1"
+    });
 });
 
-
-// ✅ Build App
+// ✅ Build the app
 var app = builder.Build();
 
-// ✅ Register EntityRegistrationMiddleware (Executes once)
+using (var scope = app.Services.CreateScope())
+{
+    var orchestrator = scope.ServiceProvider.GetRequiredService<EntityRegistryOrchestrator>();
+    await orchestrator.ExecuteAsync(true);
+}
+
+// ✅ Run one-time entity registration and seed check via middleware
 app.UseMiddleware<EntityRegistrationMiddleware>();
 
-
-// ✅ Configure Middleware
+// ✅ Configure HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
     app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Alstom.Spectrail.ICD.API v1"));
+    app.UseSwaggerUI(c =>
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Alstom.Spectrail.ICD.API v1"));
 }
 
 app.UseRouting();
 app.UseAuthorization();
 app.MapControllers();
 app.MapGet("/health", () => Results.Ok("Healthy"));
-// ✅ Run Application
+
 app.Run();

@@ -14,8 +14,8 @@
 //  /*******************************************************************************
 // AuthorName: SUBHASISH BISWAS
 // Email: subhasish.biswas@alstomgroup.com
-// FileName: EntityRegistrationBootstrapper.cs
-// ProjectName: Alstom.Spectrail.ICD.Application
+// FileName: DynamicRepositoryAutofacModule.cs
+// ProjectName: Alstom.Spectrail.ICD.API
 // Created by SUBHASISH BISWAS On: 2025-03-21
 // Updated by SUBHASISH BISWAS On: 2025-03-21
 //  ******************************************************************************/
@@ -38,8 +38,8 @@
 //  /*******************************************************************************
 // AuthorName: SUBHASISH BISWAS
 // Email: subhasish.biswas@alstomgroup.com
-// FileName: EntityRegistrationBootstrapper.cs
-// ProjectName: Alstom.Spectrail.ICD.Application
+// FileName: DynamicRepositoryAutofacModule.cs
+// ProjectName: Alstom.Spectrail.ICD.API
 // Created by SUBHASISH BISWAS On: 2025-03-21
 // Updated by SUBHASISH BISWAS On: 2025-03-21
 //  *****************************************************************************#1#
@@ -48,44 +48,40 @@
 
 #region
 
+using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
+using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Handlers;
+using Alstom.Spectrail.ICD.Application.Features.ICD.Queries.Handler;
+using Alstom.Spectrail.ICD.Application.Features.ICD.Queries.Query;
 using Alstom.Spectrail.ICD.Application.Registry;
-using Alstom.Spectrail.ICD.Application.Utility;
-using Alstom.Spectrail.Server.Common.Configuration;
-using ClosedXML.Excel;
-using Microsoft.Extensions.DependencyInjection;
+using Autofac;
+using MediatR;
 
 #endregion
 
-public static class EntityRegistrationBootstrapper
+public class DynamicRepositoryAutofacModule : Module
 {
-    public static void RegisterDynamicEntities(IServiceCollection services, IServerConfigHelper configHelper)
+    protected override void Load(ContainerBuilder builder)
     {
-        var icdFiles = configHelper.GetICDFiles();
-        var dynamicTypes = new List<Type>();
+        var dynamicTypes = EntityRegistry.GetAllEntityTypes(); // Your dynamic entity types
 
-        foreach (var file in icdFiles)
+        foreach (var entityType in dynamicTypes)
         {
-            var selectedSheets = EntityRegistry.ExtractEquipmentNames(file, configHelper);
+            var queryType = typeof(RepositoryQuery).MakeGenericType(entityType);
+            var handlerType = typeof(RepositoryQueryHandler).MakeGenericType(entityType);
+            var handlerInterface =
+                typeof(IRequestHandler<,>).MakeGenericType(queryType,
+                    typeof(IEnumerable<>).MakeGenericType(entityType));
 
-            using var workbook = new XLWorkbook(file);
-            foreach (var sheet in workbook.Worksheets)
-            {
-                var sheetName = sheet.Name.Trim().Replace(" ", "").ToLower();
+            builder.RegisterType(handlerType).As(handlerInterface).InstancePerLifetimeScope();
 
-                if (selectedSheets.Any() && !selectedSheets.Contains(sheetName, StringComparer.OrdinalIgnoreCase))
-                    continue;
+            // Register the command handler if needed
+            var commandType = typeof(RepositoryCommand<>).MakeGenericType(entityType);
+            var commandHandlerType = typeof(RepositoryCommandHandler<>).MakeGenericType(entityType);
+            var commandInterface = typeof(IRequestHandler<,>).MakeGenericType(commandType, typeof(bool));
 
-                var entityType = EntityRegistry.GetEntityType(sheetName)
-                                 ?? EntityRegistry.GenerateDynamicEntity(sheetName);
+            builder.RegisterType(commandHandlerType).As(commandInterface).InstancePerLifetimeScope();
 
-                if (entityType == null) continue;
-
-                EntityRegistry.CacheEntityType(sheetName, entityType);
-                dynamicTypes.Add(entityType);
-            }
+            Console.WriteLine($"✅ Autofac Registered: {entityType.Name}");
         }
-
-        // ✅ Register repository handlers for dynamic types
-        DynamicRepositoryRegistrar.RegisterRepositoryHandlers(services, dynamicTypes);
     }
 }*/

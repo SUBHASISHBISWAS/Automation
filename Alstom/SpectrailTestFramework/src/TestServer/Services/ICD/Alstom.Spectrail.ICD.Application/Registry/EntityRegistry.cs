@@ -28,7 +28,6 @@ using System.Reflection;
 using System.Reflection.Emit;
 using Alstom.Spectrail.ICD.Application.Contracts;
 using Alstom.Spectrail.ICD.Application.Models;
-using Alstom.Spectrail.ICD.Application.Utility;
 using Alstom.Spectrail.ICD.Domain.Entities.ICD;
 using Alstom.Spectrail.Server.Common.Configuration;
 using Alstom.Spectrail.Server.Common.Entities;
@@ -87,10 +86,11 @@ public class EntityRegistry
         return entityType;
     }
 
-    public void RegisterEntity()
+    public List<Type> RegisterEntity()
     {
-        if (_entityTypeCache.Count() > 0) return;
+        var registeredEntityTypes = new List<Type>();
         var icdFiles = _configHelper!.GetICDFiles();
+
         foreach (var filePath in icdFiles)
             try
             {
@@ -102,15 +102,14 @@ public class EntityRegistry
                 {
                     var sheetName = worksheet.Name.Trim().Replace(" ", "").ToLower();
 
-                    if (selectedSheets.Any() && !selectedSheets.Contains(sheetName, StringComparer.OrdinalIgnoreCase))
+                    if (selectedSheets.Any() &&
+                        !selectedSheets.Contains(sheetName, StringComparer.OrdinalIgnoreCase))
                     {
                         Console.WriteLine($"⚠️ Skipping sheet: {sheetName} (not in config)");
                         continue;
                     }
 
                     var entityType = GetEntityType(sheetName) ?? GenerateDynamicEntity(sheetName);
-                    if (entityType == null) continue;
-
                     CacheEntityType(sheetName, entityType);
 
                     var mapping = new EntityMapping
@@ -128,22 +127,23 @@ public class EntityRegistry
                     if (existing != null && existing.EntityName == mapping.EntityName)
                     {
                         Console.WriteLine($"✅ Already registered: {mapping.EntityName}");
-                        continue;
+                    }
+                    else
+                    {
+                        var update = Update.Set(x => x.EntityName, mapping.EntityName);
+                        _collection?.UpdateOne(filter, update, new UpdateOptions { IsUpsert = true });
+                        Console.WriteLine($"✅ Registered: {mapping.EntityName}");
                     }
 
-                    var update = Update.Set(x => x.EntityName, mapping.EntityName);
-                    _collection?.UpdateOne(filter, update, new UpdateOptions { IsUpsert = true });
-
-                    Console.WriteLine($"✅ Registered: {mapping.EntityName}");
+                    registeredEntityTypes.Add(entityType);
                 }
-
-                var allDynamicTypes = _dynamicTypesCache.Values.ToList();
-                DynamicRepositoryRegistrar.RegisterRepositoryHandlers(_services, allDynamicTypes);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"❌ Error processing file: {filePath}, Msg: {ex.Message}");
             }
+
+        return registeredEntityTypes.Distinct().ToList(); // ensure no duplicates
     }
 
     public static List<string> ExtractEquipmentNames(string filePath, IServerConfigHelper configHelper)
@@ -167,8 +167,8 @@ public class EntityRegistry
         var fileName = Path.GetFileName(filePath).ToLower();
         var filters = configHelper.GetSection<Dictionary<string, List<string>>>("Settings:DynamicEntityFilters");
 
-        filters.TryGetValue(fileName, out var perFile);
-        filters.TryGetValue("default", out var fallback);
+        filters!.TryGetValue(fileName, out var perFile);
+        filters!.TryGetValue("default", out var fallback);
 
         var allowedPrefixes = perFile ?? fallback ?? new List<string>();
 
