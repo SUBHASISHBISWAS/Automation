@@ -17,7 +17,7 @@
 // FileName: RepositoryBase.cs
 // ProjectName: Alstom.Spectrail.Server.Common
 // Created by SUBHASISH BISWAS On: 2025-03-04
-// Updated by SUBHASISH BISWAS On: 2025-03-17
+// Updated by SUBHASISH BISWAS On: 2025-03-21
 //  ******************************************************************************/
 
 #endregion
@@ -80,8 +80,8 @@ public class RepositoryBase<T>(IDataProvider<T> dataProvider) : IAsyncRepository
         return await dataProvider.DeleteAllAsync();
     }
 
-    public async Task<IEnumerable<T>> GetAllAsync(string? fileName = null)
+    public async Task<IEnumerable<T>> GetAllAsync(string? fileName = null, string? sheetName = null)
     {
-        return await dataProvider.GetAllAsync(fileName);
+        return await dataProvider.GetAllAsync(fileName, sheetName);
     }
 }

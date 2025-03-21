@@ -16,8 +16,8 @@
 // Email: subhasish.biswas@alstomgroup.com
 // FileName: CustomColumnController.cs
 // ProjectName: Alstom.Spectrail.ICD.API
-// Created by SUBHASISH BISWAS On: 2025-03-13
-// Updated by SUBHASISH BISWAS On: 2025-03-19
+// Created by SUBHASISH BISWAS On: 2025-03-21
+// Updated by SUBHASISH BISWAS On: 2025-03-21
 //  ******************************************************************************/
 
 #endregion
@@ -66,7 +66,11 @@ public class CustomColumnController : ControllerBase
     {
         if (string.IsNullOrEmpty(fileName)) return BadRequest("❌ File name is required.");
 
-        var data = await _mediator.Send(new RepositoryQuery<DCUEntity> { FileName = fileName });
+        var data = await _mediator.Send(new RepositoryQuery
+        {
+            FileName = fileName,
+            SheetName = "bce"
+        });
 
         if (!data.Any()) return NotFound($"⚠️ No records found for file: {fileName}");
         return Ok(_mapper.Map<List<DCUDto>>(data));
@@ -77,7 +81,7 @@ public class CustomColumnController : ControllerBase
     {
         if (string.IsNullOrEmpty(fileName)) return BadRequest("❌ File name is required.");
 
-        var data = await _mediator.Send(new RepositoryQuery<DCUEntity> { FileName = fileName });
+        var data = await _mediator.Send(new RepositoryQuery { FileName = fileName });
 
         if (!data.Any()) return NotFound($"⚠️ No records found for file: {fileName}");
 
@@ -88,7 +92,7 @@ public class CustomColumnController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> GetDCURecordById(string id)
     {
-        var data = await _mediator.Send(new RepositoryQuery<DCUEntity>(id));
+        var data = await _mediator.Send(new RepositoryQuery());
         return Ok(data);
     }
 
@@ -132,4 +136,39 @@ public class CustomColumnController : ControllerBase
         var result = await _mediator.Send(new RepositoryCommand<DCUEntity>(RepositoryOperation.DeleteAll));
         return result ? Ok("✅ All Records Deleted!") : BadRequest("❌ Failed to Delete!");
     }
+
+    /*private async Task<List<EntityBase>> FetchEntitiesDynamicallyAsync(string entityName, string fileName)
+    {
+        var entityType = EntityRegistry.GetEntityType(entityName);
+        if (entityType == null)
+            throw new InvalidOperationException($"❌ Entity type '{entityName}' could not be resolved.");
+
+        var queryType = typeof(RepositoryQuery<>).MakeGenericType(entityType);
+        var queryInstance = Activator.CreateInstance(queryType);
+        queryType.GetProperty("FileName")?.SetValue(queryInstance, fileName);
+
+        var sendMethod = typeof(IMediator)
+            .GetMethods(BindingFlags.Instance | BindingFlags.Public)
+            .Where(m => m.Name == "Send" && m.IsGenericMethod)
+            .Where(m =>
+            {
+                var parameters = m.GetParameters();
+                return parameters.Length == 2 &&
+                       parameters[0].ParameterType.GetGenericTypeDefinition() == typeof(IRequest<>) &&
+                       parameters[1].ParameterType == typeof(CancellationToken);
+            })
+            .FirstOrDefault();
+
+        if (sendMethod == null)
+            throw new InvalidOperationException("❌ Could not find a matching generic Send method on IMediator.");
+
+        var genericSend = sendMethod.MakeGenericMethod(typeof(List<EntityBase>));
+        var cancellationToken = CancellationToken.None;
+
+        var task = (Task)genericSend.Invoke(_mediator, new[] { queryInstance, cancellationToken });
+        await task.ConfigureAwait(false);
+
+        var result = task.GetType().GetProperty("Result")?.GetValue(task) as List<EntityBase>;
+        return result ?? new List<EntityBase>();
+    }*/
 }

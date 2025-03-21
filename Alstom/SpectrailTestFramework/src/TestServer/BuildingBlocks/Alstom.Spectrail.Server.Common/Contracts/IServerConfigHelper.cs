@@ -17,7 +17,7 @@
 // FileName: IServerConfigHelper.cs
 // ProjectName: Alstom.Spectrail.Server.Common
 // Created by SUBHASISH BISWAS On: 2025-03-13
-// Updated by SUBHASISH BISWAS On: 2025-03-13
+// Updated by SUBHASISH BISWAS On: 2025-03-21
 //  ******************************************************************************/
 
 #endregion
@@ -43,4 +43,8 @@ public interface IServerConfigHelper
     ///     ✅ Checks if a feature flag is enabled (Defaults to false if missing).
     /// </summary>
     bool IsFeatureEnabled(string feature);
+
+    T? GetSetting<T>(string key);
+
+    T? GetSection<T>(string sectionKey);
 }

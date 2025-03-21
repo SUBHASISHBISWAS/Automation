@@ -16,8 +16,8 @@
 // Email: subhasish.biswas@alstomgroup.com
 // FileName: IExcelService.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
-// Created by SUBHASISH BISWAS On: 2025-03-06
-// Updated by SUBHASISH BISWAS On: 2025-03-13
+// Created by SUBHASISH BISWAS On: 2025-03-16
+// Updated by SUBHASISH BISWAS On: 2025-03-21
 //  ******************************************************************************/
 
 #endregion
@@ -32,8 +32,10 @@ namespace Alstom.Spectrail.ICD.Application.Contracts;
 
 public interface IExcelService
 {
-    Task<List<T>> ReadExcelAndStoreAsync<T>(string filePath, string? sheetName = null) where T : EntityBase, new();
-    Task<List<T>> GetStoredDataAsync<T>() where T : EntityBase, new();
+    Task<List<T>> ReadExcelAndStoreAsync<T>(string filePath, string? sheetName = null)
+        where T : EntityBase, new();
+
+    //Task<List<T>> GetStoredDataAsync<T>() where T : EntityBase, new();
     string ComputeFileChecksum(string filePath);
 
     Task InitializeAsync();

@@ -16,19 +16,17 @@
 // Email: subhasish.biswas@alstomgroup.com
 // FileName: MongoDataProvider.cs
 // ProjectName: Alstom.Spectrail.ICD.Infrastructure
-// Created by SUBHASISH BISWAS On: 2025-03-04
-// Updated by SUBHASISH BISWAS On: 2025-03-19
+// Created by SUBHASISH BISWAS On: 2025-03-20
+// Updated by SUBHASISH BISWAS On: 2025-03-21
 //  ******************************************************************************/
 
 #endregion
 
 #region
 
-using System.Collections;
 using System.Linq.Expressions;
 using Alstom.Spectrail.ICD.Application.Contracts;
 using Alstom.Spectrail.ICD.Application.Registry;
-using Alstom.Spectrail.ICD.Application.Utility;
 using Alstom.Spectrail.Server.Common.Contracts;
 using Alstom.Spectrail.Server.Common.Entities;
 using MongoDB.Bson;
@@ -259,7 +257,7 @@ public class MongoDataProvider<T>(IICDDbContext icdDataContext) : IDataProvider<
         }
     }
 
-    public async Task<IEnumerable<T>> GetAllAsync(string? fileName = null)
+    public async Task<IEnumerable<T>> GetAllAsync(string? fileName = null, string? sheetName = null)
     {
         try
         {
@@ -274,10 +272,11 @@ public class MongoDataProvider<T>(IICDDbContext icdDataContext) : IDataProvider<
                 return new List<T>(); // Return an empty list if no data found
             }
 
+
             // ✅ Flatten the nested lists and filter to the correct type
             var allEntities = entityCollections
                 .SelectMany(e => e)
-                .Where(entity => entity is T)
+                .Where(entity => entity.SheetName == sheetName)
                 .Cast<T>()
                 .ToList();
 
@@ -296,44 +295,40 @@ public class MongoDataProvider<T>(IICDDbContext icdDataContext) : IDataProvider<
     {
         try
         {
-            // ✅ Fetch dynamic objects from GetAllEntityAsync
             var result = await GetAllEntityAsync(fileName);
 
-            if (result is not List<object> allDatabaseInstances || !allDatabaseInstances.Any())
+            if (result is not List<EntityBase> allEntities || !allEntities.Any())
             {
                 Console.WriteLine("⚠️ No data found to convert.");
                 return new Dictionary<string, List<List<EntityBase>>>();
             }
 
+            // ✅ Group by file name (normalize to lowercase & remove extension)
+            var groupedByFile = allEntities
+                .Where(e => !string.IsNullOrWhiteSpace(e.FileName))
+                .GroupBy(e => Path.GetFileNameWithoutExtension(e.FileName!).ToLowerInvariant())
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.ToList()
+                );
+
             Dictionary<string, List<List<EntityBase>>> databaseResults = new();
 
-            foreach (var dbInstance in allDatabaseInstances)
+            foreach (var kvp in groupedByFile)
             {
-                var dbType = dbInstance.GetType();
-                var dbName = dbType.Name; // Extract database name
+                var fileKey = kvp.Key;
+                var entities = kvp.Value;
 
-                List<List<EntityBase>> entityCollections = new();
+                // ✅ Group further by entity type inside the file (if needed)
+                var groupedByEntityType = entities
+                    .GroupBy(e => e.GetType().Name)
+                    .Select(g => g.ToList())
+                    .ToList();
 
-                foreach (var property in dbType.GetProperties())
-                {
-                    // ✅ Get the List<EntityType> property (e.g., List<DCUEntity>)
-                    var entityList = property.GetValue(dbInstance) as IList;
-
-                    if (entityList == null) continue;
-
-                    var entityType = entityList.GetType().GetGenericArguments()[0]; // Get DCUEntity, BCHEntity, etc.
-
-                    // ✅ Convert each entity inside the list to EntityBase
-                    var castedEntities = entityList.Cast<EntityBase>().ToList();
-
-                    if (castedEntities.Any())
-                        entityCollections.Add(castedEntities);
-                }
-
-                if (entityCollections.Any()) databaseResults[dbName] = entityCollections;
+                databaseResults[fileKey] = groupedByEntityType;
             }
 
-            Console.WriteLine("\u2705 Successfully converted to dictionary format.");
+            Console.WriteLine("✅ Successfully grouped data by file name.");
             return databaseResults;
         }
         catch (TypeLoadException ex)
@@ -349,17 +344,13 @@ public class MongoDataProvider<T>(IICDDbContext icdDataContext) : IDataProvider<
         }
     }
 
-    /// <summary>
-    ///     ✅ Retrieves all records from MongoDB.
-    /// </summary>
-    private async Task<object> GetAllEntityAsync(string? fileName = null)
+    private async Task<List<EntityBase>> GetAllEntityAsync(string? fileName = null)
     {
         try
         {
-            List<object> allDatabaseInstances = new();
+            List<EntityBase> allEntities = new();
             List<string> collectionsToProcess;
 
-            // ✅ Fetch collections from EntityRegistry if `fileName` is null
             if (string.IsNullOrEmpty(fileName))
             {
                 Console.WriteLine("📌 Fetching all data from EntityRegistry...");
@@ -368,7 +359,7 @@ public class MongoDataProvider<T>(IICDDbContext icdDataContext) : IDataProvider<
                 if (!allMappings.Any())
                 {
                     Console.WriteLine("⚠️ No entity mappings found in the registry.");
-                    return new List<object>(); // Return empty list if no mappings
+                    return allEntities;
                 }
 
                 collectionsToProcess = allMappings
@@ -378,12 +369,10 @@ public class MongoDataProvider<T>(IICDDbContext icdDataContext) : IDataProvider<
             }
             else
             {
-                // ✅ Process only the requested collection
                 collectionsToProcess = new List<string>
                     { Path.GetFileNameWithoutExtension(fileName).Replace(" ", "_").ToLower() };
             }
 
-            // ✅ Debug: Show available collections
             var availableCollections = _icdDatabase.ListCollectionNames().ToList();
             Console.WriteLine($"📌 Available collections in MongoDB: {string.Join(", ", availableCollections)}");
 
@@ -406,26 +395,12 @@ public class MongoDataProvider<T>(IICDDbContext icdDataContext) : IDataProvider<
                     continue;
                 }
 
-                // ✅ Identify all entity names inside the database collection
-                var entityNames = documents
-                    .SelectMany(doc => doc.Elements)
-                    .Where(e => e.Name != "_id") // Ignore `_id`
-                    .Select(e => e.Name)
-                    .Distinct()
-                    .ToList();
-
-                // ✅ Create a dynamic database type (trdp_icd_cc, trdp_icd_generated)
-                var dynamicDbType = DynamicTypeFactory.CreateDatabaseType(collectionName, entityNames);
-                var dbInstance = Activator.CreateInstance(dynamicDbType);
-
                 foreach (var doc in documents)
                 foreach (var element in doc.Elements)
                 {
-                    if (element.Name == "_id") continue; // Skip `_id`
+                    if (element.Name == "_id") continue;
 
-                    var entityTypeName = element.Name; // e.g., "BCHEntity", "DCUEntity"
-
-                    // ✅ Ensure correct entity type is used from EntityRegistry
+                    var entityTypeName = element.Name;
                     var correctEntityType = EntityRegistry.GetEntityType(entityTypeName);
                     if (correctEntityType == null)
                     {
@@ -449,39 +424,18 @@ public class MongoDataProvider<T>(IICDDbContext icdDataContext) : IDataProvider<
                         continue;
                     }
 
-                    // ✅ Deserialize using the correct entity type
                     var entities = entityDoc["Entities"]
                         .AsBsonArray
                         .Select(e => BsonSerializer.Deserialize(e.AsBsonDocument, correctEntityType))
+                        .OfType<EntityBase>()
                         .ToList();
 
-                    // ✅ Create a strongly typed list dynamically
-                    var genericListType = typeof(List<>).MakeGenericType(correctEntityType);
-                    var stronglyTypedEntities = Activator.CreateInstance(genericListType) as IList;
-
-                    foreach (var entity in entities)
-                        stronglyTypedEntities?.Add(entity);
-
-                    // ✅ Store entity list inside the dynamic database wrapper
-                    var dbProperty = dynamicDbType.GetProperty(entityTypeName);
-                    if (dbProperty != null && stronglyTypedEntities != null)
-                        dbProperty.SetValue(dbInstance, stronglyTypedEntities);
+                    allEntities.AddRange(entities);
                 }
-
-                allDatabaseInstances.Add(dbInstance);
             }
 
-            // ✅ Return all databases if `fileName` is null
-            if (string.IsNullOrEmpty(fileName))
-            {
-                Console.WriteLine($"✅ Retrieved {allDatabaseInstances.Count} databases.");
-                return allDatabaseInstances;
-            }
-
-            // ✅ Return a single database if `fileName` is provided
-            var resultContainer = allDatabaseInstances.FirstOrDefault();
-            Console.WriteLine($"✅ Retrieved data structure for '{fileName}'.");
-            return resultContainer ?? new object();
+            Console.WriteLine($"✅ Total entities retrieved: {allEntities.Count}");
+            return allEntities;
         }
         catch (MongoConnectionException ex)
         {
@@ -496,7 +450,7 @@ public class MongoDataProvider<T>(IICDDbContext icdDataContext) : IDataProvider<
         catch (KeyNotFoundException ex)
         {
             Console.WriteLine($"⚠️ Missing expected field: {ex.Message}");
-            return new List<object>(); // Return an empty object instead of failing
+            return new List<EntityBase>();
         }
         catch (Exception ex)
         {

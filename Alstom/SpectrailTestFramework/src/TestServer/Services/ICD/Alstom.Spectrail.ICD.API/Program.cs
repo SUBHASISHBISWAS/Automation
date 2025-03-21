@@ -17,7 +17,7 @@
 // FileName: Program.cs
 // ProjectName: Alstom.Spectrail.ICD.API
 // Created by SUBHASISH BISWAS On: 2025-03-11
-// Updated by SUBHASISH BISWAS On: 2025-03-20
+// Updated by SUBHASISH BISWAS On: 2025-03-21
 //  ******************************************************************************/
 
 #endregion
@@ -54,7 +54,11 @@ builder.Services.AddSingleton<ICDMongoDataContext>();
 
 // ✅ Register Entity Registry (Depends on Mongo Context)
 builder.Services.AddSingleton<EntityRegistry>(sp => new EntityRegistry(sp.GetRequiredService<ICDMongoDataContext>(),
-    sp.GetRequiredService<IServerConfigHelper>()));
+    sp.GetRequiredService<IServerConfigHelper>(), services));
+var tempProvider = builder.Services.BuildServiceProvider();
+var registry = tempProvider.GetRequiredService<EntityRegistry>();
+// Manually trigger dynamic entity registration
+registry.RegisterEntity();
 
 services.AddSingleton<IConnectionMultiplexer>(sp =>
 {

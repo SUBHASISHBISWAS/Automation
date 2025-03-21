@@ -16,24 +16,20 @@
 // Email: subhasish.biswas@alstomgroup.com
 // FileName: RegisterApplicationServices.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
-// Created by SUBHASISH BISWAS On: 2025-03-16
-// Updated by SUBHASISH BISWAS On: 2025-03-17
+// Created by SUBHASISH BISWAS On: 2025-03-21
+// Updated by SUBHASISH BISWAS On: 2025-03-21
 //  ******************************************************************************/
 
 #endregion
 
 #region
 
-using System.Reflection;
 using Alstom.Spectrail.ICD.Application.Behaviours;
 using Alstom.Spectrail.ICD.Application.Contracts;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Handlers;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Queries.Handler;
-using Alstom.Spectrail.ICD.Application.Features.ICD.Queries.Query;
 using Alstom.Spectrail.ICD.Application.Services;
-using Alstom.Spectrail.ICD.Domain.Entities.ICD;
-using Alstom.Spectrail.Server.Common.Entities;
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
@@ -54,14 +50,14 @@ public static class ApplicationServiceRegistration
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UnhandledExceptionBehaviour<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
 
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(RepositoryQueryHandler<>).Assembly));
-        services.RegisterRepositoryHandlers(typeof(DCUEntity).Assembly);
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(RepositoryQueryHandler).Assembly));
+        //services.RegisterRepositoryHandlers(typeof(DCUEntity).Assembly);
         services.AddScoped<IRequestHandler<SeedICDDataCommand, bool>, SeedICDDataCommandHandler>();
         services.AddScoped<IExcelService, ICDExcelService>();
         return services;
     }
 
-    private static void RegisterRepositoryHandlers(this IServiceCollection services, Assembly assembly)
+    /*private static void RegisterRepositoryHandlers(this IServiceCollection services, Assembly assembly)
     {
         // ✅ Find all entity types inheriting from `EntityBase`
         var entityTypes = assembly.GetTypes()
@@ -88,5 +84,5 @@ public static class ApplicationServiceRegistration
 
             Console.WriteLine($"✅ Registered Repository Handlers for: {entityType.Name}");
         }
-    }
+    }*/
 }

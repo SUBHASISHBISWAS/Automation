@@ -17,7 +17,7 @@
 // FileName: ServerConfigHelper.cs
 // ProjectName: Alstom.Spectrail.Server.Common
 // Created by SUBHASISH BISWAS On: 2025-03-11
-// Updated by SUBHASISH BISWAS On: 2025-03-16
+// Updated by SUBHASISH BISWAS On: 2025-03-21
 //  ******************************************************************************/
 
 #endregion
@@ -38,6 +38,7 @@ namespace Alstom.Spectrail.Server.Common.Configuration;
 /// </summary>
 public class ServerConfigHelper : IServerConfigHelper
 {
+    private readonly IConfiguration _configuration;
     private readonly FeatureFlagsConfig _featureFlagsConfig;
     private readonly ICDConfig _icdConfig;
 
@@ -47,7 +48,7 @@ public class ServerConfigHelper : IServerConfigHelper
     public ServerConfigHelper(IConfiguration configuration)
     {
         ArgumentNullException.ThrowIfNull(configuration);
-
+        _configuration = configuration;
         // ✅ Bind the "Settings" section to `ICDConfig`
         _icdConfig = configuration.GetSection("Settings").Get<ICDConfig>()
                      ?? throw new Exception("❌ Missing `Settings` section in appsettings.json!");
@@ -91,6 +92,36 @@ public class ServerConfigHelper : IServerConfigHelper
         var property = typeof(FeatureFlagsConfig).GetProperty(feature,
             BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
         return property != null && (bool)property.GetValue(_featureFlagsConfig);
+    }
+
+    // ✅ Use this for simple keys from ICDConfig (flat)
+    public T? GetSetting<T>(string key)
+    {
+        try
+        {
+            var setting = typeof(ICDConfig).GetProperty(key,
+                BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+            return setting != null ? (T)setting.GetValue(_icdConfig) : default;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"⚠️ Error fetching setting '{key}': {ex.Message}");
+            return default;
+        }
+    }
+
+    // ✅ Use this for nested configuration (like JSON paths)
+    public T? GetSection<T>(string sectionKey)
+    {
+        try
+        {
+            return _configuration.GetSection(sectionKey).Get<T>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"⚠️ Error getting config section '{sectionKey}': {ex.Message}");
+            return default;
+        }
     }
 
     /// <summary>

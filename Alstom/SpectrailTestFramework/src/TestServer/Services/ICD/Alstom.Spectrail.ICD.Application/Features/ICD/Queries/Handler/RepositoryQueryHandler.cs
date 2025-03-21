@@ -16,38 +16,61 @@
 // Email: subhasish.biswas@alstomgroup.com
 // FileName: RepositoryQueryHandler.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
-// Created by SUBHASISH BISWAS On: 2025-03-16
-// Updated by SUBHASISH BISWAS On: 2025-03-19
+// Created by SUBHASISH BISWAS On: 2025-03-21
+// Updated by SUBHASISH BISWAS On: 2025-03-21
 //  ******************************************************************************/
 
 #endregion
 
 #region
 
+using System.Reflection;
 using Alstom.Spectrail.ICD.Application.Contracts;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Queries.Query;
+using Alstom.Spectrail.ICD.Application.Registry;
 using Alstom.Spectrail.Server.Common.Entities;
-using AutoMapper;
 using MediatR;
 
 #endregion
 
 namespace Alstom.Spectrail.ICD.Application.Features.ICD.Queries.Handler;
 
-public class RepositoryQueryHandler<T>(IAsyncRepository<T> repository, IMapper mapper)
-    : IRequestHandler<RepositoryQuery<T>, IEnumerable<T>>
-    where T : EntityBase
+public class RepositoryQueryHandler(
+    IServiceProvider serviceProvider)
+    : IRequestHandler<RepositoryQuery, IEnumerable<EntityBase>>
 {
-    public async Task<IEnumerable<T>> Handle(RepositoryQuery<T> request, CancellationToken cancellationToken)
+    public async Task<IEnumerable<EntityBase>> Handle(RepositoryQuery request, CancellationToken cancellationToken)
     {
+        if (string.IsNullOrEmpty(request.SheetName))
+            throw new InvalidOperationException("EntityName is required for dynamic query resolution.");
+
+        // 🧠 Resolve dynamic entity type from registry
+        var entityType = EntityRegistry.GetEntityType(request.SheetName);
+        if (entityType is null)
+            throw new InvalidOperationException($"❌ Unable to resolve type for '{request.SheetName}'");
+
+        // 🧪 Get repository of type IAsyncRepository<entityType>
+        var repoInterfaceType = typeof(IAsyncRepository<>).MakeGenericType(entityType);
+        var repository = serviceProvider.GetService(repoInterfaceType);
+        if (repository is null)
+            throw new InvalidOperationException($"❌ Repository not registered for type '{entityType.Name}'");
+
+        // 🛠 Get methods
+        MethodInfo method;
+        object? result;
+
         if (!string.IsNullOrEmpty(request.Id))
         {
-            var entity = await repository.GetByIdAsync(request.Id);
-            return new List<T> { entity };
+            method = repoInterfaceType.GetMethod("GetByIdAsync")!;
+            result = await (dynamic)method.Invoke(repository, new object[] { request.Id })!;
+            return new List<EntityBase> { (EntityBase)result! };
         }
 
-        if (request.Filter != null) return await repository.GetByFilterAsync(request.Filter);
+        if (request.Filter != null)
+            throw new NotSupportedException("⚠️ Filters not supported in dynamic query without generics.");
 
-        return await repository.GetAllAsync(request.FileName);
+        method = repoInterfaceType.GetMethod("GetAllAsync", new[] { typeof(string), typeof(string) })!;
+        result = await (dynamic)method.Invoke(repository, new object?[] { request.FileName, request.SheetName })!;
+        return ((IEnumerable<object>)result!).Cast<EntityBase>();
     }
 }

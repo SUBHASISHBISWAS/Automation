@@ -16,8 +16,8 @@
 // Email: subhasish.biswas@alstomgroup.com
 // FileName: ICDExcelService.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
-// Created by SUBHASISH BISWAS On: 2025-03-16
-// Updated by SUBHASISH BISWAS On: 2025-03-17
+// Created by SUBHASISH BISWAS On: 2025-03-21
+// Updated by SUBHASISH BISWAS On: 2025-03-21
 //  ******************************************************************************/
 
 #endregion
@@ -30,6 +30,7 @@ using Alstom.Spectrail.ICD.Application.Contracts;
 using Alstom.Spectrail.ICD.Application.Enums;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Queries.Query;
+using Alstom.Spectrail.ICD.Application.Registry;
 using Alstom.Spectrail.Server.Common.Configuration;
 using Alstom.Spectrail.Server.Common.Entities;
 using ClosedXML.Excel;
@@ -47,7 +48,7 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
     /// <summary>
     ///     ✅ Reads an Excel file, detects changes, and updates MongoDB.
     /// </summary>
-    public async Task<List<T>> ReadExcelAndStoreAsync<T>(string? filePath, string? sheetName)
+    public async Task<List<T>> ReadExcelAndStoreAsync<T>(string filePath, string? sheetName)
         where T : EntityBase, new()
     {
         if (string.IsNullOrEmpty(filePath) || string.IsNullOrEmpty(sheetName))
@@ -57,7 +58,7 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
         var newChecksum = ComputeFileChecksum(filePath);
 
         // ✅ Fetch existing data
-        var existingRecords = await mediator.Send(new RepositoryQuery<T>
+        var existingRecords = await mediator.Send(new RepositoryQuery
             { FileName = Path.GetFileNameWithoutExtension(filePath).ToLower() });
         var entityBases = existingRecords.Where(e => e.FileKey == uniqueKey).ToList();
         var existingChecksum = entityBases.FirstOrDefault()?.Checksum;
@@ -66,7 +67,7 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
         if (configHelper.IsFeatureEnabled("EnableChecksumValidation") && existingChecksum == newChecksum)
         {
             Console.WriteLine($"✅ No changes detected for {uniqueKey}. Using existing data.");
-            return entityBases;
+            return entityBases as List<T>;
         }
 
         var newRecords = ReadExcel<T>(filePath, sheetName);
@@ -115,13 +116,6 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
             }
     }
 
-    /// <summary>
-    ///     ✅ Retrieves stored data from MongoDB using RepositoryQuery.
-    /// </summary>
-    public async Task<List<T>> GetStoredDataAsync<T>() where T : EntityBase, new()
-    {
-        return (await mediator.Send(new RepositoryQuery<T>())).ToList();
-    }
 
     /// <summary>
     ///     ✅ Reads and processes all sheets dynamically.
@@ -132,26 +126,32 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
             throw new FileNotFoundException($"❌ File not found: {filePath}");
 
         using var workbook = new XLWorkbook(filePath);
+        var fileName = Path.GetFileName(filePath).Trim().ToLower();
+
+        // ✅ Read Equipment Names from "network_config" sheet
+        var selectedEquipmentNames = EntityRegistry.ExtractEquipmentNames(filePath, configHelper);
+
         foreach (var worksheet in workbook.Worksheets)
         {
             var sheetName = worksheet.Name.Trim().Replace(" ", "").ToLower();
             Console.WriteLine($"📌 Processing sheet: {sheetName}");
 
-            var entityType = AppDomain.CurrentDomain.GetAssemblies()
-                .SelectMany(a => a.GetTypes())
-                .FirstOrDefault(t =>
-                    t.IsClass && !t.IsAbstract && typeof(EntityBase).IsAssignableFrom(t) &&
-                    t.Name.Replace("Entity", "").Trim().ToLower() == sheetName);
+            // ✅ Apply dynamic filtering
+            if (selectedEquipmentNames.Count > 0 &&
+                !selectedEquipmentNames.Contains(sheetName, StringComparer.OrdinalIgnoreCase))
+            {
+                Console.WriteLine($"⚠️ Skipping sheet '{sheetName}' (Not in selected entities).");
+                continue;
+            }
 
+            var entityType = EntityRegistry.GetEntityType(sheetName);
             if (entityType == null)
             {
                 Console.WriteLine($"⚠️ No registered entity for sheet: {sheetName}. Skipping...");
                 continue;
             }
 
-            // ✅ Register dynamically when processing the file
-            //EntityRegistry.RegisterEntity(filePath, sheetName, entityType);
-            Console.WriteLine($"✅ Registered Entity: {entityType.FullName} for '{filePath}:{sheetName}'");
+            Console.WriteLine($"✅ Using entity type: {entityType.FullName} for '{filePath}:{sheetName}'");
 
             // 🚀 Now process the sheet
             await InvokeGenericMethod(nameof(ReadExcelAndStoreAsync), entityType, filePath, sheetName);
@@ -188,12 +188,7 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
                         var targetType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
                         var sanitizedValue = cellValue.ToString()?.Trim();
 
-                        if (string.IsNullOrEmpty(sanitizedValue)) continue;
-
-                        if (property.PropertyType.IsEnum && Enum.TryParse(property.PropertyType, sanitizedValue, true,
-                                out var enumValue))
-                            property.SetValue(entity, enumValue);
-                        else
+                        if (!string.IsNullOrEmpty(sanitizedValue))
                             property.SetValue(entity, Convert.ChangeType(sanitizedValue, targetType));
                     }
                 }
@@ -210,21 +205,6 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
         }
 
         return entities;
-    }
-
-    /// <summary>
-    ///     ✅ Extracts and normalizes Excel cell values.
-    /// </summary>
-    private static object? ExtractCellValue(IXLCell cell)
-    {
-        return cell.DataType switch
-        {
-            XLDataType.Text => cell.GetString().Trim(),
-            XLDataType.Number => cell.GetDouble(),
-            XLDataType.Boolean => cell.GetBoolean(),
-            XLDataType.DateTime => cell.GetDateTime(),
-            _ => cell.Value
-        };
     }
 
     /// <summary>
@@ -257,5 +237,20 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
             throw new InvalidOperationException($"❌ Method '{methodName}' not found in {nameof(ICDExcelService)}.");
 
         await (Task)method.Invoke(this, parameters)!;
+    }
+
+    /// <summary>
+    ///     ✅ Extracts and normalizes Excel cell values.
+    /// </summary>
+    private static object? ExtractCellValue(IXLCell cell)
+    {
+        return cell.DataType switch
+        {
+            XLDataType.Text => cell.GetString().Trim(),
+            XLDataType.Number => cell.GetDouble(),
+            XLDataType.Boolean => cell.GetBoolean(),
+            XLDataType.DateTime => cell.GetDateTime(),
+            _ => cell.Value
+        };
     }
 }

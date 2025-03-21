@@ -17,16 +17,26 @@
 // FileName: ICDConfig.cs
 // ProjectName: Alstom.Spectrail.Server.Common
 // Created by SUBHASISH BISWAS On: 2025-03-13
-// Updated by SUBHASISH BISWAS On: 2025-03-13
+// Updated by SUBHASISH BISWAS On: 2025-03-21
 //  ******************************************************************************/
 
 #endregion
 
-// ReSharper disable InconsistentNaming
-
 namespace Alstom.Spectrail.Server.Common.Configuration;
 
+/// <summary>
+///     ✅ Represents configuration settings for ICD processing.
+/// </summary>
 public class ICDConfig
 {
+    /// <summary>
+    ///     ✅ The root folder where all ICD Excel files are stored.
+    /// </summary>
     public string ICD_FOLDER_PATH { get; init; } = string.Empty;
+
+    /// <summary>
+    ///     ✅ Per-file dynamic entity filters from `appsettings.json`.
+    ///     ✅ If empty, all entities will be processed.
+    /// </summary>
+    public Dictionary<string, List<string>> DynamicEntityFilters { get; init; } = new();
 }

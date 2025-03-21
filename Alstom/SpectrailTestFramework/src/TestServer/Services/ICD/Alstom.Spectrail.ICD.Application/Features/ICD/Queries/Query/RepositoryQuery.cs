@@ -17,7 +17,7 @@
 // FileName: RepositoryQuery.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-16
-// Updated by SUBHASISH BISWAS On: 2025-03-17
+// Updated by SUBHASISH BISWAS On: 2025-03-21
 //  ******************************************************************************/
 
 #endregion
@@ -32,12 +32,14 @@ using MediatR;
 
 namespace Alstom.Spectrail.ICD.Application.Features.ICD.Queries.Query;
 
-public class RepositoryQuery<T>(string? id = null, Expression<Func<T, bool>>? filter = null)
-    : IRequest<IEnumerable<T>>
-    where T : EntityBase
+public class RepositoryQuery
+    : IRequest<IEnumerable<EntityBase>>
+
 {
-    public string? Id { get; } = id;
+    public string? Id { get; set; }
 
     public string? FileName { get; set; }
-    public Expression<Func<T, bool>>? Filter { get; } = filter;
+    public Expression<Func<EntityBase, bool>>? Filter { get; set; }
+
+    public string? SheetName { get; set; }
 }

@@ -16,19 +16,24 @@
 // Email: subhasish.biswas@alstomgroup.com
 // FileName: EntityRegistry.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
-// Created by SUBHASISH BISWAS On: 2025-03-20
-// Updated by SUBHASISH BISWAS On: 2025-03-20
+// Created by SUBHASISH BISWAS On: 2025-03-21
+// Updated by SUBHASISH BISWAS On: 2025-03-21
 //  ******************************************************************************/
 
 #endregion
 
 #region
 
+using System.Reflection;
+using System.Reflection.Emit;
 using Alstom.Spectrail.ICD.Application.Contracts;
 using Alstom.Spectrail.ICD.Application.Models;
+using Alstom.Spectrail.ICD.Application.Utility;
+using Alstom.Spectrail.ICD.Domain.Entities.ICD;
 using Alstom.Spectrail.Server.Common.Configuration;
 using Alstom.Spectrail.Server.Common.Entities;
 using ClosedXML.Excel;
+using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using static MongoDB.Driver.Builders<Alstom.Spectrail.ICD.Application.Models.EntityMapping>;
@@ -37,47 +42,36 @@ using static MongoDB.Driver.Builders<Alstom.Spectrail.ICD.Application.Models.Ent
 
 namespace Alstom.Spectrail.ICD.Application.Registry;
 
-/// <summary>
-///     ✅ Manages entity mappings stored in MongoDB.
-/// </summary>
 public class EntityRegistry
 {
     private static IMongoCollection<EntityMapping>? _collection;
     private static IServerConfigHelper? _configHelper;
+    private static IServiceCollection? _services;
     private static readonly Dictionary<string, Type> _entityTypeCache = new();
+    private static readonly Dictionary<string, Type> _dynamicTypesCache = new();
 
-    /// <summary>
-    ///     ✅ Initializes MongoDB connection.
-    /// </summary>
-    public EntityRegistry(IICDDbContext dbContext, IServerConfigHelper configHelper)
+    public EntityRegistry(IICDDbContext dbContext, IServerConfigHelper configHelper, IServiceCollection services)
     {
         _collection = dbContext.ICDEntityMapping;
         _configHelper = configHelper;
-        RegisterEntitiesFromAssembly();
+        _services = services;
     }
 
-
-    /// <summary>
-    ///     ✅ Gets the registered entity type using file name and sheet name.
-    /// </summary>
-    /// <summary>
-    ///     ✅ Retrieves the registered entity type using the entity type name.
-    /// </summary>
     public static Type? GetEntityType(string entityTypeName)
     {
-        if (string.IsNullOrEmpty(entityTypeName))
+        if (string.IsNullOrWhiteSpace(entityTypeName))
         {
             Console.WriteLine("⚠️ Entity type name cannot be null or empty.");
             return null;
         }
 
-        Console.WriteLine($"🔍 Searching Entity Type: {entityTypeName}");
+        if (_entityTypeCache.TryGetValue(entityTypeName.ToLower(), out var cachedType))
+            return cachedType;
 
         var fullyQualifiedName = GetFullyQualifiedEntityName(entityTypeName);
+        if (string.IsNullOrWhiteSpace(fullyQualifiedName))
+            return null;
 
-        Console.WriteLine($"📌 Found mapping: {fullyQualifiedName}");
-
-        // ✅ Resolve the type from the current application domain
         var entityType = Type.GetType(fullyQualifiedName) ??
                          AppDomain.CurrentDomain.GetAssemblies()
                              .SelectMany(a => a.GetTypes())
@@ -85,148 +79,189 @@ public class EntityRegistry
 
         if (entityType == null)
         {
-            Console.WriteLine($"❌ Failed to resolve entity type: {fullyQualifiedName}");
+            Console.WriteLine($"❌ Could not resolve: {fullyQualifiedName}");
             return null;
         }
 
-        Console.WriteLine($"✅ Successfully resolved: {entityType.FullName}");
+        CacheEntityType(entityTypeName, entityType);
         return entityType;
     }
 
-
-    /// <summary>
-    ///     ✅ Registers a single entity dynamically in MongoDB.
-    ///     ✅ Now updates only if changes are found.
-    /// </summary>
     public void RegisterEntity()
     {
+        if (_entityTypeCache.Count() > 0) return;
         var icdFiles = _configHelper!.GetICDFiles();
         foreach (var filePath in icdFiles)
             try
             {
-                if (!File.Exists(filePath))
-                    throw new FileNotFoundException($"❌ File not found: {filePath}");
-
-                using var workbook = new XLWorkbook(filePath);
                 var fileName = Path.GetFileName(filePath).Trim().ToLower();
+                using var workbook = new XLWorkbook(filePath);
+                var selectedSheets = ExtractEquipmentNames(filePath, _configHelper);
+
                 foreach (var worksheet in workbook.Worksheets)
                 {
-                    var normalizedSheetName = worksheet.Name.Trim().Replace(" ", "").ToLower();
-                    Console.WriteLine($"📌 Processing sheet: {normalizedSheetName}");
+                    var sheetName = worksheet.Name.Trim().Replace(" ", "").ToLower();
 
-                    // ✅ Step 1: Check Cache First
-                    if (!_entityTypeCache.TryGetValue(normalizedSheetName, out var cachedType))
+                    if (selectedSheets.Any() && !selectedSheets.Contains(sheetName, StringComparer.OrdinalIgnoreCase))
                     {
-                        Console.WriteLine($"⚠️ No registered entity for sheet: {normalizedSheetName}. Skipping...");
+                        Console.WriteLine($"⚠️ Skipping sheet: {sheetName} (not in config)");
                         continue;
                     }
 
-                    var normalizedEntityName = cachedType.FullName;
+                    var entityType = GetEntityType(sheetName) ?? GenerateDynamicEntity(sheetName);
+                    if (entityType == null) continue;
+
+                    CacheEntityType(sheetName, entityType);
+
                     var mapping = new EntityMapping
                     {
                         FileName = fileName,
-                        SheetName = normalizedSheetName,
-                        EntityName = normalizedEntityName
+                        SheetName = sheetName,
+                        EntityName = entityType.FullName!
                     };
 
                     var filter = Filter.And(
                         Filter.Eq(x => x.FileName, mapping.FileName),
-                        Filter.Eq(x => x.SheetName, mapping.SheetName)
-                    );
+                        Filter.Eq(x => x.SheetName, mapping.SheetName));
 
-                    // ✅ Check if an update is actually needed
-                    var existingEntity = _collection?.Find(filter).FirstOrDefault();
-                    if (existingEntity != null && existingEntity.EntityName == mapping.EntityName)
+                    var existing = _collection?.Find(filter).FirstOrDefault();
+                    if (existing != null && existing.EntityName == mapping.EntityName)
                     {
-                        Console.WriteLine(
-                            $"✅ Already Registered: {cachedType.FullName} for '{fileName}:{normalizedSheetName}'");
+                        Console.WriteLine($"✅ Already registered: {mapping.EntityName}");
                         continue;
                     }
 
-                    // ✅ If change detected, update the entity mapping
                     var update = Update.Set(x => x.EntityName, mapping.EntityName);
-                    var options = new UpdateOptions { IsUpsert = true };
+                    _collection?.UpdateOne(filter, update, new UpdateOptions { IsUpsert = true });
 
-                    _collection?.UpdateOne(filter, update, options);
-                    Console.WriteLine(
-                        $"✅ Updated Entity: {cachedType.FullName} for '{fileName}:{normalizedSheetName}'");
+                    Console.WriteLine($"✅ Registered: {mapping.EntityName}");
                 }
+
+                var allDynamicTypes = _dynamicTypesCache.Values.ToList();
+                DynamicRepositoryRegistrar.RegisterRepositoryHandlers(_services, allDynamicTypes);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error processing {filePath}: {ex.Message}");
+                Console.WriteLine($"❌ Error processing file: {filePath}, Msg: {ex.Message}");
             }
     }
 
-    /// <summary>
-    ///     ✅ Caches resolved entity types in memory for faster lookups.
-    /// </summary>
-    private static void CacheEntityType(string entityTypeName, Type entityType)
+    public static List<string> ExtractEquipmentNames(string filePath, IServerConfigHelper configHelper)
     {
-        if (!_entityTypeCache.TryAdd(entityTypeName, entityType)) return;
-        Console.WriteLine($"🛠 Cached entity type: {entityType.FullName}");
+        using var workbook = new XLWorkbook(filePath);
+        var worksheet = workbook.Worksheet("network_config");
+
+        if (worksheet == null)
+            throw new InvalidOperationException("⚠️ Sheet 'network_config' not found.");
+
+        var headerRow = worksheet.Row(1).Cells().Select(c => c.GetString().Trim()).ToList();
+        var colIndex = headerRow.IndexOf("Equipment Sheet");
+
+        if (colIndex == -1)
+            throw new InvalidOperationException("⚠️ Column 'Equipment Sheet' not found.");
+
+        var allEquipments = worksheet.Column(colIndex + 1)
+            .CellsUsed().Skip(1).Select(c => c.GetString().Trim())
+            .Distinct().ToList();
+
+        var fileName = Path.GetFileName(filePath).ToLower();
+        var filters = configHelper.GetSection<Dictionary<string, List<string>>>("Settings:DynamicEntityFilters");
+
+        filters.TryGetValue(fileName, out var perFile);
+        filters.TryGetValue("default", out var fallback);
+
+        var allowedPrefixes = perFile ?? fallback ?? new List<string>();
+
+        return allowedPrefixes.Count == 0
+            ? allEquipments
+            : allEquipments.Where(name =>
+                allowedPrefixes.Any(prefix =>
+                    name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))).ToList();
     }
 
-    /// <summary>
-    ///     ✅ Scans and registers all entities that inherit from EntityBase dynamically.
-    /// </summary>
-    private static void RegisterEntitiesFromAssembly()
-    {
-        var assemblies = AppDomain.CurrentDomain.GetAssemblies()
-            .Where(asm => asm.FullName!.StartsWith("Alstom.Spectrail"))
-            .ToList();
-
-        foreach (var asm in assemblies)
-        {
-            Console.WriteLine($"🔍 Scanning Assembly: {asm.FullName}");
-
-            var entityTypes = asm.GetTypes()
-                .Where(t => t is { IsClass: true, IsAbstract: false } && typeof(EntityBase).IsAssignableFrom(t))
-                .ToList();
-
-            foreach (var type in entityTypes)
-            {
-                var shortName = type.Name.Replace("Entity", "").Trim().ToLower();
-                Console.WriteLine($"📌 Detected entity: {shortName}");
-                CacheEntityType(shortName, type); // ✅ Cache entity types
-            }
-        }
-    }
-
-
-    /// <summary>
-    ///     ✅ Returns all registered entity mappings.
-    /// </summary>
     public static List<EntityMapping> GetAllMappings()
     {
-        return _collection.Find(_ => true).ToList();
+        return _collection?.Find(_ => true).ToList() ?? [];
     }
 
-    /// <summary>
-    ///     ✅ Retrieves the fully qualified entity name from MongoDB.
-    /// </summary>
-    /// <summary>
-    ///     ✅ Retrieves the fully qualified entity name from MongoDB based on the short entity name.
-    /// </summary>
     private static string? GetFullyQualifiedEntityName(string shortEntityName)
     {
-        if (_collection == null)
-        {
-            Console.WriteLine("❌ EntityRegistry collection is not initialized.");
-            return null;
-        }
+        if (_collection == null) return null;
 
-        // ✅ Find entity where the fully qualified name ends with short entity name (case-insensitive)
         var filter = Filter.Regex(x => x.EntityName, new BsonRegularExpression($@"\.{shortEntityName}$", "i"));
-        var result = _collection.Find(filter).FirstOrDefault();
+        return _collection.Find(filter).FirstOrDefault()?.EntityName;
+    }
 
-        if (result == null)
+    public static void CacheEntityType(string entityTypeName, Type entityType)
+    {
+        if (!_entityTypeCache.TryAdd(entityTypeName.ToLower(), entityType)) return;
+        Console.WriteLine($"🧠 Cached: {entityType.FullName}");
+    }
+
+    public static Type GenerateDynamicEntity(string entityName)
+    {
+        // Normalize to PascalCase and append 'Entity'
+        var pascalName = char.ToUpper(entityName[0]) + entityName[1..].ToLower();
+        var fullTypeName = $"Alstom.Spectrail.ICD.Domain.Entities.ICD.{pascalName}Entity";
+
+        if (_dynamicTypesCache.TryGetValue(fullTypeName, out var existingType))
+            return existingType;
+
+        var assemblyName = new AssemblyName("DynamicEntities");
+        var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
+        var moduleBuilder = assemblyBuilder.DefineDynamicModule("MainModule");
+
+        var typeBuilder = moduleBuilder.DefineType(
+            fullTypeName,
+            TypeAttributes.Public | TypeAttributes.Class,
+            typeof(EntityBase)
+        );
+
+        // ✅ Reuse property definition from a template like DCUEntity
+        // 🔍 Get all public instance properties from the base class
+        var baseProperties = typeof(EntityBase)
+            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Select(p => p.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase); // Ignore case for safety
+
+// 🔍 Get all properties from the template class (e.g., DCUEntity)
+        var properties = typeof(DCUEntity)
+            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(p => !baseProperties.Contains(p.Name)) // 🧠 Skip inherited ones
+            .ToList();
+        foreach (var prop in properties)
         {
-            Console.WriteLine($"⚠️ No match found for '{shortEntityName}' in EntityRegistry.");
-            return null;
+            var fieldBuilder = typeBuilder.DefineField($"_{char.ToLower(prop.Name[0]) + prop.Name[1..]}",
+                prop.PropertyType, FieldAttributes.Private);
+
+            var getter = typeBuilder.DefineMethod($"get_{prop.Name}",
+                MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig,
+                prop.PropertyType, Type.EmptyTypes);
+            var getterIl = getter.GetILGenerator();
+            getterIl.Emit(OpCodes.Ldarg_0);
+            getterIl.Emit(OpCodes.Ldfld, fieldBuilder);
+            getterIl.Emit(OpCodes.Ret);
+
+            var setter = typeBuilder.DefineMethod($"set_{prop.Name}",
+                MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig,
+                null, new[] { prop.PropertyType });
+            var setterIl = setter.GetILGenerator();
+            setterIl.Emit(OpCodes.Ldarg_0);
+            setterIl.Emit(OpCodes.Ldarg_1);
+            setterIl.Emit(OpCodes.Stfld, fieldBuilder);
+            setterIl.Emit(OpCodes.Ret);
+
+            var propertyBuilder =
+                typeBuilder.DefineProperty(prop.Name, PropertyAttributes.HasDefault, prop.PropertyType, null);
+            propertyBuilder.SetGetMethod(getter);
+            propertyBuilder.SetSetMethod(setter);
         }
 
-        Console.WriteLine($"📌 Found fully qualified name: {result.EntityName}");
-        return result.EntityName; // ✅ Example: "Alstom.Spectrail.ICD.Domain.Entities.ICD.BCHEntity"
+        var dynamicType = typeBuilder.CreateType();
+        _dynamicTypesCache[fullTypeName] = dynamicType;
+
+        Console.WriteLine($"🛠 Generated dynamic entity: {fullTypeName}");
+
+        return dynamicType;
     }
 }
