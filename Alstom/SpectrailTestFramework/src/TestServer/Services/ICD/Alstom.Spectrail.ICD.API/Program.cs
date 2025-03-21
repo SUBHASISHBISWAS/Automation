@@ -74,7 +74,6 @@ services.AddSingleton<EntityRegistry>(sp =>
             services, mapperConfigExpression) // Passed for dynamic registration
 );
 
-//services.AddScoped<EntityRegistryOrchestrator>();
 
 services.AddSingleton<IConnectionMultiplexer>(_ =>
 {
@@ -85,12 +84,6 @@ services.AddSingleton<IConnectionMultiplexer>(_ =>
 // ✅ Register application and infrastructure services
 services.RegisterApplicationServices();
 services.RegisterInfrastructureServices(configuration);
-
-// ✅ Run Entity Registry & Seed Data before app starts
-await using (var tempProvider = services.BuildServiceProvider())
-{
-    tempProvider.GetRequiredService<EntityRegistry>();
-}
 
 // ✅ Register controllers and Swagger
 services.AddControllers();
@@ -108,6 +101,7 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
+    scope.ServiceProvider.GetRequiredService<EntityRegistry>();
     var orchestrator = scope.ServiceProvider.GetRequiredService<EntityRegistryOrchestrator>();
     await orchestrator.ExecuteAsync(true);
 }
