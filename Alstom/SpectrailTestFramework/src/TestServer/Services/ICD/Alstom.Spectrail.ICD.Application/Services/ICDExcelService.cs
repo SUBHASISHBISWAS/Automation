@@ -132,7 +132,7 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
         var fileName = Path.GetFileName(filePath).Trim().ToLower();
 
         // ✅ Read Equipment Names from "network_config" sheet
-        var selectedEquipmentNames = EntityRegistry.ExtractEquipmentNames(filePath, configHelper);
+        var selectedEquipmentNames = EntityRegistry.ExtractEquipmentNames(filePath);
 
         foreach (var worksheet in workbook.Worksheets)
         {

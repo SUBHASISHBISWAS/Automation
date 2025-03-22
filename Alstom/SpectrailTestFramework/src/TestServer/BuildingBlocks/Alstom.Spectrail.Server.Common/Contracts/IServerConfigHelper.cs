@@ -17,7 +17,7 @@
 // FileName: IServerConfigHelper.cs
 // ProjectName: Alstom.Spectrail.Server.Common
 // Created by SUBHASISH BISWAS On: 2025-03-13
-// Updated by SUBHASISH BISWAS On: 2025-03-21
+// Updated by SUBHASISH BISWAS On: 2025-03-22
 //  ******************************************************************************/
 
 #endregion
@@ -46,5 +46,5 @@ public interface IServerConfigHelper
 
     T? GetSetting<T>(string key);
 
-    T? GetSection<T>(string sectionKey);
+    T GetSection<T>(string sectionKey);
 }

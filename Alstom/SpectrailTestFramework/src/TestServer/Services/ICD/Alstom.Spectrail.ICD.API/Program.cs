@@ -67,19 +67,21 @@ services.AddSingleton<IMapper>(sp =>
     var config = new MapperConfiguration(mapperConfigExpression);
     return config.CreateMapper(sp.GetRequiredService);
 });
-services.AddSingleton<EntityRegistry>(sp =>
-        new EntityRegistry(
-            sp.GetRequiredService<ICDMongoDataContext>(),
-            sp.GetRequiredService<IServerConfigHelper>(),
-            services, mapperConfigExpression) // Passed for dynamic registration
-);
-
 
 services.AddSingleton<IConnectionMultiplexer>(_ =>
 {
     var connString = configuration["RedisConfig:ConnectionString"] ?? "localhost:6379,abortConnect=false";
     return ConnectionMultiplexer.Connect(connString);
 });
+
+services.AddSingleton<EntityRegistry>(sp =>
+        new EntityRegistry(
+            sp.GetRequiredService<ICDMongoDataContext>(),
+            sp.GetRequiredService<IServerConfigHelper>(),
+            services, mapperConfigExpression,
+            sp.GetRequiredService<IConnectionMultiplexer>()) // Passed for dynamic registration
+);
+
 
 // ✅ Register application and infrastructure services
 services.RegisterApplicationServices();

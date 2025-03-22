@@ -17,15 +17,13 @@
 // FileName: EntityRegistryOrchestrator.cs
 // ProjectName: Alstom.Spectrail.ICD.API
 // Created by SUBHASISH BISWAS On: 2025-03-21
-// Updated by SUBHASISH BISWAS On: 2025-03-21
+// Updated by SUBHASISH BISWAS On: 2025-03-22
 //  ******************************************************************************/
 
 #endregion
 
 #region
 
-using System.Security.Cryptography;
-using System.Text;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
 using Alstom.Spectrail.ICD.Application.Registry;
 using Alstom.Spectrail.ICD.Application.Utility;
@@ -48,7 +46,7 @@ public class EntityRegistryOrchestrator(
     ILifetimeScope rootScope)
 {
     private const string RedisKeyEntityList = "RegisteredEntities";
-    private const string RedisKeyFolderHash = "LastFolderHash";
+
     private const string RedisKeyRegistryCompleted = "EntityRegistryCompleted";
     private readonly IDatabase _redisDb = redis.GetDatabase();
 
@@ -93,13 +91,18 @@ public class EntityRegistryOrchestrator(
 
     private async Task<bool> HasFolderChanged(string folderPath)
     {
-        string? lastHash = await _redisDb.StringGetAsync(RedisKeyFolderHash);
-        var currentHash = ComputeFolderHash(folderPath);
+        string? lastHash = await _redisDb.StringGetAsync(SpectrailConstants.RedisKeyFolderHash);
+        var currentHash = folderPath.ComputeFolderHash(async (hash, filePath) =>
+        {
+            await _redisDb.StringSetAsync(
+                $"{SpectrailConstants.RedisFileHashKey}{filePath.GetFileNameWithoutExtension()}",
+                hash);
+        });
 
         if (lastHash == currentHash)
             return false;
 
-        await _redisDb.StringSetAsync(RedisKeyFolderHash, currentHash);
+        await _redisDb.StringSetAsync(SpectrailConstants.RedisKeyFolderHash, currentHash);
         return true;
     }
 
@@ -129,23 +132,5 @@ public class EntityRegistryOrchestrator(
             .Where(t => t is { IsClass: true, IsAbstract: false } && typeof(EntityBase).IsAssignableFrom(t))
             .Select(t => t.FullName!)
             .ToHashSet();
-    }
-
-    private string ComputeFolderHash(string folderPath)
-    {
-        if (!Directory.Exists(folderPath)) return string.Empty;
-
-        using var sha = SHA256.Create();
-        var files = Directory.GetFiles(folderPath, "*", SearchOption.AllDirectories).OrderBy(f => f);
-
-        var combinedHash = new StringBuilder();
-        foreach (var file in files)
-        {
-            using var stream = File.OpenRead(file);
-            combinedHash.Append(BitConverter.ToString(sha.ComputeHash(stream)).Replace("-", "").ToLower());
-        }
-
-        return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(combinedHash.ToString())))
-            .Replace("-", "").ToLower();
     }
 }

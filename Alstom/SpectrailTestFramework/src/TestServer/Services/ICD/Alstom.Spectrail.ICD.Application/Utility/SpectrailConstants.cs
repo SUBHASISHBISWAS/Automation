@@ -14,35 +14,35 @@
 //  /*******************************************************************************
 // AuthorName: SUBHASISH BISWAS
 // Email: subhasish.biswas@alstomgroup.com
-// FileName: EntityMapping.cs
+// FileName: SpectrailConstants.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
-// Created by SUBHASISH BISWAS On: 2025-03-17
+// Created by SUBHASISH BISWAS On: 2025-03-22
 // Updated by SUBHASISH BISWAS On: 2025-03-22
 //  ******************************************************************************/
 
 #endregion
 
-#region
+namespace Alstom.Spectrail.ICD.Application.Utility;
 
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
-
-#endregion
-
-namespace Alstom.Spectrail.ICD.Application.Models;
-
-/// <summary>
-///     ✅ Represents an entity mapping stored in MongoDB.
-/// </summary>
-public class EntityMapping
+public static class SpectrailConstants
 {
-    [BsonId] // ✅ Marks _id as MongoDB's primary key (auto-generated)
-    [BsonRepresentation(BsonType.ObjectId)]
-    public string Id { get; set; } = ObjectId.GenerateNewId().ToString(); // ✅ No fixed _id!
+    public const string DynamicAssemblyName = "Alstom.Spectrail.ICD.Domain.Entities.ICD";
 
-    public string FileName { get; init; } = string.Empty;
-    public string SheetName { get; init; } = string.Empty;
-    public string EntityName { get; init; } = string.Empty;
+    public const string Settings_DynamicEntityFilters = "Settings:DynamicEntityFilters";
 
-    public bool IsRegistered { get; init; } = false;
+    public const string ICD_NetworkConfig = "network_config";
+
+    #region Redis Keys
+
+    public const string RedisKeyFolderHash = "Spectrail:ICD:DataFolder:LastFolderHash";
+
+    public const string RedisFileHashKey = "Spectrail:ICD:Files:Hash:";
+
+    public const string RedisEquipmentHashKey = "Spectrail:ICD:Files:Equipments:";
+
+    public const string RedisEntityListKey = "Spectrail:ICD:EntityRegistry:FileToEntityMapping";
+
+    public const string RedisDynamicType = "Spectrail:ICD:DynamicTypes:";
+
+    #endregion
 }
