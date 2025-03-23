@@ -17,7 +17,7 @@
 // FileName: ServerConfigHelper.cs
 // ProjectName: Alstom.Spectrail.Server.Common
 // Created by SUBHASISH BISWAS On: 2025-03-11
-// Updated by SUBHASISH BISWAS On: 2025-03-21
+// Updated by SUBHASISH BISWAS On: 2025-03-22
 //  ******************************************************************************/
 
 #endregion
@@ -111,11 +111,11 @@ public class ServerConfigHelper : IServerConfigHelper
     }
 
     // ✅ Use this for nested configuration (like JSON paths)
-    public T? GetSection<T>(string sectionKey)
+    public T GetSection<T>(string sectionKey)
     {
         try
         {
-            return _configuration.GetSection(sectionKey).Get<T>();
+            return _configuration.GetSection(sectionKey).Get<T>() ?? throw new InvalidOperationException();
         }
         catch (Exception ex)
         {

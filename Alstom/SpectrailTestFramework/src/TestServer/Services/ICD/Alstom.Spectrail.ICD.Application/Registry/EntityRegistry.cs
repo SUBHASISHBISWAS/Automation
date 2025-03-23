@@ -54,8 +54,8 @@ public class EntityRegistry
     private static IServiceCollection _services;
     private static IMapperConfigurationExpression _mapperConfig;
     private static IDatabase _redis;
-    private static readonly Dictionary<string, Type> _localDynamicTypesCache = new();
-    private static Dictionary<string, List<string>> _registeredEntityByFile = new();
+    private static readonly Dictionary<string, Type> _localDynamicTypesCache = new(StringComparer.OrdinalIgnoreCase);
+    private static Dictionary<string, List<string>> _registeredEntityByFile = new(StringComparer.OrdinalIgnoreCase);
 
     public EntityRegistry(IICDDbContext dbContext, IServerConfigHelper configHelper, IServiceCollection services,
         IMapperConfigurationExpression mapperConfig, IConnectionMultiplexer redis)
@@ -133,7 +133,7 @@ public class EntityRegistry
         var filters =
             _configHelper.GetSection<Dictionary<string, List<string>>>(
                 $"{SpectrailConstants.Settings_DynamicEntityFilters}");
-        filters.TryGetValue(filePath.GetFileName(), out var perFile);
+        filters.TryGetValue(filePath.GetFileName().ToLowerInvariant(), out var perFile);
         filters.TryGetValue("default", out var fallback);
         var allowedPrefixes = perFile ?? fallback ?? [];
 
@@ -267,7 +267,7 @@ public class EntityRegistry
 
     public static List<string>? ExtractEquipmentNames(string filePath)
     {
-        var fileName = Path.GetFileName(filePath).ToLower();
+        var fileName = Path.GetFileNameWithoutExtension(filePath).ToLower();
         if (_registeredEntityByFile.Count == 0) _ = LoadRegisteredEntitiesAsync();
         _registeredEntityByFile.TryGetValue(fileName, out var registeredEntity);
         return registeredEntity is { Count: > 0 } ? registeredEntity : null;

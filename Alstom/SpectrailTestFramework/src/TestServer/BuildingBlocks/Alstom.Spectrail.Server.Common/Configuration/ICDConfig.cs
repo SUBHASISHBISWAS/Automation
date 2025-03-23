@@ -17,7 +17,7 @@
 // FileName: ICDConfig.cs
 // ProjectName: Alstom.Spectrail.Server.Common
 // Created by SUBHASISH BISWAS On: 2025-03-13
-// Updated by SUBHASISH BISWAS On: 2025-03-21
+// Updated by SUBHASISH BISWAS On: 2025-03-22
 //  ******************************************************************************/
 
 #endregion
@@ -38,5 +38,6 @@ public class ICDConfig
     ///     ✅ Per-file dynamic entity filters from `appsettings.json`.
     ///     ✅ If empty, all entities will be processed.
     /// </summary>
-    public Dictionary<string, List<string>> DynamicEntityFilters { get; init; } = new();
+    public Dictionary<string, List<string>> DynamicEntityFilters { get; init; } = new(StringComparer
+        .OrdinalIgnoreCase);
 }
