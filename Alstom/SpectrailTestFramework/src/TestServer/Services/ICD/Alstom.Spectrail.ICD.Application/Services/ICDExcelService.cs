@@ -17,20 +17,19 @@
 // FileName: ICDExcelService.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-22
-// Updated by SUBHASISH BISWAS On: 2025-03-22
+// Updated by SUBHASISH BISWAS On: 2025-03-23
 //  ******************************************************************************/
 
 #endregion
 
 #region
 
-using System.Reflection;
-using System.Security.Cryptography;
 using Alstom.Spectrail.ICD.Application.Contracts;
 using Alstom.Spectrail.ICD.Application.Enums;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Queries.Query;
 using Alstom.Spectrail.ICD.Application.Registry;
+using Alstom.Spectrail.ICD.Application.Utility;
 using Alstom.Spectrail.Server.Common.Configuration;
 using Alstom.Spectrail.Server.Common.Entities;
 using ClosedXML.Excel;
@@ -45,17 +44,6 @@ namespace Alstom.Spectrail.ICD.Application.Services;
 /// </summary>
 public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelper) : IExcelService
 {
-    /// <summary>
-    ///     ✅ Computes MD5 checksum for file change detection.
-    /// </summary>
-    public string ComputeFileChecksum(string filePath)
-    {
-        using var md5 = MD5.Create();
-        using var stream = File.OpenRead(filePath);
-        var hash = md5.ComputeHash(stream);
-        return BitConverter.ToString(hash).Replace("-", "").ToLower();
-    }
-
     /// <summary>
     ///     ✅ Initializes all configured ICD files from `appsettings.json`
     /// </summary>
@@ -73,52 +61,6 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
             }
     }
 
-    /// <summary>
-    ///     ✅ Reads an Excel file, detects changes, and updates MongoDB.
-    /// </summary>
-    public async Task<List<EntityBase>> ReadExcelAndStoreAsync(Type entityType, string filePath, string? sheetName)
-
-    {
-        if (string.IsNullOrEmpty(filePath) || string.IsNullOrEmpty(sheetName))
-            throw new ArgumentNullException("❌ File path or sheet name cannot be null!");
-
-        var uniqueKey = $"{Path.GetFileNameWithoutExtension(filePath)}_{sheetName}";
-        var newChecksum = ComputeFileChecksum(filePath);
-
-        // ✅ Fetch existing data
-        var existingRecords = await mediator.Send(new RepositoryQuery
-        {
-            FileName = Path.GetFileNameWithoutExtension(filePath).ToLower(),
-            SheetName = sheetName.ToLower()
-        });
-        var entityBases = existingRecords.Where(e => e.FileKey == uniqueKey).ToList();
-        var existingChecksum = entityBases.FirstOrDefault()?.Checksum;
-
-        // ✅ Skip processing if checksum validation is enabled and file is unchanged
-        if (configHelper.IsFeatureEnabled("EnableChecksumValidation") && existingChecksum == newChecksum)
-        {
-            Console.WriteLine($"✅ No changes detected for {uniqueKey}. Using existing data.");
-            return entityBases;
-        }
-
-        var newRecords = ReadExcel(entityType, filePath, sheetName);
-        newRecords.ForEach(record =>
-        {
-            record.FileKey = uniqueKey;
-            record.FileName = Path.GetFileNameWithoutExtension(filePath);
-            record.SheetName = sheetName;
-        });
-        newRecords.ForEach(record => record.Checksum = newChecksum);
-
-        // ✅ Use `RepositoryCommand<T>` for efficient batch operations
-        var isFeatureEnabled = configHelper.IsFeatureEnabled("EnableEagerLoading") ||
-                               configHelper.IsFeatureEnabled("EnableMiddlewarePreloading");
-        await ExecuteRepositoryCommand(isFeatureEnabled, newRecords);
-
-        Console.WriteLine($"✅ Successfully processed {newRecords.Count} records from {uniqueKey}.");
-        return newRecords;
-    }
-
 
     /// <summary>
     ///     ✅ Reads and processes all sheets dynamically.
@@ -128,26 +70,29 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
         if (!File.Exists(filePath))
             throw new FileNotFoundException($"❌ File not found: {filePath}");
 
-        using var workbook = new XLWorkbook(filePath);
-        var fileName = Path.GetFileName(filePath).Trim().ToLower();
+        var fileName = filePath.GetFileNameWithoutExtension();
+        IXLWorksheets worksheets;
+        if (EntityRegistry.RegisteredWorksheets[fileName].Count == 0)
+            worksheets = new XLWorkbook
+                (filePath).Worksheets;
+        else
+            worksheets = EntityRegistry.RegisteredWorksheets[fileName];
 
-        // ✅ Read Equipment Names from "network_config" sheet
-        var selectedEquipmentNames = EntityRegistry.ExtractEquipmentNames(filePath);
-
-        foreach (var worksheet in workbook.Worksheets)
+        foreach (var worksheet in worksheets)
         {
             var sheetName = worksheet.Name.Trim().Replace(" ", "").ToLower();
-            Console.WriteLine($"📌 Processing sheet: {sheetName}");
 
-            // ✅ Apply dynamic filtering
-            if (selectedEquipmentNames.Count > 0 &&
-                !selectedEquipmentNames.Contains(sheetName, StringComparer.OrdinalIgnoreCase))
+            var registeredEquipmentName =
+                (await EntityRegistry.LoadRegisteredEntitiesAsync()).GetValueOrDefault(fileName);
+            if (!(registeredEquipmentName?.Count > 0) ||
+                !registeredEquipmentName.Contains(sheetName, StringComparer.OrdinalIgnoreCase))
             {
                 Console.WriteLine($"⚠️ Skipping sheet '{sheetName}' (Not in selected entities).");
                 continue;
             }
 
             var entityType = EntityRegistry.GetEntityType(sheetName);
+
             if (entityType == null)
             {
                 Console.WriteLine($"⚠️ No registered entity for sheet: {sheetName}. Skipping...");
@@ -156,18 +101,49 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
 
             Console.WriteLine($"✅ Using entity type: {entityType.FullName} for '{filePath}:{sheetName}'");
 
-            // 🚀 Now process the sheet
-            await InvokeGenericMethod(nameof(ReadExcelAndStoreAsync), entityType, filePath, sheetName);
+            var uniqueKey = $"{fileName}_{sheetName}";
+            var newChecksum = filePath.ComputeFileHash();
+
+            var existingRecords = await mediator.Send(new RepositoryQuery
+            {
+                FileName = fileName,
+                SheetName = sheetName
+            });
+
+            var entityBases = existingRecords.Where(e => e.FileKey == uniqueKey).ToList();
+            var existingChecksum = entityBases.FirstOrDefault()?.Checksum;
+
+            // ✅ Skip processing if checksum validation is enabled and file is unchanged
+            if (configHelper.IsFeatureEnabled("EnableChecksumValidation") && existingChecksum == newChecksum)
+            {
+                Console.WriteLine($"✅ No changes detected for {uniqueKey}. Using existing data.");
+                return;
+            }
+
+
+            var newRecords = ReadExcel(entityType, worksheet);
+            newRecords.ForEach(record =>
+            {
+                record.FileKey = uniqueKey;
+                record.FileName = Path.GetFileNameWithoutExtension(filePath);
+                record.SheetName = sheetName;
+            });
+            newRecords.ForEach(record => record.Checksum = newChecksum);
+
+            // ✅ Use `RepositoryCommand<T>` for efficient batch operations
+            var isFeatureEnabled = configHelper.IsFeatureEnabled("EnableEagerLoading") ||
+                                   configHelper.IsFeatureEnabled("EnableMiddlewarePreloading");
+            await ExecuteRepositoryCommand(isFeatureEnabled, newRecords);
+
+            Console.WriteLine($"✅ Successfully processed {newRecords.Count} records from {uniqueKey}.");
         }
     }
 
     /// <summary>
     ///     ✅ Reads an Excel file and maps dynamically to a strongly typed entity.
     /// </summary>
-    private List<EntityBase> ReadExcel(Type entityType, string filePath, string sheetName)
+    private static List<EntityBase> ReadExcel(Type entityType, IXLWorksheet worksheet)
     {
-        using var workbook = new XLWorkbook(filePath);
-        var worksheet = workbook.Worksheet(sheetName);
         var rows = worksheet.RowsUsed().Skip(1); // ✅ Skip header row
         var properties = entityType.GetProperties();
         var headers = worksheet.Row(1).Cells().Select(c => c.GetString().Trim().Replace(" ", "")).ToList();
@@ -227,20 +203,6 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
         }
     }
 
-    /// <summary>
-    ///     ✅ Dynamically invokes a generic method.
-    /// </summary>
-    private async Task InvokeGenericMethod(string methodName, params object[] parameters)
-    {
-        var method = typeof(ICDExcelService)
-            .GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public);
-
-
-        if (method == null)
-            throw new InvalidOperationException($"❌ Method '{methodName}' not found in {nameof(ICDExcelService)}.");
-
-        await (Task)method.Invoke(this, parameters)!;
-    }
 
     /// <summary>
     ///     ✅ Extracts and normalizes Excel cell values.

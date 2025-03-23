@@ -17,7 +17,7 @@
 // FileName: EntityRegistry.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-21
-// Updated by SUBHASISH BISWAS On: 2025-03-22
+// Updated by SUBHASISH BISWAS On: 2025-03-23
 //  ******************************************************************************/
 
 #endregion
@@ -57,6 +57,7 @@ public class EntityRegistry
     private static readonly Dictionary<string, Type> _localDynamicTypesCache = new(StringComparer.OrdinalIgnoreCase);
     private static Dictionary<string, List<string>> _registeredEntityByFile = new(StringComparer.OrdinalIgnoreCase);
 
+
     public EntityRegistry(IICDDbContext dbContext, IServerConfigHelper configHelper, IServiceCollection services,
         IMapperConfigurationExpression mapperConfig, IConnectionMultiplexer redis)
     {
@@ -73,6 +74,9 @@ public class EntityRegistry
         _mapperConfig = mapperConfig;
         _redis = redis.GetDatabase();
     }
+
+    public static Dictionary<string, IXLWorksheets> RegisteredWorksheets { get; } =
+        new(StringComparer.OrdinalIgnoreCase);
 
     public static Type? GetEntityType(string entityTypeName)
     {
@@ -153,6 +157,13 @@ public class EntityRegistry
         var registeredEntity = new List<Type>();
         //var fileName = Path.GetFileName(filePath).ToLower();
         var workSheets = GetAllWorksheets(filePath, out var allEquipments, out var equipmentsToRegister);
+        if (workSheets.Count == 0)
+        {
+            Console.WriteLine($"⚠️ No worksheets found in file: {filePath}");
+            return ([], []);
+        }
+
+        RegisteredWorksheets[filePath.GetFileNameWithoutExtension()] = workSheets;
         try
         {
             var fileHashKey = $"{SpectrailConstants.RedisFileHashKey}{filePath.GetFileNameWithoutExtension()}";
@@ -256,12 +267,13 @@ public class EntityRegistry
         await _redis.StringSetAsync(SpectrailConstants.RedisEntityListKey, json);
     }
 
-    private static async Task LoadRegisteredEntitiesAsync()
+    public static async Task<Dictionary<string, List<string>>> LoadRegisteredEntitiesAsync()
     {
         var json = await _redis.StringGetAsync(SpectrailConstants.RedisEntityListKey);
         if (!json.IsNullOrEmpty)
             _registeredEntityByFile = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(json)
                                       ?? new Dictionary<string, List<string>>();
+        return _registeredEntityByFile;
     }
 
 

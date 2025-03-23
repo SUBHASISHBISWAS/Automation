@@ -17,14 +17,12 @@
 // FileName: IExcelService.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-16
-// Updated by SUBHASISH BISWAS On: 2025-03-21
+// Updated by SUBHASISH BISWAS On: 2025-03-23
 //  ******************************************************************************/
 
 #endregion
 
 #region
-
-using Alstom.Spectrail.Server.Common.Entities;
 
 #endregion
 
@@ -32,10 +30,5 @@ namespace Alstom.Spectrail.ICD.Application.Contracts;
 
 public interface IExcelService
 {
-    Task<List<EntityBase>> ReadExcelAndStoreAsync(Type entityType, string filePath, string? sheetName = null);
-
-
-    string ComputeFileChecksum(string filePath);
-
     Task InitializeAsync();
 }
