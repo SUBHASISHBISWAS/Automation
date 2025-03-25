@@ -17,7 +17,7 @@
 // FileName: SpectrailConstants.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-22
-// Updated by SUBHASISH BISWAS On: 2025-03-22
+// Updated by SUBHASISH BISWAS On: 2025-03-25
 //  ******************************************************************************/
 
 #endregion
@@ -32,6 +32,7 @@ public static class SpectrailConstants
 
     public const string ICD_NetworkConfig = "network_config";
 
+
     #region Redis Keys
 
     public const string RedisKeyFolderHash = "Spectrail:ICD:DataFolder:LastFolderHash";
@@ -43,6 +44,8 @@ public static class SpectrailConstants
     public const string RedisEntityListKey = "Spectrail:ICD:EntityRegistry:FileToEntityMapping";
 
     public const string RedisDynamicType = "Spectrail:ICD:DynamicTypes:";
+
+    public const string RedisDynamicAssemblyCreated = "Spectrail:ICD:DynamicAssesmly:Status";
 
     #endregion
 }

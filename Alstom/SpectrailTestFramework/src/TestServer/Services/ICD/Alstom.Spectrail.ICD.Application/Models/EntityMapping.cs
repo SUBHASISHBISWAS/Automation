@@ -17,7 +17,7 @@
 // FileName: EntityMapping.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-17
-// Updated by SUBHASISH BISWAS On: 2025-03-22
+// Updated by SUBHASISH BISWAS On: 2025-03-26
 //  ******************************************************************************/
 
 #endregion
@@ -44,5 +44,5 @@ public class EntityMapping
     public string SheetName { get; init; } = string.Empty;
     public string EntityName { get; init; } = string.Empty;
 
-    public bool IsRegistered { get; init; } = false;
+    public bool? IsRegistered { get; init; } = false;
 }

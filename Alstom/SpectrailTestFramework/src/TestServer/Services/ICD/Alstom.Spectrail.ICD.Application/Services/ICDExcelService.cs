@@ -17,7 +17,7 @@
 // FileName: ICDExcelService.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-22
-// Updated by SUBHASISH BISWAS On: 2025-03-23
+// Updated by SUBHASISH BISWAS On: 2025-03-25
 //  ******************************************************************************/
 
 #endregion
@@ -82,8 +82,8 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
         {
             var sheetName = worksheet.Name.Trim().Replace(" ", "").ToLower();
 
-            var registeredEquipmentName =
-                (await EntityRegistry.LoadRegisteredEntitiesAsync()).GetValueOrDefault(fileName);
+            var registeredEquipmentName = new List<string>();
+            //(await EntityRegistry.LoadRegisteredEntitiesAsync()).GetValueOrDefault(fileName);
             if (!(registeredEquipmentName?.Count > 0) ||
                 !registeredEquipmentName.Contains(sheetName, StringComparer.OrdinalIgnoreCase))
             {

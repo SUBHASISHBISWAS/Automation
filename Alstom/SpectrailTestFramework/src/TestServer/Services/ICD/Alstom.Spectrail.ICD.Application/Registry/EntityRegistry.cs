@@ -16,14 +16,15 @@
 // Email: subhasish.biswas@alstomgroup.com
 // FileName: EntityRegistry.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
-// Created by SUBHASISH BISWAS On: 2025-03-21
-// Updated by SUBHASISH BISWAS On: 2025-03-23
+// Created by SUBHASISH BISWAS On: 2025-03-25
+// Updated by SUBHASISH BISWAS On: 2025-03-26
 //  ******************************************************************************/
 
 #endregion
 
 #region
 
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -51,12 +52,12 @@ public class EntityRegistry
 {
     private static IMongoCollection<EntityMapping> _collection;
     private static IServerConfigHelper _configHelper;
-    private static IServiceCollection _services;
     private static IMapperConfigurationExpression _mapperConfig;
     private static IDatabase _redis;
-    private static readonly Dictionary<string, Type> _localDynamicTypesCache = new(StringComparer.OrdinalIgnoreCase);
-    private static Dictionary<string, List<string>> _registeredEntityByFile = new(StringComparer.OrdinalIgnoreCase);
 
+
+    private static readonly ConcurrentDictionary<string, List<IXLWorksheet>> icdWorksheetMap =
+        new(StringComparer.OrdinalIgnoreCase);
 
     public EntityRegistry(IICDDbContext dbContext, IServerConfigHelper configHelper, IServiceCollection services,
         IMapperConfigurationExpression mapperConfig, IConnectionMultiplexer redis)
@@ -70,7 +71,6 @@ public class EntityRegistry
         Debug.Assert(dbContext.ICDEntityMapping != null);
         _collection = dbContext.ICDEntityMapping;
         _configHelper = configHelper;
-        _services = services;
         _mapperConfig = mapperConfig;
         _redis = redis.GetDatabase();
     }
@@ -78,7 +78,7 @@ public class EntityRegistry
     public static Dictionary<string, IXLWorksheets> RegisteredWorksheets { get; } =
         new(StringComparer.OrdinalIgnoreCase);
 
-    public static Type? GetEntityType(string entityTypeName)
+    public static Type? GetEntityType(string entityTypeName, string? fileName = null)
     {
         if (string.IsNullOrWhiteSpace(entityTypeName))
         {
@@ -89,84 +89,118 @@ public class EntityRegistry
         var pascalName = char.ToUpper(entityTypeName[0]) + entityTypeName[1..].ToLower();
         var fullTypeName = $"{SpectrailConstants.DynamicAssemblyName}.{pascalName}Entity";
 
-        // 🔍 Step 1: Local cache
-        if (_localDynamicTypesCache.TryGetValue(fullTypeName, out var cachedType))
-            return cachedType;
+        var dynamicEntitiesPath = Path.Combine(AppContext.BaseDirectory, "DynamicEntities");
 
-        // 🌐 Step 2: Redis check
-        var redisKey = $"{SpectrailConstants.RedisDynamicType}{fullTypeName}";
-        if (_redis.KeyExists(redisKey))
+        if (!Directory.Exists(dynamicEntitiesPath))
         {
-            var resolvedType = Type.GetType(fullTypeName)
-                               ?? AppDomain.CurrentDomain
-                                   .GetAssemblies()
-                                   .SelectMany(SpectralUtility.SafeGetTypes)
-                                   .FirstOrDefault(t => t.FullName == fullTypeName);
-
-            if (resolvedType != null)
-            {
-                _localDynamicTypesCache[fullTypeName] = resolvedType;
-                Console.WriteLine($"✅ Resolved from Redis: {fullTypeName}");
-                return resolvedType;
-            }
-
-            Console.WriteLine($"⚠️ Redis entry exists but type not loaded: {fullTypeName}");
+            Console.WriteLine("❌ DynamicEntities directory not found.");
+            return null;
         }
 
-        // ❌ Step 3: Not found
-        Console.WriteLine($"❌ Could not resolve entity type: {fullTypeName}");
-        return null;
+        var loadedTypes = new List<Type>();
+        string[] dllFiles;
+
+        if (!string.IsNullOrWhiteSpace(fileName))
+        {
+            // 🔍 Normalize and locate specific DLL by filename
+            var normalizedFileName = fileName.GetFileNameWithoutExtension()
+                .Replace(" ", "", StringComparison.OrdinalIgnoreCase).Trim();
+            dllFiles = Directory.GetFiles(dynamicEntitiesPath, "*.dll", SearchOption.TopDirectoryOnly)
+                .Where(dll =>
+                {
+                    var segments = Path.GetFileNameWithoutExtension(dll)
+                        .Split('.', StringSplitOptions.RemoveEmptyEntries);
+
+                    var segmentToMatch = segments.Length >= 2
+                        ? segments[^2]
+                        : segments[^1];
+
+                    return segmentToMatch.Replace(" ", "", StringComparison.OrdinalIgnoreCase)
+                        .Equals(normalizedFileName, StringComparison.OrdinalIgnoreCase);
+                })
+                .ToArray();
+        }
+        else
+        {
+            // 🔁 Load all if filename not specified
+            dllFiles = Directory.GetFiles(dynamicEntitiesPath, "*.dll", SearchOption.TopDirectoryOnly);
+        }
+
+        foreach (var dllPath in dllFiles)
+            try
+            {
+                var assembly = Assembly.LoadFrom(dllPath);
+                var types = assembly.GetTypes()
+                    .Where(t => t.IsClass && t.Namespace == SpectrailConstants.DynamicAssemblyName)
+                    .ToList();
+
+                loadedTypes.AddRange(types);
+                Console.WriteLine($"✅ Loaded {types.Count} types from {Path.GetFileName(dllPath)}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ Error loading types from {dllPath}: {ex.Message}");
+            }
+
+        return loadedTypes.FirstOrDefault(t => t.FullName == fullTypeName);
     }
 
-    private static IXLWorksheets GetAllWorksheets(string filePath, out List<string> allEquipments,
-        out List<string> equipmentsToRegister)
+    private static (List<string> allEquipments,
+        ConcurrentDictionary<string, List<IXLWorksheet>>
+        sheetMap)
+        ExtractEquipmentInfo(string filePath)
     {
-        //var fileName = Path.GetFileName(filePath).ToLower();
         using var workbook = new XLWorkbook(filePath);
-        var networkSheet = workbook.Worksheet($"{SpectrailConstants.ICD_NetworkConfig}");
-        if (networkSheet == null) throw new InvalidOperationException("⚠️ Sheet 'network_config' not found.");
+        var networkSheet = workbook.Worksheet(SpectrailConstants.ICD_NetworkConfig)
+                           ?? throw new InvalidOperationException("⚠️ Sheet 'network_config' not found.");
 
         var headerRow = networkSheet.Row(1).Cells().Select(c => c.GetString().Trim()).ToList();
         var colIndex = headerRow.IndexOf("Equipment Sheet");
         if (colIndex == -1) throw new InvalidOperationException("⚠️ Column 'Equipment Sheet' not found.");
 
-        allEquipments = networkSheet.Column(colIndex + 1)
+        var allEquipments = networkSheet.Column(colIndex + 1)
             .CellsUsed().Skip(1).Select(c => c.GetString().Trim())
             .Distinct().ToList();
 
-        var filters =
-            _configHelper.GetSection<Dictionary<string, List<string>>>(
-                $"{SpectrailConstants.Settings_DynamicEntityFilters}");
-        filters.TryGetValue(filePath.GetFileName().ToLowerInvariant(), out var perFile);
-        filters.TryGetValue("default", out var fallback);
-        var allowedPrefixes = perFile ?? fallback ?? [];
+        foreach (var worksheet in workbook.Worksheets)
+        {
+            var fileKey = Path.GetFileNameWithoutExtension(filePath);
 
-        equipmentsToRegister = allowedPrefixes.Count == 0
-            ? allEquipments
-            : allEquipments.Where(name =>
-                allowedPrefixes.Any(prefix =>
-                    name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))).ToList();
-        _registeredEntityByFile[filePath.GetFileNameWithoutExtension()] = equipmentsToRegister;
-        return workbook.Worksheets;
+            // Ensure thread-safe add or update
+            icdWorksheetMap.AddOrUpdate(
+                fileKey,
+                _ => [worksheet.CopyTo(new XLWorkbook())],
+                (_, existingList) =>
+                {
+                    existingList.Add(worksheet.CopyTo(new XLWorkbook()));
+                    return existingList;
+                });
+        }
+
+
+        //_registeredEntityByFile[filePath.GetFileNameWithoutExtension()] = equipmentsToRegister;
+        return (allEquipments, icdWorksheetMap);
     }
 
-    private static (List<Type> StoredEntities, List<Type> RegisterEntity)
-        ProcessExcelAndRegisterEntitiesAndExtractEquipmentNames(string filePath)
+    private static (List<Type> AllEquipmentEntity, List<Type> RegisteredEquipmentEntity)
+        ProcessExcelAndRegisterEntitiesAndExtractEquipmentNames(string filePath,
+            List<string>? equipmentsToRegister = null)
     {
-        var storedEntity = new List<Type>();
-        var registeredEntity = new List<Type>();
-        //var fileName = Path.GetFileName(filePath).ToLower();
-        var workSheets = GetAllWorksheets(filePath, out var allEquipments, out var equipmentsToRegister);
+        var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(filePath);
+        var allEquipmentEntity = new List<Type>();
+        var registeredEquipmentEntity = new List<Type>();
+        var (allEquipments, icdWorkSheets) = ExtractEquipmentInfo(filePath);
+        var workSheets = icdWorkSheets[fileNameWithoutExtension];
+
         if (workSheets.Count == 0)
         {
             Console.WriteLine($"⚠️ No worksheets found in file: {filePath}");
             return ([], []);
         }
 
-        RegisteredWorksheets[filePath.GetFileNameWithoutExtension()] = workSheets;
         try
         {
-            var fileHashKey = $"{SpectrailConstants.RedisFileHashKey}{filePath.GetFileNameWithoutExtension()}";
+            var fileHashKey = $"{SpectrailConstants.RedisFileHashKey}{fileNameWithoutExtension}";
             var storedHash = _redis?.StringGet(fileHashKey).ToString();
             var currentHash = filePath.ComputeFileHash();
 
@@ -176,19 +210,19 @@ public class EntityRegistry
                 return ([], []);
             }
 
-            var equipmentKey = $"{SpectrailConstants.RedisEquipmentHashKey}{filePath.GetFileNameWithoutExtension()}";
+            var equipmentKey = $"{SpectrailConstants.RedisEquipmentHashKey}{fileNameWithoutExtension}";
             _redis?.KeyDelete(equipmentKey); // Clear previous
 
             foreach (var equipment in allEquipments)
-                _redis?.HashSet(equipmentKey, equipment, equipmentsToRegister.Contains(equipment).ToString());
+                _redis?.HashSet(equipmentKey, equipment, equipmentsToRegister?.Contains(equipment).ToString());
 
             foreach (var worksheet in workSheets)
             {
                 var sheetName = worksheet.Name.Trim().Replace(" ", "").ToUpper();
-                var isRegistered = equipmentsToRegister.Contains(sheetName, StringComparer.OrdinalIgnoreCase);
+                var isRegistered = equipmentsToRegister?.Contains(sheetName, StringComparer.OrdinalIgnoreCase);
                 var networkSheet = allEquipments.Contains(sheetName, StringComparer.OrdinalIgnoreCase);
                 if (!networkSheet) continue;
-                var entityType = GetEntityType(sheetName) ?? GenerateDynamicEntity(sheetName);
+                var entityType = GetEntityType(sheetName, fileNameWithoutExtension) ?? GenerateDynamicEntity(sheetName);
                 _mapperConfig.CreateMap(entityType, typeof(CustomColumnDto)).ReverseMap();
                 Debug.Assert(entityType.FullName != null);
                 var mapping = new EntityMapping
@@ -211,20 +245,27 @@ public class EntityRegistry
 
                 Console.WriteLine($"📄 Processed sheet: {sheetName}, Registered: {isRegistered}");
 
-                if (isRegistered) registeredEntity.Add(entityType);
+                if (isRegistered != null && isRegistered.Value) registeredEquipmentEntity.Add(entityType);
 
-                storedEntity.Add(entityType);
+                allEquipmentEntity.Add(entityType);
             }
+
+            DynamicEntityCompiler.CompileAndLoadEntities(allEquipmentEntity, fileNameWithoutExtension,
+                registerDynamicEquipmentTypes =>
+                {
+                    var json = JsonSerializer.Serialize(registerDynamicEquipmentTypes);
+                    _redis?.StringSetAsync(SpectrailConstants.RedisDynamicAssemblyCreated, json);
+                });
         }
         catch (Exception ex)
         {
             Console.WriteLine($"❌ Error processing file: {filePath}, Msg: {ex.Message}");
         }
 
-        return (storedEntity, registeredEntity);
+        return (allEquipmentEntity, registeredEquipmentEntity);
     }
 
-    public List<Type> RegisterEntity()
+    public List<Type> RegisterEntity(List<(string FileName, List<string> newEntities)> newEntitiesToRegister)
     {
         var registeredEntityTypes = new List<Type>();
         foreach (var filePath in _configHelper.GetICDFiles())
@@ -236,31 +277,41 @@ public class EntityRegistry
                     continue;
                 }
 
-                var entityTypes = ProcessExcelAndRegisterEntitiesAndExtractEquipmentNames(filePath);
+                var newEquipment = newEntitiesToRegister
+                    .FirstOrDefault(m =>
+                        m.FileName.GetFileNameWithoutExtension().Replace(" ", "", StringComparison.OrdinalIgnoreCase)
+                            .Trim()
+                            .Equals(filePath.GetFileNameWithoutExtension(), StringComparison.OrdinalIgnoreCase))
+                    .newEntities;
 
-                if (entityTypes.StoredEntities.Count == 0)
+                if (newEquipment.Count == 0) continue;
+
+                var entityTypes = ProcessExcelAndRegisterEntitiesAndExtractEquipmentNames(filePath, newEquipment);
+
+                if (entityTypes.AllEquipmentEntity.Count == 0)
                 {
                     Console.WriteLine($"⚠️ No entity types found in file: {filePath}");
                     continue;
                 }
 
-                if (entityTypes.RegisterEntity.Count == 0)
+                if (entityTypes.RegisteredEquipmentEntity.Count == 0)
                 {
                     Console.WriteLine($"⚠️ No entity types registered: {filePath}");
                     continue;
                 }
 
-                registeredEntityTypes.AddRange(entityTypes.RegisterEntity);
+                registeredEntityTypes.AddRange(entityTypes.RegisteredEquipmentEntity);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"❌ Error processing file: {filePath}, Msg: {ex.Message}");
             }
 
-        _ = PersistRegisteredEntitiesAsync();
+        //_ = PersistRegisteredEntitiesAsync();
         return registeredEntityTypes.Distinct().ToList(); // ensure no duplicates
     }
 
+    /*
     private static async Task PersistRegisteredEntitiesAsync()
     {
         var json = JsonSerializer.Serialize(_registeredEntityByFile);
@@ -283,11 +334,29 @@ public class EntityRegistry
         if (_registeredEntityByFile.Count == 0) _ = LoadRegisteredEntitiesAsync();
         _registeredEntityByFile.TryGetValue(fileName, out var registeredEntity);
         return registeredEntity is { Count: > 0 } ? registeredEntity : null;
-    }
+    }*/
 
     public static List<EntityMapping> GetAllMappings()
     {
         return _collection.Find(_ => true).ToList() ?? [];
+    }
+
+    public static async Task<List<EntityMapping>> GetEquipmentMappingsByFile(string fileName)
+    {
+        var filter = Filter.Eq(x => x.FileName, fileName);
+        var result = await _collection.Find(filter).ToListAsync();
+        return result;
+    }
+
+    public static async Task<List<EntityMapping>> GetRegisteredEquipmentMappingsByFile(string fileName)
+    {
+        var builder = Filter;
+        var filter = builder.And(
+            builder.Eq(x => x.FileName, fileName),
+            builder.Eq(x => x.IsRegistered, true)
+        );
+        var result = await _collection.Find(filter).ToListAsync();
+        return result;
     }
 
     private static string? GetFullyQualifiedEntityName(string shortEntityName)
@@ -304,23 +373,6 @@ public class EntityRegistry
     {
         var pascalName = char.ToUpper(entityName[0]) + entityName[1..].ToLower();
         var fullTypeName = $"{SpectrailConstants.DynamicAssemblyName}.{pascalName}Entity";
-
-        // ⚡ In-memory check
-        if (_localDynamicTypesCache.TryGetValue(fullTypeName, out var cachedType))
-            return cachedType;
-
-        // 🌐 Redis check
-        var redisKey = $"{SpectrailConstants.RedisDynamicType}{fullTypeName}";
-        if (_redis!.KeyExists(redisKey))
-        {
-            var type = Type.GetType(fullTypeName);
-            if (type != null)
-            {
-                _localDynamicTypesCache[fullTypeName] = type;
-                Console.WriteLine($"✅ Retrieved cached entity type from Redis: {fullTypeName}");
-                return type;
-            }
-        }
 
         // 🏗 Build dynamically
         var assemblyName = new AssemblyName($"{SpectrailConstants.DynamicAssemblyName}.DynamicEntities");
@@ -372,15 +424,7 @@ public class EntityRegistry
         }
 
         var dynamicType = typeBuilder.CreateType();
-
-        // 💾 Update in-memory cache
-        _localDynamicTypesCache[fullTypeName] = dynamicType;
-
-        // 💾 Store in Redis (for next runs)
-        _redis.StringSet(redisKey, "true"); // Could store timestamp or metadata if needed
-
         Console.WriteLine($"🛠 Generated and cached dynamic entity: {fullTypeName}");
-
         return dynamicType;
     }
 }
