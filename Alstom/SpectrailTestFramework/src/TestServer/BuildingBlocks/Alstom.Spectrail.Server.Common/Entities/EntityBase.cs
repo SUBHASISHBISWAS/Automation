@@ -17,7 +17,7 @@
 // FileName: EntityBase.cs
 // ProjectName: Alstom.Spectrail.Server.Common
 // Created by SUBHASISH BISWAS On: 2025-03-11
-// Updated by SUBHASISH BISWAS On: 2025-03-21
+// Updated by SUBHASISH BISWAS On: 2025-03-26
 //  ******************************************************************************/
 
 #endregion
@@ -43,11 +43,13 @@ public class EntityBase : IEntityBase
     public string? LastModifiedBy { get; set; } = Environment.UserName ?? Environment.MachineName ?? "Unknown";
     public DateTime? LastModifiedDate { get; set; } = DateTime.Now;
     public string? FileKey { get; set; }
-    [BsonElement("checksum")] public string? Checksum { get; set; }
+    [BsonElement("FileChecksum")] public string? FileChecksum { get; set; }
 
     // ✅ Added properties
     public string FileName { get; set; } = string.Empty;
 
     public string SheetName { get; set; } = string.Empty;
+
+    [BsonElement("RowChecksum")] public string? RowChecksum { get; set; }
     // ✅ Checksum for change detection
 }

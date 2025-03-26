@@ -53,7 +53,11 @@ public class EntityRegistryOrchestrator(
     {
         var folderPath = configHelper.GetICDFolderPath();
         var hasFolderChanged = await HasFolderChanged(folderPath);
-        var loadedDynamicTypes = await RegisterOrLoadExistingDynamicEntities();
+        var changedFiles = await configHelper.GetICDFiles().GetAndStoreChangedFilesFromRedis(
+            async key => (await _redisDb.StringGetAsync(key)).ToString(),
+            async (key, value) => await _redisDb.StringSetAsync(key, value)
+        );
+        var loadedDynamicTypes = await RegisterOrLoadExistingDynamicEntities(changedFiles);
         if (loadedDynamicTypes.Count > 0)
         {
             rootScope.BeginLifetimeScope(builder =>
@@ -64,10 +68,10 @@ public class EntityRegistryOrchestrator(
 
             if (hasFolderChanged)
             {
-                var changedFiles = await configHelper.GetICDFiles().GetAndStoreChangedFilesFromRedis(
+                /*changedFiles = await configHelper.GetICDFiles().GetAndStoreChangedFilesFromRedis(
                     async key => (await _redisDb.StringGetAsync(key)).ToString(),
                     async (key, value) => await _redisDb.StringSetAsync(key, value)
-                );
+                );*/
 
 
                 var seeded = await mediator.Send(new SeedICDDataCommand { ICDFiles = changedFiles });
@@ -90,14 +94,14 @@ public class EntityRegistryOrchestrator(
     }
 
     private async Task<List<Type>>
-        RegisterOrLoadExistingDynamicEntities()
+        RegisterOrLoadExistingDynamicEntities(List<string> icdFiles)
     {
         var dynamicEntitiesPath = Path.Combine(AppContext.BaseDirectory, "DynamicEntities");
 
         if (!Directory.Exists(dynamicEntitiesPath))
         {
             Console.WriteLine("❌ DynamicEntities directory not found.");
-            return EntityRegistry.RegisterEntity();
+            return EntityRegistry.RegisterEntity(icdFiles);
         }
 
         var dllFiles = Directory.GetFiles(dynamicEntitiesPath, "*.dll", SearchOption.TopDirectoryOnly);
@@ -149,7 +153,7 @@ public class EntityRegistryOrchestrator(
                         m.FileName.GetFileNameWithoutExtension().Replace(" ", "", StringComparison.OrdinalIgnoreCase)
                             .Trim()
                             .Equals(normalizedFileName, StringComparison.OrdinalIgnoreCase)))
-                    loadedTypes.AddRange(EntityRegistry.RegisterEntity());
+                    loadedTypes.AddRange(EntityRegistry.RegisterEntity(icdFiles));
             }
             catch (Exception ex)
             {

@@ -55,6 +55,9 @@ public class EntityRegistry
     private static IDatabase _redis;
 
 
+    private static readonly Dictionary<string, List<Type>> _entityTypeCache = new(StringComparer.OrdinalIgnoreCase);
+
+
     public EntityRegistry(IICDDbContext dbContext, IServerConfigHelper configHelper, IServiceCollection services,
         IMapperConfigurationExpression mapperConfig, IConnectionMultiplexer redis)
     {
@@ -76,7 +79,6 @@ public class EntityRegistry
 
     public static IMapperConfigurationExpression MapperConfig { get; private set; }
 
-
     public static Type? GetEntityType(string entityTypeName, string? fileName = null)
     {
         if (string.IsNullOrWhiteSpace(entityTypeName))
@@ -89,30 +91,34 @@ public class EntityRegistry
         var fullTypeName = $"{SpectrailConstants.DynamicAssemblyName}.{pascalName}Entity";
 
         var dynamicEntitiesPath = Path.Combine(AppContext.BaseDirectory, "DynamicEntities");
-
         if (!Directory.Exists(dynamicEntitiesPath))
         {
             Console.WriteLine("❌ DynamicEntities directory not found.");
             return null;
         }
 
-        var loadedTypes = new List<Type>();
+        // 📛 Use "ALL" key if no file specified
+        var cacheKey = string.IsNullOrWhiteSpace(fileName)
+            ? "ALL"
+            : fileName.GetFileNameWithoutExtension().Replace(" ", "", StringComparison.OrdinalIgnoreCase).Trim();
+
+        // ✅ Return from cache if already loaded
+        if (_entityTypeCache.TryGetValue(cacheKey, out var cachedTypes))
+            return cachedTypes.FirstOrDefault(t => t.FullName == fullTypeName);
+
         string[] dllFiles;
 
         if (!string.IsNullOrWhiteSpace(fileName))
         {
-            // 🔍 Normalize and locate specific DLL by filename
-            var normalizedFileName = fileName.GetFileNameWithoutExtension()
-                .Replace(" ", "", StringComparison.OrdinalIgnoreCase).Trim();
+            var normalizedFileName = cacheKey;
+
             dllFiles = Directory.GetFiles(dynamicEntitiesPath, "*.dll", SearchOption.TopDirectoryOnly)
                 .Where(dll =>
                 {
                     var segments = Path.GetFileNameWithoutExtension(dll)
                         .Split('.', StringSplitOptions.RemoveEmptyEntries);
 
-                    var segmentToMatch = segments.Length >= 2
-                        ? segments[^2]
-                        : segments[^1];
+                    var segmentToMatch = segments.Length >= 2 ? segments[^2] : segments[^1];
 
                     return segmentToMatch.Replace(" ", "", StringComparison.OrdinalIgnoreCase)
                         .Equals(normalizedFileName, StringComparison.OrdinalIgnoreCase);
@@ -121,9 +127,10 @@ public class EntityRegistry
         }
         else
         {
-            // 🔁 Load all if filename not specified
             dllFiles = Directory.GetFiles(dynamicEntitiesPath, "*.dll", SearchOption.TopDirectoryOnly);
         }
+
+        var loadedTypes = new List<Type>();
 
         foreach (var dllPath in dllFiles)
             try
@@ -140,6 +147,9 @@ public class EntityRegistry
             {
                 Console.WriteLine($"⚠️ Error loading types from {dllPath}: {ex.Message}");
             }
+
+        // 🧠 Cache loaded types
+        _entityTypeCache[cacheKey] = loadedTypes;
 
         return loadedTypes.FirstOrDefault(t => t.FullName == fullTypeName);
     }
@@ -189,7 +199,7 @@ public class EntityRegistry
     private static List<Type>?
         ProcessExcelAndRegisterEntities(string filePath)
     {
-        List<Type> registeredAssemblyEntity = null;
+        List<Type>? registeredAssemblyEntity = null;
         var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(filePath);
         //var allEquipmentEntity = new List<Type>();
         var registeredEquipmentEntity = new List<Type>();
@@ -204,16 +214,6 @@ public class EntityRegistry
 
         try
         {
-            /*var fileHashKey = $"{SpectrailConstants.RedisFileHashKey}{fileNameWithoutExtension}";
-            var storedHash = _redis?.StringGet(fileHashKey).ToString();
-            var currentHash = filePath.ComputeFileHash();
-
-            if (storedHash == currentHash)
-            {
-                Console.WriteLine($"🧊 File Changed: {filePath.GetFileName()}. Skipping processing.");
-                return [];
-            }*/
-
             foreach (var worksheet in workSheets)
             {
                 var sheetName = worksheet.Name.Trim().Replace(" ", "").ToUpper();
@@ -259,10 +259,10 @@ public class EntityRegistry
         return registeredAssemblyEntity;
     }
 
-    public static List<Type> RegisterEntity()
+    public static List<Type> RegisterEntity(List<string> icdFiles)
     {
         var registeredEntityTypes = new List<Type>();
-        foreach (var filePath in _configHelper.GetICDFiles())
+        foreach (var filePath in icdFiles)
             try
             {
                 if (!File.Exists(filePath))

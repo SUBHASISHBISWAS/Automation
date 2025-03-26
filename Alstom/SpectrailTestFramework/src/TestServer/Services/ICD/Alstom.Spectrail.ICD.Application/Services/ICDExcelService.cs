@@ -24,9 +24,12 @@
 
 #region
 
+using System.Security.Cryptography;
+using System.Text;
 using Alstom.Spectrail.ICD.Application.Contracts;
 using Alstom.Spectrail.ICD.Application.Enums;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
+using Alstom.Spectrail.ICD.Application.Features.ICD.Queries.Query;
 using Alstom.Spectrail.ICD.Application.Registry;
 using Alstom.Spectrail.ICD.Application.Utility;
 using Alstom.Spectrail.Server.Common.Configuration;
@@ -68,13 +71,18 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
         if (!File.Exists(filePath))
             throw new FileNotFoundException($"❌ File not found: {filePath}");
 
+        var sheetNames = (await EntityRegistry.GetRegisteredEquipmentMappingsByFile(filePath))
+            .Select(x => x.SheetName)
+            .ToList();
         var fileName = filePath.GetFileNameWithoutExtension();
-        List<IXLWorksheet> worksheets;
-        if (EntityRegistry.RegisteredWorksheets.IsEmpty)
-            worksheets = new XLWorkbook
-                (filePath).Worksheets.ToList();
-        else
-            worksheets = EntityRegistry.RegisteredWorksheets[fileName];
+
+        var worksheets = EntityRegistry.RegisteredWorksheets.IsEmpty
+            ? new XLWorkbook(filePath).Worksheets
+                .Where(ws =>
+                    sheetNames.Select(s => s.Trim().Replace(" ", "").ToLower())
+                        .Contains(ws.Name.Trim().Replace(" ", "").ToLower()))
+                .ToList()
+            : EntityRegistry.RegisteredWorksheets[fileName];
 
         foreach (var worksheet in worksheets)
         {
@@ -90,40 +98,47 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
             Console.WriteLine($"✅ Using entity type: {entityType.FullName} for '{filePath}:{sheetName}'");
 
             var uniqueKey = $"{fileName}_{sheetName}";
-            var newChecksum = filePath.ComputeFileHash();
-            /*
+            var newFileChecksum = filePath.ComputeFileHash();
+
             var existingRecords = await mediator.Send(new RepositoryQuery
             {
                 FileName = fileName,
                 SheetName = sheetName
             });
 
-            var entityBases = existingRecords.Where(e => e.FileKey == uniqueKey).ToList();
-            var existingChecksum = entityBases.FirstOrDefault()?.Checksum;
-
-            // ✅ Skip processing if checksum validation is enabled and file is unchanged
-            if (configHelper.IsFeatureEnabled("EnableChecksumValidation") && existingChecksum == newChecksum)
-            {
-                Console.WriteLine($"✅ No changes detected for {uniqueKey}. Using existing data.");
-                return;
-            }*/
-
+            var existingMap = existingRecords.ToDictionary(
+                e => e.Id.ToString(),
+                e => e.RowChecksum,
+                StringComparer.OrdinalIgnoreCase);
 
             var newRecords = ReadExcel(entityType, worksheet);
-            newRecords.ForEach(record =>
+            foreach (var record in newRecords)
             {
                 record.FileKey = uniqueKey;
-                record.FileName = Path.GetFileNameWithoutExtension(filePath);
+                record.FileName = fileName;
                 record.SheetName = sheetName;
-            });
-            newRecords.ForEach(record => record.Checksum = newChecksum);
+                record.FileChecksum = newFileChecksum;
+                record.RowChecksum = ComputeChecksumFromProperties(record);
+            }
 
-            // ✅ Use `RepositoryCommand<T>` for efficient batch operations
-            var isFeatureEnabled = configHelper.IsFeatureEnabled("EnableEagerLoading") ||
-                                   configHelper.IsFeatureEnabled("EnableMiddlewarePreloading");
-            await ExecuteRepositoryCommand(isFeatureEnabled, newRecords);
+            var changedOrNew = newRecords
+                .Where(nr =>
+                    !existingMap.TryGetValue(nr.Id.ToString(), out var checksum) ||
+                    checksum != nr.RowChecksum)
+                .ToList();
 
-            Console.WriteLine($"✅ Successfully processed {newRecords.Count} records from {uniqueKey}.");
+            if (changedOrNew.Count > 0)
+            {
+                var eagerLoad = configHelper.IsFeatureEnabled("EnableEagerLoading") ||
+                                configHelper.IsFeatureEnabled("EnableMiddlewarePreloading");
+
+                await ExecuteRepositoryCommand(eagerLoad, changedOrNew);
+                Console.WriteLine($"✅ Stored {changedOrNew.Count} updated/new records from {uniqueKey}.");
+            }
+            else
+            {
+                Console.WriteLine($"✅ No changes detected for {uniqueKey}. Skipping storage.");
+            }
         }
     }
 
@@ -191,6 +206,18 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
         }
     }
 
+    private static string ComputeChecksumFromProperties(object obj)
+    {
+        var props = obj.GetType().GetProperties()
+            .Where(p => p.CanRead && p.Name != "RowChecksum")
+            .OrderBy(p => p.Name)
+            .Select(p => $"{p.Name}:{p.GetValue(obj)?.ToString()?.Trim()}");
+
+        var concat = string.Join("|", props);
+        using var sha = SHA256.Create();
+        var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(concat));
+        return Convert.ToHexString(bytes);
+    }
 
     /// <summary>
     ///     ✅ Extracts and normalizes Excel cell values.
