@@ -24,7 +24,6 @@
 
 #region
 
-using System.Reflection;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
 using Alstom.Spectrail.ICD.Application.Registry;
 using Alstom.Spectrail.ICD.Application.Utility;
@@ -96,7 +95,9 @@ public class EntityRegistryOrchestrator(
     private async Task<List<Type>>
         RegisterOrLoadExistingDynamicEntities(List<string> icdFiles)
     {
-        var dynamicEntitiesPath = Path.Combine(AppContext.BaseDirectory, "DynamicEntities");
+        return await DynamicEntityManager.LoadOrRegisterEntitiesAsync(icdFiles);
+
+        /*var dynamicEntitiesPath = Path.Combine(AppContext.BaseDirectory, "DynamicEntities");
 
         if (!Directory.Exists(dynamicEntitiesPath))
         {
@@ -161,7 +162,7 @@ public class EntityRegistryOrchestrator(
             }
         }
 
-        return loadedTypes;
+        return loadedTypes;*/
     }
 
     private async Task<bool> HasFolderChanged(string folderPath)

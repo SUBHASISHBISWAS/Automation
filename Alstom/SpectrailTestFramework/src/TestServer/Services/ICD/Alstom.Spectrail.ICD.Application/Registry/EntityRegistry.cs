@@ -51,8 +51,8 @@ namespace Alstom.Spectrail.ICD.Application.Registry;
 public class EntityRegistry
 {
     private static IMongoCollection<EntityMapping> _collection;
-    private static IServerConfigHelper _configHelper;
-    private static IDatabase _redis;
+    //private static IServerConfigHelper _configHelper;
+    //private static IDatabase _redis;
 
 
     private static readonly Dictionary<string, List<Type>> _entityTypeCache = new(StringComparer.OrdinalIgnoreCase);
@@ -69,9 +69,9 @@ public class EntityRegistry
 
         Debug.Assert(dbContext.ICDEntityMapping != null);
         _collection = dbContext.ICDEntityMapping;
-        _configHelper = configHelper;
+        //_configHelper = configHelper;
         MapperConfig = mapperConfig;
-        _redis = redis.GetDatabase();
+        //_redis = redis.GetDatabase();
     }
 
     public static ConcurrentDictionary<string, List<IXLWorksheet>> RegisteredWorksheets { get; } =
@@ -81,7 +81,8 @@ public class EntityRegistry
 
     public static Type? GetEntityType(string entityTypeName, string? fileName = null)
     {
-        if (string.IsNullOrWhiteSpace(entityTypeName))
+        return DynamicEntityManager.GetEntityType(entityTypeName, fileName);
+        /*if (string.IsNullOrWhiteSpace(entityTypeName))
         {
             Console.WriteLine("⚠️ Entity type name cannot be null or empty.");
             return null;
@@ -151,7 +152,7 @@ public class EntityRegistry
         // 🧠 Cache loaded types
         _entityTypeCache[cacheKey] = loadedTypes;
 
-        return loadedTypes.FirstOrDefault(t => t.FullName == fullTypeName);
+        return loadedTypes.FirstOrDefault(t => t.FullName == fullTypeName);*/
     }
 
     private static (List<string> allEquipments,
