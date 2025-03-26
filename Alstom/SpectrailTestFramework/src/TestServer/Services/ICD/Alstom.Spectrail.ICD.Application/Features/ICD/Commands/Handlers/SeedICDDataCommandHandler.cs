@@ -17,7 +17,7 @@
 // FileName: SeedICDDataCommandHandler.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-12
-// Updated by SUBHASISH BISWAS On: 2025-03-13
+// Updated by SUBHASISH BISWAS On: 2025-03-26
 //  ******************************************************************************/
 
 #endregion
@@ -42,7 +42,7 @@ public class SeedICDDataCommandHandler(IExcelService icdExcelService)
     {
         try
         {
-            await icdExcelService.InitializeAsync();
+            await icdExcelService.InitializeAsync(request.ICDFiles);
             return true;
         }
         catch (Exception ex)

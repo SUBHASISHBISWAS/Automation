@@ -64,7 +64,13 @@ public class EntityRegistryOrchestrator(
 
             if (hasFolderChanged)
             {
-                var seeded = await mediator.Send(new SeedICDDataCommand());
+                var changedFiles = await configHelper.GetICDFiles().GetAndStoreChangedFilesFromRedis(
+                    async key => (await _redisDb.StringGetAsync(key)).ToString(),
+                    async (key, value) => await _redisDb.StringSetAsync(key, value)
+                );
+
+
+                var seeded = await mediator.Send(new SeedICDDataCommand { ICDFiles = changedFiles });
 
                 if (seeded)
                 {
@@ -157,12 +163,7 @@ public class EntityRegistryOrchestrator(
     private async Task<bool> HasFolderChanged(string folderPath)
     {
         string? lastHash = await _redisDb.StringGetAsync(SpectrailConstants.RedisKeyFolderHash);
-        var currentHash = folderPath.ComputeFolderHash(async (hash, filePath) =>
-        {
-            await _redisDb.StringSetAsync(
-                $"{SpectrailConstants.RedisFileHashKey}{filePath.GetFileNameWithoutExtension()}",
-                hash);
-        });
+        var currentHash = folderPath.ComputeFolderHash();
 
         if (lastHash == currentHash)
             return false;

@@ -121,21 +121,18 @@ public class MongoDataProvider(IICDDbContext icdDataContext) : IDataProvider
             var filter = Builders<BsonDocument>.Filter.Exists(pascalEntityName);
             var documents = await collection.Find(filter).ToListAsync();
 
-            foreach (var doc in documents)
-            {
-                if (!doc.Contains(pascalEntityName)) continue;
-
-                var sheetDoc = doc[pascalEntityName].AsBsonDocument;
-                if (!sheetDoc.Contains("Entities") || !sheetDoc["Entities"].IsBsonArray) continue;
-
-                var entityArray = sheetDoc["Entities"].AsBsonArray;
-                var entities = entityArray
-                    .Select(e => BsonSerializer.Deserialize(e.AsBsonDocument, entityType))
-                    .OfType<EntityBase>()
-                    .ToList();
-
+            foreach (var entities in from doc in documents
+                     where doc.Contains(pascalEntityName)
+                     select doc[pascalEntityName].AsBsonDocument
+                     into sheetDoc
+                     where sheetDoc.Contains("Entities") && sheetDoc["Entities"].IsBsonArray
+                     select sheetDoc["Entities"].AsBsonArray
+                     into entityArray
+                     select entityArray
+                         .Select(e => BsonSerializer.Deserialize(e.AsBsonDocument, entityType))
+                         .OfType<EntityBase>()
+                         .ToList())
                 allEntities.AddRange(entities);
-            }
 
             Console.WriteLine($"✅ Retrieved {allEntities.Count} entities from '{collectionName}'");
             return allEntities;

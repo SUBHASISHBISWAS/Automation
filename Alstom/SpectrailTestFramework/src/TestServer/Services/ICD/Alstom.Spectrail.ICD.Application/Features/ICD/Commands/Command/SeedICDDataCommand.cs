@@ -17,7 +17,7 @@
 // FileName: SeedICDDataCommand.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-12
-// Updated by SUBHASISH BISWAS On: 2025-03-13
+// Updated by SUBHASISH BISWAS On: 2025-03-26
 //  ******************************************************************************/
 
 #endregion
@@ -33,4 +33,7 @@ namespace Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
 /// <summary>
 ///     ✅ Command to seed ICD Data from Excel
 /// </summary>
-public class SeedICDDataCommand : IRequest<bool>;
+public class SeedICDDataCommand : IRequest<bool>
+{
+    public List<string> ICDFiles { get; init; } = [];
+}

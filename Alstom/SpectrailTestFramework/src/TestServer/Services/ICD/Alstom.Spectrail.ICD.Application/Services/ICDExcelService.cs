@@ -46,9 +46,8 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
     /// <summary>
     ///     ✅ Initializes all configured ICD files from `appsettings.json`
     /// </summary>
-    public async Task InitializeAsync()
+    public async Task InitializeAsync(List<string> icdFiles)
     {
-        var icdFiles = configHelper.GetICDFiles();
         foreach (var filePath in icdFiles)
             try
             {
@@ -71,7 +70,7 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
 
         var fileName = filePath.GetFileNameWithoutExtension();
         List<IXLWorksheet> worksheets;
-        if (EntityRegistry.RegisteredWorksheets[fileName].Count == 0)
+        if (EntityRegistry.RegisteredWorksheets.IsEmpty)
             worksheets = new XLWorkbook
                 (filePath).Worksheets.ToList();
         else

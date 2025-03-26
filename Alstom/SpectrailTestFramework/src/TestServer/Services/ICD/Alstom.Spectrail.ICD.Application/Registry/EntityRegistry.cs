@@ -204,15 +204,15 @@ public class EntityRegistry
 
         try
         {
-            var fileHashKey = $"{SpectrailConstants.RedisFileHashKey}{fileNameWithoutExtension}";
+            /*var fileHashKey = $"{SpectrailConstants.RedisFileHashKey}{fileNameWithoutExtension}";
             var storedHash = _redis?.StringGet(fileHashKey).ToString();
             var currentHash = filePath.ComputeFileHash();
 
-            if (storedHash != currentHash)
+            if (storedHash == currentHash)
             {
                 Console.WriteLine($"🧊 File Changed: {filePath.GetFileName()}. Skipping processing.");
                 return [];
-            }
+            }*/
 
             foreach (var worksheet in workSheets)
             {

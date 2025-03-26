@@ -17,12 +17,8 @@
 // FileName: IExcelService.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-16
-// Updated by SUBHASISH BISWAS On: 2025-03-23
+// Updated by SUBHASISH BISWAS On: 2025-03-26
 //  ******************************************************************************/
-
-#endregion
-
-#region
 
 #endregion
 
@@ -30,5 +26,5 @@ namespace Alstom.Spectrail.ICD.Application.Contracts;
 
 public interface IExcelService
 {
-    Task InitializeAsync();
+    Task InitializeAsync(List<string> icdFiles);
 }
