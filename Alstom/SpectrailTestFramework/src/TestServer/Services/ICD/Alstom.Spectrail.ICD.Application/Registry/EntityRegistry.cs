@@ -28,6 +28,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Text.RegularExpressions;
 using Alstom.Spectrail.ICD.Application.Contracts;
 using Alstom.Spectrail.ICD.Application.Models;
 using Alstom.Spectrail.ICD.Application.Utility;
@@ -38,6 +39,7 @@ using Alstom.Spectrail.Server.Common.Entities;
 using AutoMapper;
 using ClosedXML.Excel;
 using Microsoft.Extensions.DependencyInjection;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using StackExchange.Redis;
 using static MongoDB.Driver.Builders<Alstom.Spectrail.ICD.Application.Models.EntityMapping>;
@@ -50,7 +52,6 @@ public class EntityRegistry
 {
     private static IMongoCollection<EntityMapping> _collection;
     private static IServerConfigHelper _configHelper;
-    private static IMapperConfigurationExpression _mapperConfig;
     private static IDatabase _redis;
 
 
@@ -66,12 +67,14 @@ public class EntityRegistry
         Debug.Assert(dbContext.ICDEntityMapping != null);
         _collection = dbContext.ICDEntityMapping;
         _configHelper = configHelper;
-        _mapperConfig = mapperConfig;
+        MapperConfig = mapperConfig;
         _redis = redis.GetDatabase();
     }
 
     public static ConcurrentDictionary<string, List<IXLWorksheet>> RegisteredWorksheets { get; } =
         new(StringComparer.OrdinalIgnoreCase);
+
+    public static IMapperConfigurationExpression MapperConfig { get; private set; }
 
 
     public static Type? GetEntityType(string entityTypeName, string? fileName = null)
@@ -218,7 +221,7 @@ public class EntityRegistry
                 var networkSheet = allEquipments.Contains(sheetName, StringComparer.OrdinalIgnoreCase);
                 if (!networkSheet) continue;
                 var entityType = GetEntityType(sheetName, fileNameWithoutExtension) ?? GenerateDynamicEntity(sheetName);
-                _mapperConfig.CreateMap(entityType, typeof(CustomColumnDto)).ReverseMap();
+
                 Debug.Assert(entityType.FullName != null);
                 var mapping = new EntityMapping
                 {
@@ -245,6 +248,8 @@ public class EntityRegistry
 
             registeredAssemblyEntity = DynamicEntityCompiler.CompileAndLoadEntities(registeredEquipmentEntity,
                 fileNameWithoutExtension);
+            foreach (var entityType in registeredAssemblyEntity)
+                MapperConfig.CreateMap(entityType, typeof(CustomColumnDto)).ReverseMap();
         }
         catch (Exception ex)
         {
@@ -294,11 +299,17 @@ public class EntityRegistry
 
     public static async Task<List<EntityMapping>> GetRegisteredEquipmentMappingsByFile(string fileName)
     {
-        var builder = Filter;
+        var normalizedFileName = Path.GetFileNameWithoutExtension(fileName).Trim();
+
+        var regexPattern = $"^{Regex.Escape(normalizedFileName)}(\\.xlsx)?$";
+        var regex = new BsonRegularExpression(regexPattern, "i"); // case-insensitive match
+
+        var builder = Filter; // 👈 Use `Builders<T>.Filter` not just `Filter`
         var filter = builder.And(
-            builder.Eq(x => x.FileName, fileName),
+            builder.Regex(x => x.FileName, regex),
             builder.Eq(x => x.IsRegistered, true)
         );
+
         var result = await _collection.Find(filter).ToListAsync();
         return result;
     }

@@ -16,8 +16,8 @@
 // Email: subhasish.biswas@alstomgroup.com
 // FileName: Program.cs
 // ProjectName: Alstom.Spectrail.ICD.API
-// Created by SUBHASISH BISWAS On: 2025-03-11
-// Updated by SUBHASISH BISWAS On: 2025-03-22
+// Created by SUBHASISH BISWAS On: 2025-03-26
+// Updated by SUBHASISH BISWAS On: 2025-03-26
 //  ******************************************************************************/
 
 #endregion
@@ -109,7 +109,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 // ✅ Run one-time entity registration and seed check via middleware
-app.UseMiddleware<EntityRegistrationMiddleware>();
+//app.UseMiddleware<EntityRegistrationMiddleware>();
 
 // ✅ Configure HTTP request pipeline
 if (app.Environment.IsDevelopment())

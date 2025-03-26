@@ -28,6 +28,7 @@ using System.Reflection;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
 using Alstom.Spectrail.ICD.Application.Registry;
 using Alstom.Spectrail.ICD.Application.Utility;
+using Alstom.Spectrail.ICD.Domain.DTO.ICD;
 using Alstom.Spectrail.Server.Common.Configuration;
 using Autofac;
 using MediatR;
@@ -38,7 +39,6 @@ using StackExchange.Redis;
 namespace Alstom.Spectrail.ICD.API.Middleware;
 
 public class EntityRegistryOrchestrator(
-    EntityRegistry entityRegistry,
     IMediator mediator,
     IConnectionMultiplexer redis,
     IServerConfigHelper configHelper,
@@ -54,26 +54,32 @@ public class EntityRegistryOrchestrator(
         var folderPath = configHelper.GetICDFolderPath();
         var hasFolderChanged = await HasFolderChanged(folderPath);
         var loadedDynamicTypes = await RegisterOrLoadExistingDynamicEntities();
-        if (hasFolderChanged || loadedDynamicTypes.Count > 0)
+        if (loadedDynamicTypes.Count > 0)
         {
             rootScope.BeginLifetimeScope(builder =>
                 DynamicRepositoryRegistrar.RegisterRepositoryHandlers(builder, loadedDynamicTypes));
 
-            var seeded = await mediator.Send(new SeedICDDataCommand());
+            foreach (var entityType in loadedDynamicTypes)
+                EntityRegistry.MapperConfig.CreateMap(entityType, typeof(CustomColumnDto)).ReverseMap();
 
-            if (seeded)
+            if (hasFolderChanged)
             {
-                await _redisDb.StringSetAsync(RedisKeyRegistryCompleted, "true", TimeSpan.FromHours(12));
-                Console.WriteLine("✅ MongoDB Seeding Completed!");
+                var seeded = await mediator.Send(new SeedICDDataCommand());
+
+                if (seeded)
+                {
+                    await _redisDb.StringSetAsync(RedisKeyRegistryCompleted, "true", TimeSpan.FromHours(12));
+                    Console.WriteLine("✅ MongoDB Seeding Completed!");
+                }
+                else
+                {
+                    Console.WriteLine("⚠️ MongoDB Seeding Failed!");
+                }
             }
             else
             {
-                Console.WriteLine("⚠️ MongoDB Seeding Failed!");
+                Console.WriteLine("✅ No entity or folder changes. Skipping.");
             }
-        }
-        else
-        {
-            Console.WriteLine("✅ No entity or folder changes. Skipping.");
         }
     }
 
