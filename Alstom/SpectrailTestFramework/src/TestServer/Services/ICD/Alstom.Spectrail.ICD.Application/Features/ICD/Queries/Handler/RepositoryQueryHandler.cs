@@ -17,7 +17,7 @@
 // FileName: RepositoryQueryHandler.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-21
-// Updated by SUBHASISH BISWAS On: 2025-03-22
+// Updated by SUBHASISH BISWAS On: 2025-03-26
 //  ******************************************************************************/
 
 #endregion
@@ -45,7 +45,7 @@ public class RepositoryQueryHandler(
             throw new InvalidOperationException("EntityName is required for dynamic query resolution.");
 
         // 🧠 Resolve dynamic entity type from registry
-        var entityType = EntityRegistry.GetEntityType(request.SheetName);
+        var entityType = EntityRegistry.GetEntityType(request.SheetName, request.FileName);
         if (entityType is null)
             throw new InvalidOperationException($"❌ Unable to resolve type for '{request.SheetName}'");
 

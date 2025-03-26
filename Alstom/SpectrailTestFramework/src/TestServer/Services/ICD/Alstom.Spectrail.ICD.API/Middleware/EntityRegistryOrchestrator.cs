@@ -51,19 +51,13 @@ public class EntityRegistryOrchestrator(
 
     public async Task ExecuteAsync(bool force = false)
     {
-        var allDynamicTypes = new List<Type>();
         var folderPath = configHelper.GetICDFolderPath();
         var hasFolderChanged = await HasFolderChanged(folderPath);
-        var (loadedDynamicTypes, newEntitiesToRegister) = await LoadExistingDynamicEntitiesAndGetNewEntities();
-        allDynamicTypes.AddRange(loadedDynamicTypes);
-        var isNewEntitiesAdded = newEntitiesToRegister.Count > 0;
-        if (hasFolderChanged || isNewEntitiesAdded)
+        var loadedDynamicTypes = await RegisterOrLoadExistingDynamicEntities();
+        if (hasFolderChanged || loadedDynamicTypes.Count > 0)
         {
-            var newDynamicTypes = entityRegistry.RegisterEntity(newEntitiesToRegister);
-            allDynamicTypes.AddRange(newDynamicTypes);
-
             rootScope.BeginLifetimeScope(builder =>
-                DynamicRepositoryRegistrar.RegisterRepositoryHandlers(builder, allDynamicTypes));
+                DynamicRepositoryRegistrar.RegisterRepositoryHandlers(builder, loadedDynamicTypes));
 
             var seeded = await mediator.Send(new SeedICDDataCommand());
 
@@ -79,24 +73,19 @@ public class EntityRegistryOrchestrator(
         }
         else
         {
-            rootScope.BeginLifetimeScope(builder =>
-                DynamicRepositoryRegistrar.RegisterRepositoryHandlers(builder, allDynamicTypes));
             Console.WriteLine("✅ No entity or folder changes. Skipping.");
         }
     }
 
-    private async Task<(List<Type> registeredEntities, List<(string Filename, List<string> newEntities)>
-            newEntitieToBeRegistered)>
-        LoadExistingDynamicEntitiesAndGetNewEntities()
+    private async Task<List<Type>>
+        RegisterOrLoadExistingDynamicEntities()
     {
-        var newlyAddedEntities = await GetAllNewEntitiesToBeRegistered();
-
         var dynamicEntitiesPath = Path.Combine(AppContext.BaseDirectory, "DynamicEntities");
 
         if (!Directory.Exists(dynamicEntitiesPath))
         {
             Console.WriteLine("❌ DynamicEntities directory not found.");
-            return ([], []);
+            return EntityRegistry.RegisterEntity();
         }
 
         var dllFiles = Directory.GetFiles(dynamicEntitiesPath, "*.dll", SearchOption.TopDirectoryOnly);
@@ -113,23 +102,12 @@ public class EntityRegistryOrchestrator(
                 ? segments[^2].Replace(" ", "", StringComparison.OrdinalIgnoreCase).Trim()
                 : fileNameWithoutExt.Replace(" ", "", StringComparison.OrdinalIgnoreCase).Trim();
 
-            // ⛔ Skip DLLs linked to mismatched files
-            if (newlyAddedEntities.Any(m =>
-                    m.FileName.GetFileNameWithoutExtension().Replace(" ", "", StringComparison.OrdinalIgnoreCase)
-                        .Trim()
-                        .Equals(normalizedFileName, StringComparison.OrdinalIgnoreCase)))
-            {
-                Console.WriteLine(
-                    $"⏭ Skipping load for: {fileNameWithoutExt} due to entity mismatches. As these are new entities.");
-                continue;
-            }
+            var fileKey = $"{normalizedFileName}.XLSX";
 
             try
             {
-                var fileKey = $"{normalizedFileName}.XLSX";
                 var registeredMappings = await EntityRegistry.GetRegisteredEquipmentMappingsByFile(fileKey);
-
-                if (!registeredMappings.Any())
+                if (registeredMappings.Count == 0)
                 {
                     Console.WriteLine($"⚠️ No registered entities found for: {fileKey}");
                     continue;
@@ -154,6 +132,12 @@ public class EntityRegistryOrchestrator(
 
                 loadedTypes.AddRange(types);
                 Console.WriteLine($"✅ Loaded {types.Count} registered types from {Path.GetFileName(dllPath)}");
+
+                if (!registeredMappings.Any(m =>
+                        m.FileName.GetFileNameWithoutExtension().Replace(" ", "", StringComparison.OrdinalIgnoreCase)
+                            .Trim()
+                            .Equals(normalizedFileName, StringComparison.OrdinalIgnoreCase)))
+                    loadedTypes.AddRange(EntityRegistry.RegisterEntity());
             }
             catch (Exception ex)
             {
@@ -161,7 +145,7 @@ public class EntityRegistryOrchestrator(
             }
         }
 
-        return (loadedTypes, newlyAddedEntities);
+        return loadedTypes;
     }
 
     private async Task<bool> HasFolderChanged(string folderPath)
@@ -179,45 +163,5 @@ public class EntityRegistryOrchestrator(
 
         await _redisDb.StringSetAsync(SpectrailConstants.RedisKeyFolderHash, currentHash);
         return true;
-    }
-
-
-    private async Task<List<(string FileName, List<string> NewlyAddedEntities)>> GetAllNewEntitiesToBeRegistered()
-    {
-        var mismatches = new List<(string FileName, List<string> MissingEntities)>();
-
-        foreach (var fileName in configHelper.GetICDFiles().Select(f => f.GetFileName()))
-        {
-            var existingMapping = await EntityRegistry.GetRegisteredEquipmentMappingsByFile(fileName);
-            var registeredEquipments = existingMapping
-                .Select(x => x.SheetName)
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-            var filters = configHelper.GetSection<Dictionary<string, List<string>>>(
-                SpectrailConstants.Settings_DynamicEntityFilters);
-
-            filters.TryGetValue(fileName.ToLowerInvariant(), out var perFile);
-            filters.TryGetValue("default", out var fallback);
-            var allowedPrefixes = perFile ?? fallback ?? [];
-
-            var expectedEquipments = filters
-                .Where(f => f.Key.Equals(fileName, StringComparison.OrdinalIgnoreCase) || f.Key == "default")
-                .SelectMany(kv => kv.Value)
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
-
-            var missing = expectedEquipments
-                .Where(expected =>
-                    !registeredEquipments.Any(actual =>
-                        actual.StartsWith(expected, StringComparison.OrdinalIgnoreCase)))
-                .ToList();
-
-            var isMismatch = missing.Count > 0 || expectedEquipments.Count != registeredEquipments.Count;
-
-            if (isMismatch)
-                mismatches.Add((fileName, missing));
-        }
-
-        return mismatches;
     }
 }

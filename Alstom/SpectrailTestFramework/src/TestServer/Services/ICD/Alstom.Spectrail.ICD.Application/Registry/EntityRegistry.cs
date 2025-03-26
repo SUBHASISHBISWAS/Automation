@@ -28,7 +28,6 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Text.Json;
 using Alstom.Spectrail.ICD.Application.Contracts;
 using Alstom.Spectrail.ICD.Application.Models;
 using Alstom.Spectrail.ICD.Application.Utility;
@@ -39,7 +38,6 @@ using Alstom.Spectrail.Server.Common.Entities;
 using AutoMapper;
 using ClosedXML.Excel;
 using Microsoft.Extensions.DependencyInjection;
-using MongoDB.Bson;
 using MongoDB.Driver;
 using StackExchange.Redis;
 using static MongoDB.Driver.Builders<Alstom.Spectrail.ICD.Application.Models.EntityMapping>;
@@ -55,9 +53,6 @@ public class EntityRegistry
     private static IMapperConfigurationExpression _mapperConfig;
     private static IDatabase _redis;
 
-
-    private static readonly ConcurrentDictionary<string, List<IXLWorksheet>> icdWorksheetMap =
-        new(StringComparer.OrdinalIgnoreCase);
 
     public EntityRegistry(IICDDbContext dbContext, IServerConfigHelper configHelper, IServiceCollection services,
         IMapperConfigurationExpression mapperConfig, IConnectionMultiplexer redis)
@@ -75,8 +70,9 @@ public class EntityRegistry
         _redis = redis.GetDatabase();
     }
 
-    public static Dictionary<string, IXLWorksheets> RegisteredWorksheets { get; } =
+    public static ConcurrentDictionary<string, List<IXLWorksheet>> RegisteredWorksheets { get; } =
         new(StringComparer.OrdinalIgnoreCase);
+
 
     public static Type? GetEntityType(string entityTypeName, string? fileName = null)
     {
@@ -159,15 +155,22 @@ public class EntityRegistry
         if (colIndex == -1) throw new InvalidOperationException("⚠️ Column 'Equipment Sheet' not found.");
 
         var allEquipments = networkSheet.Column(colIndex + 1)
-            .CellsUsed().Skip(1).Select(c => c.GetString().Trim())
-            .Distinct().ToList();
+            .CellsUsed()
+            .Skip(1)
+            .Select(c => c.GetString().Trim())
+            .Where(e => !string.IsNullOrWhiteSpace(e))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToHashSet();
 
         foreach (var worksheet in workbook.Worksheets)
         {
             var fileKey = Path.GetFileNameWithoutExtension(filePath);
 
-            // Ensure thread-safe add or update
-            icdWorksheetMap.AddOrUpdate(
+            // Only process worksheet if it matches an equipment name
+            if (!allEquipments.Contains(worksheet.Name.Trim()))
+                continue;
+
+            RegisteredWorksheets.AddOrUpdate(
                 fileKey,
                 _ => [worksheet.CopyTo(new XLWorkbook())],
                 (_, existingList) =>
@@ -177,17 +180,15 @@ public class EntityRegistry
                 });
         }
 
-
-        //_registeredEntityByFile[filePath.GetFileNameWithoutExtension()] = equipmentsToRegister;
-        return (allEquipments, icdWorksheetMap);
+        return (allEquipments.ToList(), RegisteredWorksheets);
     }
 
-    private static (List<Type> AllEquipmentEntity, List<Type> RegisteredEquipmentEntity)
-        ProcessExcelAndRegisterEntitiesAndExtractEquipmentNames(string filePath,
-            List<string>? equipmentsToRegister = null)
+    private static List<Type>?
+        ProcessExcelAndRegisterEntities(string filePath)
     {
+        List<Type> registeredAssemblyEntity = null;
         var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(filePath);
-        var allEquipmentEntity = new List<Type>();
+        //var allEquipmentEntity = new List<Type>();
         var registeredEquipmentEntity = new List<Type>();
         var (allEquipments, icdWorkSheets) = ExtractEquipmentInfo(filePath);
         var workSheets = icdWorkSheets[fileNameWithoutExtension];
@@ -195,7 +196,7 @@ public class EntityRegistry
         if (workSheets.Count == 0)
         {
             Console.WriteLine($"⚠️ No worksheets found in file: {filePath}");
-            return ([], []);
+            return [];
         }
 
         try
@@ -207,19 +208,13 @@ public class EntityRegistry
             if (storedHash != currentHash)
             {
                 Console.WriteLine($"🧊 File Changed: {filePath.GetFileName()}. Skipping processing.");
-                return ([], []);
+                return [];
             }
-
-            var equipmentKey = $"{SpectrailConstants.RedisEquipmentHashKey}{fileNameWithoutExtension}";
-            _redis?.KeyDelete(equipmentKey); // Clear previous
-
-            foreach (var equipment in allEquipments)
-                _redis?.HashSet(equipmentKey, equipment, equipmentsToRegister?.Contains(equipment).ToString());
 
             foreach (var worksheet in workSheets)
             {
                 var sheetName = worksheet.Name.Trim().Replace(" ", "").ToUpper();
-                var isRegistered = equipmentsToRegister?.Contains(sheetName, StringComparer.OrdinalIgnoreCase);
+                var isRegistered = allEquipments.Contains(sheetName, StringComparer.OrdinalIgnoreCase);
                 var networkSheet = allEquipments.Contains(sheetName, StringComparer.OrdinalIgnoreCase);
                 if (!networkSheet) continue;
                 var entityType = GetEntityType(sheetName, fileNameWithoutExtension) ?? GenerateDynamicEntity(sheetName);
@@ -245,27 +240,21 @@ public class EntityRegistry
 
                 Console.WriteLine($"📄 Processed sheet: {sheetName}, Registered: {isRegistered}");
 
-                if (isRegistered != null && isRegistered.Value) registeredEquipmentEntity.Add(entityType);
-
-                allEquipmentEntity.Add(entityType);
+                if (isRegistered) registeredEquipmentEntity.Add(entityType);
             }
 
-            DynamicEntityCompiler.CompileAndLoadEntities(allEquipmentEntity, fileNameWithoutExtension,
-                registerDynamicEquipmentTypes =>
-                {
-                    var json = JsonSerializer.Serialize(registerDynamicEquipmentTypes);
-                    _redis?.StringSetAsync(SpectrailConstants.RedisDynamicAssemblyCreated, json);
-                });
+            registeredAssemblyEntity = DynamicEntityCompiler.CompileAndLoadEntities(registeredEquipmentEntity,
+                fileNameWithoutExtension);
         }
         catch (Exception ex)
         {
             Console.WriteLine($"❌ Error processing file: {filePath}, Msg: {ex.Message}");
         }
 
-        return (allEquipmentEntity, registeredEquipmentEntity);
+        return registeredAssemblyEntity;
     }
 
-    public List<Type> RegisterEntity(List<(string FileName, List<string> newEntities)> newEntitiesToRegister)
+    public static List<Type> RegisterEntity()
     {
         var registeredEntityTypes = new List<Type>();
         foreach (var filePath in _configHelper.GetICDFiles())
@@ -277,75 +266,30 @@ public class EntityRegistry
                     continue;
                 }
 
-                var newEquipment = newEntitiesToRegister
-                    .FirstOrDefault(m =>
-                        m.FileName.GetFileNameWithoutExtension().Replace(" ", "", StringComparison.OrdinalIgnoreCase)
-                            .Trim()
-                            .Equals(filePath.GetFileNameWithoutExtension(), StringComparison.OrdinalIgnoreCase))
-                    .newEntities;
+                var entityTypes = ProcessExcelAndRegisterEntities(filePath);
 
-                if (newEquipment.Count == 0) continue;
 
-                var entityTypes = ProcessExcelAndRegisterEntitiesAndExtractEquipmentNames(filePath, newEquipment);
-
-                if (entityTypes.AllEquipmentEntity.Count == 0)
-                {
-                    Console.WriteLine($"⚠️ No entity types found in file: {filePath}");
-                    continue;
-                }
-
-                if (entityTypes.RegisteredEquipmentEntity.Count == 0)
+                if (entityTypes?.Count == 0)
                 {
                     Console.WriteLine($"⚠️ No entity types registered: {filePath}");
                     continue;
                 }
 
-                registeredEntityTypes.AddRange(entityTypes.RegisteredEquipmentEntity);
+                Debug.Assert(entityTypes != null, nameof(entityTypes) + " != null");
+                registeredEntityTypes.AddRange(entityTypes);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"❌ Error processing file: {filePath}, Msg: {ex.Message}");
             }
 
-        //_ = PersistRegisteredEntitiesAsync();
         return registeredEntityTypes.Distinct().ToList(); // ensure no duplicates
     }
 
-    /*
-    private static async Task PersistRegisteredEntitiesAsync()
-    {
-        var json = JsonSerializer.Serialize(_registeredEntityByFile);
-        await _redis.StringSetAsync(SpectrailConstants.RedisEntityListKey, json);
-    }
-
-    public static async Task<Dictionary<string, List<string>>> LoadRegisteredEntitiesAsync()
-    {
-        var json = await _redis.StringGetAsync(SpectrailConstants.RedisEntityListKey);
-        if (!json.IsNullOrEmpty)
-            _registeredEntityByFile = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(json)
-                                      ?? new Dictionary<string, List<string>>();
-        return _registeredEntityByFile;
-    }
-
-
-    public static List<string>? ExtractEquipmentNames(string filePath)
-    {
-        var fileName = Path.GetFileNameWithoutExtension(filePath).ToLower();
-        if (_registeredEntityByFile.Count == 0) _ = LoadRegisteredEntitiesAsync();
-        _registeredEntityByFile.TryGetValue(fileName, out var registeredEntity);
-        return registeredEntity is { Count: > 0 } ? registeredEntity : null;
-    }*/
 
     public static List<EntityMapping> GetAllMappings()
     {
         return _collection.Find(_ => true).ToList() ?? [];
-    }
-
-    public static async Task<List<EntityMapping>> GetEquipmentMappingsByFile(string fileName)
-    {
-        var filter = Filter.Eq(x => x.FileName, fileName);
-        var result = await _collection.Find(filter).ToListAsync();
-        return result;
     }
 
     public static async Task<List<EntityMapping>> GetRegisteredEquipmentMappingsByFile(string fileName)
@@ -358,16 +302,6 @@ public class EntityRegistry
         var result = await _collection.Find(filter).ToListAsync();
         return result;
     }
-
-    private static string? GetFullyQualifiedEntityName(string shortEntityName)
-    {
-        if (_collection == null) return null;
-
-        var filter = Filter.Regex(x => x.EntityName,
-            new BsonRegularExpression($@"\.{shortEntityName}$", "i"));
-        return _collection.Find(filter).FirstOrDefault()?.EntityName;
-    }
-
 
     private static Type GenerateDynamicEntity(string entityName)
     {

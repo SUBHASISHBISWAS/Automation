@@ -17,7 +17,7 @@
 // FileName: DynamicEntityCompiler.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-25
-// Updated by SUBHASISH BISWAS On: 2025-03-25
+// Updated by SUBHASISH BISWAS On: 2025-03-26
 //  ******************************************************************************/
 
 #endregion
@@ -70,8 +70,7 @@ public static class DynamicEntityCompiler
         return type.Name;
     }
 
-    public static Assembly CompileAndLoadEntities(IEnumerable<Type> entityTypes, string fileName,
-        Action<Dictionary<string, bool>>? registerDynamicEquipmentTypes = null)
+    public static List<Type> CompileAndLoadEntities(IEnumerable<Type> entityTypes, string fileName)
     {
         var sb = new StringBuilder();
         sb.AppendLine("using System;");
@@ -122,7 +121,9 @@ public static class DynamicEntityCompiler
             MetadataReference.CreateFromFile(typeof(EntityBase).Assembly.Location),
             MetadataReference.CreateFromFile(typeof(BsonObjectId).Assembly.Location),
             MetadataReference.CreateFromFile(typeof(GCSettings).Assembly.Location),
-            MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location)
+            MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location),
+            MetadataReference.CreateFromFile(Path.Combine(Path.GetDirectoryName(typeof(object).Assembly.Location)!,
+                "System.Runtime.dll"))
         };
 
         var outputFile = Path.Combine(AppContext.BaseDirectory, "DynamicEntities",
@@ -131,20 +132,20 @@ public static class DynamicEntityCompiler
 
         var compilation = CSharpCompilation.Create(
             Path.GetFileNameWithoutExtension(outputFile),
-            new[] { syntaxTree },
+            [syntaxTree],
             refs,
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
         );
 
         using var fs = new FileStream(outputFile, FileMode.Create);
         var result = compilation.Emit(fs);
-
+        fs.Flush(); // Ensure all bytes are written
+        fs.Close(); // Important: avoid locked/incomplete files
         if (result.Success)
-        {
-            _dynamicEquipmentTypesMap[fileName.GetFileNameWithoutExtension()] = true;
-            registerDynamicEquipmentTypes?.Invoke(_dynamicEquipmentTypesMap);
-            return Assembly.LoadFrom(outputFile);
-        }
+            return Assembly.LoadFrom(outputFile)
+                .GetTypes()
+                .Where(t => t is { IsClass: true, IsAbstract: false } && typeof(EntityBase).IsAssignableFrom(t))
+                .ToList();
 
         var errors = string.Join(Environment.NewLine, result.Diagnostics.Select(d => d.ToString()));
         throw new Exception($"❌ Roslyn compilation failed:\n{errors}");

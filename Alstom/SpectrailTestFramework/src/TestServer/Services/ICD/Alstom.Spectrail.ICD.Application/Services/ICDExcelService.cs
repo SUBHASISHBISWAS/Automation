@@ -17,7 +17,7 @@
 // FileName: ICDExcelService.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-22
-// Updated by SUBHASISH BISWAS On: 2025-03-25
+// Updated by SUBHASISH BISWAS On: 2025-03-26
 //  ******************************************************************************/
 
 #endregion
@@ -27,7 +27,6 @@
 using Alstom.Spectrail.ICD.Application.Contracts;
 using Alstom.Spectrail.ICD.Application.Enums;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
-using Alstom.Spectrail.ICD.Application.Features.ICD.Queries.Query;
 using Alstom.Spectrail.ICD.Application.Registry;
 using Alstom.Spectrail.ICD.Application.Utility;
 using Alstom.Spectrail.Server.Common.Configuration;
@@ -71,27 +70,17 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
             throw new FileNotFoundException($"❌ File not found: {filePath}");
 
         var fileName = filePath.GetFileNameWithoutExtension();
-        IXLWorksheets worksheets;
+        List<IXLWorksheet> worksheets;
         if (EntityRegistry.RegisteredWorksheets[fileName].Count == 0)
             worksheets = new XLWorkbook
-                (filePath).Worksheets;
+                (filePath).Worksheets.ToList();
         else
             worksheets = EntityRegistry.RegisteredWorksheets[fileName];
 
         foreach (var worksheet in worksheets)
         {
             var sheetName = worksheet.Name.Trim().Replace(" ", "").ToLower();
-
-            var registeredEquipmentName = new List<string>();
-            //(await EntityRegistry.LoadRegisteredEntitiesAsync()).GetValueOrDefault(fileName);
-            if (!(registeredEquipmentName?.Count > 0) ||
-                !registeredEquipmentName.Contains(sheetName, StringComparer.OrdinalIgnoreCase))
-            {
-                Console.WriteLine($"⚠️ Skipping sheet '{sheetName}' (Not in selected entities).");
-                continue;
-            }
-
-            var entityType = EntityRegistry.GetEntityType(sheetName);
+            var entityType = EntityRegistry.GetEntityType(sheetName, fileName);
 
             if (entityType == null)
             {
@@ -103,7 +92,7 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
 
             var uniqueKey = $"{fileName}_{sheetName}";
             var newChecksum = filePath.ComputeFileHash();
-
+            /*
             var existingRecords = await mediator.Send(new RepositoryQuery
             {
                 FileName = fileName,
@@ -118,7 +107,7 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
             {
                 Console.WriteLine($"✅ No changes detected for {uniqueKey}. Using existing data.");
                 return;
-            }
+            }*/
 
 
             var newRecords = ReadExcel(entityType, worksheet);
