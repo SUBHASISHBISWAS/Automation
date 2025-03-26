@@ -17,7 +17,7 @@
 // FileName: DynamicEntityManager.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-26
-// Updated by SUBHASISH BISWAS On: 2025-03-26
+// Updated by SUBHASISH BISWAS On: 2025-03-27
 //  ******************************************************************************/
 
 #endregion
@@ -25,6 +25,7 @@
 #region
 
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Reflection;
 using Alstom.Spectrail.ICD.Application.Registry;
 using Alstom.Spectrail.Server.Common.Entities;
@@ -39,7 +40,8 @@ public static class DynamicEntityManager
 
     public static async Task<List<Type>> LoadOrRegisterEntitiesAsync(IEnumerable<string> fileNames)
     {
-        var normalizedFiles = fileNames
+        var enumerable = fileNames as string[] ?? fileNames.ToArray();
+        var normalizedFiles = enumerable
             .Select(f => f.GetFileNameWithoutExtension().ToLowerInvariant().Trim())
             .Distinct()
             .ToList();
@@ -57,10 +59,12 @@ public static class DynamicEntityManager
                 continue;
             }
 
+            var filePath = enumerable.FirstOrDefault(x => x.Contains(file, StringComparison.OrdinalIgnoreCase));
             if (!dllDirectoryExists)
             {
                 Console.WriteLine("⚠️ DynamicEntities directory not found. Triggering fallback generation...");
-                var generated = EntityRegistry.RegisterEntity([file]);
+                Debug.Assert(filePath != null, nameof(filePath) + " != null");
+                var generated = EntityRegistry.RegisterEntity([filePath]);
                 _entityTypeCache[file] = generated;
                 loadedTypes.AddRange(generated);
                 continue;
@@ -80,8 +84,7 @@ public static class DynamicEntityManager
                 {
                     var assembly = Assembly.LoadFrom(dllPath);
                     var allTypes = assembly.GetTypes()
-                        .Where(t => t.IsClass &&
-                                    t.Namespace == SpectrailConstants.DynamicAssemblyName &&
+                        .Where(t => t is { IsClass: true, Namespace: SpectrailConstants.DynamicAssemblyName } &&
                                     typeof(EntityBase).IsAssignableFrom(t))
                         .ToList();
 
