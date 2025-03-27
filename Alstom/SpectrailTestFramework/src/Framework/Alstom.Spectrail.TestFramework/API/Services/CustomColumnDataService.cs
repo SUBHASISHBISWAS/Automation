@@ -37,7 +37,10 @@ public class CustomColumnDataService(ApiClient client) : IApiService
 {
     public async Task<List<CustomColumnRecords>?> GetCustomColumnByEquipment(string fileName, string sheetName)
     {
-        var request = new RestRequest($"/GetCustomColumnByEquipment?fileName={fileName}&sheetName={sheetName}");
+        var url =
+            $"https://localhost:5000/api/v1/CustomColumn/GetCustomColumnByEquipment?fileName={fileName}&sheetName={sheetName}";
+        var otherUrl = $"/GetCustomColumnByEquipment?fileName={fileName}&sheetName={sheetName}";
+        var request = new RestRequest(url);
         var response = await client.ExecuteAsync(request);
 
         if (!response.IsSuccessful) throw new Exception($"❌ API Error: {response.ErrorMessage}");

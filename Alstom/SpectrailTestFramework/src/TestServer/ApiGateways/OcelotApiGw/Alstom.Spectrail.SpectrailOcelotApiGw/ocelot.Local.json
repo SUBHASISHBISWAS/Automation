@@ -1,7 +1,7 @@
 {
   "Routes": [
     {
-      "DownstreamPathTemplate": "/api/v1/ICD/all?fileName={fileName}",
+      "DownstreamPathTemplate": "/api/v1/GetCustomColumnByEquipment?fileName={fileName}&sheetName={sheetName}",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -9,9 +9,79 @@
           "Port": "5000"
         }
       ],
-      "UpstreamPathTemplate": "/ICD/all?fileName={fileName}",
+      "UpstreamPathTemplate": "/CustomColumn/GetCustomColumnByEquipment?fileName={fileName}&sheetName={sheetName}",
       "UpstreamHttpMethod": [
         "GET"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/GetAllCustomColumns?fileName={fileName}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": "5000"
+        }
+      ],
+      "UpstreamPathTemplate": "/CustomColumn/GetAllCustomColumns?fileName={fileName}",
+      "UpstreamHttpMethod": [
+        "GET"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/RegisterICDFile?fileName={fileName}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": "5000"
+        }
+      ],
+      "UpstreamPathTemplate": "/CustomColumn/RegisterICDFile?fileName={fileName}",
+      "UpstreamHttpMethod": [
+        "POST"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/DeleteICDRecord?fileName={fileName}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": "5000"
+        }
+      ],
+      "UpstreamPathTemplate": "/CustomColumn/DeleteICDRecord?fileName={fileName}",
+      "UpstreamHttpMethod": [
+        "DELETE"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/DeleteAllICDRecord",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": "5000"
+        }
+      ],
+      "UpstreamPathTemplate": "/CustomColumn/DeleteAllICDRecord",
+      "UpstreamHttpMethod": [
+        "DELETE"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/ResetServer",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": "5000"
+        }
+      ],
+      "UpstreamPathTemplate": "/CustomColumn/ResetServer",
+      "UpstreamHttpMethod": [
+        "POST"
       ]
     }
   ],
