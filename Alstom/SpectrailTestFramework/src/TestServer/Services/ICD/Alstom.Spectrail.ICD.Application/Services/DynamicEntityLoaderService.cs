@@ -17,7 +17,7 @@
 // FileName: DynamicEntityLoaderService.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-27
-// Updated by SUBHASISH BISWAS On: 2025-03-27
+// Updated by SUBHASISH BISWAS On: 2025-03-28
 //  ******************************************************************************/
 
 #endregion
@@ -120,6 +120,49 @@ public class DynamicEntityLoaderService(ILifetimeScope rootScope) : IDynamicEnti
 
         Console.WriteLine($"❌ Entity type '{fullTypeName}' not found in cache for key: {key}");
         return null;
+    }
+
+    public async Task ClearEntityCacheAsync(IEnumerable<string>? fileNames = null, bool deleteFolder = false)
+    {
+        if (deleteFolder)
+        {
+            // 🔥 Full wipe
+            if (Directory.Exists(_dllDirectory))
+            {
+                Directory.Delete(_dllDirectory, true);
+                Console.WriteLine($"🧹 Deleted entire folder: {_dllDirectory}");
+            }
+
+            _cache.Clear();
+            Console.WriteLine("🧼 Cleared in-memory entity cache.");
+            return;
+        }
+
+        var normalized = fileNames
+            .Select(f => f.GetFileNameWithoutExtension().ToLowerInvariant())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        foreach (var fileKey in normalized)
+        {
+            var matchingDlls = Directory.Exists(_dllDirectory)
+                ? Directory.GetFiles(_dllDirectory, $"*.{fileKey}.DynamicEntities.dll", SearchOption.TopDirectoryOnly)
+                : Array.Empty<string>();
+
+            foreach (var dll in matchingDlls)
+                try
+                {
+                    File.Delete(dll);
+                    Console.WriteLine($"🗑 Deleted DLL: {dll}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"⚠️ Failed to delete DLL '{dll}': {ex.Message}");
+                }
+
+            if (_cache.TryRemove(fileKey, out _))
+                Console.WriteLine($"✅ Cleared cache for file: {fileKey}");
+        }
     }
 
     private async Task<List<Type>> LoadFromDllAsync(string dllPath, string fileKey)

@@ -27,6 +27,7 @@
 using Alstom.Spectrail.ICD.Application.Features.ResetServer.Commands.Command;
 using Alstom.Spectrail.ICD.Application.Utility;
 using Alstom.Spectrail.Server.Common.Configuration;
+using Alstom.Spectrail.Server.Common.Contracts;
 using Alstom.Spectrail.Server.Common.ServerUtility;
 using MediatR;
 
@@ -34,7 +35,9 @@ using MediatR;
 
 namespace Alstom.Spectrail.ICD.Application.Features.ResetServer.Commands.Handler;
 
-public class ResetSpectrailServerCommandHandler(IServerConfigHelper configHelper)
+public class ResetSpectrailServerCommandHandler(
+    IServerConfigHelper configHelper,
+    IDynamicEntityLoader dynamicEntityLoader)
     : IRequestHandler<ResetSpectrailServerCommand, bool>
 {
     public async Task<bool> Handle(ResetSpectrailServerCommand request, CancellationToken cancellationToken)
@@ -51,7 +54,7 @@ public class ResetSpectrailServerCommandHandler(IServerConfigHelper configHelper
                 $"{SpectrailConstants.RedisPrefix}:",
                 $"{SpectrailConstants.DynamicEntitiesFolder}"
             );
-
+            await dynamicEntityLoader.ClearEntityCacheAsync(deleteFolder: true);
             return true;
         }
         catch (Exception ex)

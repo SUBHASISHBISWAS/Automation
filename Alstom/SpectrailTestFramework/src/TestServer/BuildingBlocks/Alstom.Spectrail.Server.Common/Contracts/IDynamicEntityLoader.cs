@@ -17,7 +17,7 @@
 // FileName: IDynamicEntityLoader.cs
 // ProjectName: Alstom.Spectrail.Server.Common
 // Created by SUBHASISH BISWAS On: 2025-03-27
-// Updated by SUBHASISH BISWAS On: 2025-03-27
+// Updated by SUBHASISH BISWAS On: 2025-03-28
 //  ******************************************************************************/
 
 #endregion
@@ -28,4 +28,6 @@ public interface IDynamicEntityLoader
 {
     Task<List<Type>> LoadOrRegisterEntitiesAsync(IEnumerable<string> changedFiles);
     Type? GetEntityType(string entityName, string? fileName = null);
+
+    Task ClearEntityCacheAsync(IEnumerable<string>? fileNames = null, bool deleteFolder = false);
 }

@@ -34,7 +34,8 @@ using MediatR;
 
 namespace Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Handlers;
 
-public class RepositoryCommandHandler(IAsyncRepository repository) : IRequestHandler<RepositoryCommand, bool>
+public class RepositoryCommandHandler(IAsyncRepository repository, IDynamicEntityLoader dynamicEntityLoader) :
+    IRequestHandler<RepositoryCommand, bool>
 
 {
     private static readonly Dictionary<string, MethodInfo> _methodCache = typeof(IAsyncRepository)
@@ -51,6 +52,7 @@ public class RepositoryCommandHandler(IAsyncRepository repository) : IRequestHan
         {
             if (!_methodCache.TryGetValue(request.Operation, out var method))
                 throw new InvalidOperationException($"❌ Operation '{request.Operation}' not found in repository!");
+
             object?[] parameters = method.GetParameters().Length switch
             {
                 1 when request.Entities != null => [request.Entities],
@@ -59,12 +61,23 @@ public class RepositoryCommandHandler(IAsyncRepository repository) : IRequestHan
             };
 
             var result = method.Invoke(repository, parameters);
-            return await (result switch
+
+            var operationResult = await (result switch
             {
                 Task<bool> taskBool => taskBool,
                 Task task => task.ContinueWith(_ => true, cancellationToken),
                 _ => Task.FromResult(true)
             });
+
+            // ✅ If delete or delete all, clear cache accordingly
+            if (!operationResult || request.Operation is not ("Delete" or "DeleteAll")) return operationResult;
+            if (dynamicEntityLoader is not { } loader) return operationResult;
+            if (request.Operation.Equals("DeleteAll", StringComparison.OrdinalIgnoreCase))
+                await loader.ClearEntityCacheAsync(deleteFolder: true);
+            else if (!string.IsNullOrWhiteSpace(request.FileName))
+                await loader.ClearEntityCacheAsync([request.FileName]);
+
+            return operationResult;
         }
         catch (Exception ex)
         {
