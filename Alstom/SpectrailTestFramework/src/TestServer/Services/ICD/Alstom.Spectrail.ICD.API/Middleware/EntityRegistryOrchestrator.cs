@@ -56,39 +56,32 @@ public class EntityRegistryOrchestrator(
             async key => (await _redisDb.StringGetAsync(key)).ToString(),
             async (key, value) => await _redisDb.StringSetAsync(key, value)
         );
-        var loadedDynamicTypes = await RegisterOrLoadExistingDynamicEntities(changedFiles);
+        _ = await RegisterOrLoadExistingDynamicEntities(changedFiles);
         if (changedFiles.Count == 0) return;
-        if (loadedDynamicTypes.Count > 0)
+        if (hasFolderChanged)
         {
-            /*rootScope.BeginLifetimeScope(builder =>
-                DynamicRepositoryRegistrar.RegisterRepositoryHandlers(builder, loadedDynamicTypes));
-
-            foreach (var entityType in loadedDynamicTypes)
-                EntityRegistry.MapperConfig.CreateMap(entityType, typeof(CustomColumnDto)).ReverseMap();*/
-
-            if (hasFolderChanged)
+            Console.WriteLine("⚠️ Folder of File Changed! Updating Entities...");
+            var seeded = await mediator.Send(new SeedICDDataCommand { ICDFiles = changedFiles });
+            if (seeded)
             {
-                var seeded = await mediator.Send(new SeedICDDataCommand { ICDFiles = changedFiles });
-                if (seeded)
-                {
-                    await _redisDb.StringSetAsync(RedisKeyRegistryCompleted, "true", TimeSpan.FromHours(12));
-                    Console.WriteLine("✅ MongoDB Seeding Completed!");
-                }
-                else
-                {
-                    Console.WriteLine("⚠️ MongoDB Seeding Failed!");
-                }
+                await _redisDb.StringSetAsync(RedisKeyRegistryCompleted, "true", TimeSpan.FromHours(12));
+                Console.WriteLine("✅ MongoDB Seeding Completed!");
             }
             else
             {
-                Console.WriteLine("✅ No entity or folder changes. Skipping.");
+                Console.WriteLine("⚠️ MongoDB Seeding Failed!");
             }
+        }
+        else
+        {
+            Console.WriteLine("✅ No entity or folder changes. Skipping.");
         }
     }
 
     private async Task<List<Type>>
         RegisterOrLoadExistingDynamicEntities(List<string> icdFiles)
     {
+        Console.WriteLine("✅ Loading Compiled Entities...");
         return await dynamicEntityLoader.LoadOrRegisterEntitiesAsync(icdFiles);
     }
 
