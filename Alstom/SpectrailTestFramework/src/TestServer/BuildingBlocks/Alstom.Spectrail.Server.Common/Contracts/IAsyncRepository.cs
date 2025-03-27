@@ -17,7 +17,7 @@
 // FileName: IAsyncRepository.cs
 // ProjectName: Alstom.Spectrail.Server.Common
 // Created by SUBHASISH BISWAS On: 2025-03-04
-// Updated by SUBHASISH BISWAS On: 2025-03-21
+// Updated by SUBHASISH BISWAS On: 2025-03-27
 //  ******************************************************************************/
 
 #endregion
@@ -35,7 +35,7 @@ namespace Alstom.Spectrail.Server.Common.Contracts;
 public interface IAsyncRepository
 {
     [RepositoryOperation("GetAll")]
-    Task<IEnumerable<EntityBase>> GetAllAsync(string? fileName = null, string? sheetName = null);
+    Task<IEnumerable<EntityBase>> GetEntityAsync(string fileName, string sheetName);
 
     [RepositoryOperation("GetById")]
     Task<EntityBase> GetByIdAsync(string id);

@@ -85,7 +85,7 @@ public class MongoDataProvider(IICDDbContext icdDataContext) : IDataProvider
         return false;
     }
 
-    public async Task<IEnumerable<EntityBase>> GetAllAsync(string fileName, string sheetName)
+    public async Task<IEnumerable<EntityBase>> GetEntityAsync(string fileName, string sheetName)
     {
         var allEntities = new List<EntityBase>();
 
