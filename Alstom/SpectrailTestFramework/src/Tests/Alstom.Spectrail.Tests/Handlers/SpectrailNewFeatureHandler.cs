@@ -16,8 +16,8 @@
 // Email: subhasish.biswas@alstomgroup.com
 // FileName: SpectrailNewFeatureHandler.cs
 // ProjectName: Alstom.Spectrail.Tests
-// Created by SUBHASISH BISWAS On: 2025-03-13
-// Updated by SUBHASISH BISWAS On: 2025-03-19
+// Created by SUBHASISH BISWAS On: 2025-03-19
+// Updated by SUBHASISH BISWAS On: 2025-03-28
 //  ******************************************************************************/
 
 #endregion
@@ -53,11 +53,19 @@ public class SpectrailNewFeatureHandler(
             "Invalid PageObject type.");
 
     private string _fileName = string.Empty;
+    private string _sheetName = string.Empty;
 
     public SpectrailNewFeatureHandler WithFileName(string fileName)
     {
         ArgumentNullException.ThrowIfNull(fileName);
         _fileName = fileName;
+        return this;
+    }
+
+    public SpectrailNewFeatureHandler WithSheetName(string sheetName)
+    {
+        ArgumentNullException.ThrowIfNull(sheetName);
+        _sheetName = sheetName;
         return this;
     }
 
@@ -68,6 +76,6 @@ public class SpectrailNewFeatureHandler(
                 _apiServiceFactory.GetService("CustomColumnDataService") as CustomColumnDataService ??
                 throw new ArgumentNullException(nameof(CustomColumnDataService))
             ;
-        var userResponse = await customColumnDataService.GetDCUAsync(_fileName);
+        var userResponse = await customColumnDataService.GetCustomColumnByEquipment(_fileName, _sheetName);
     }
 }

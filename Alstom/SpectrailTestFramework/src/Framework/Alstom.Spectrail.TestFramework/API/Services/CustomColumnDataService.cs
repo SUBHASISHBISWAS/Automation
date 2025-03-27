@@ -16,8 +16,8 @@
 // Email: subhasish.biswas@alstomgroup.com
 // FileName: CustomColumnDataService.cs
 // ProjectName: Alstom.Spectrail.TestFramework
-// Created by SUBHASISH BISWAS On: 2025-03-13
-// Updated by SUBHASISH BISWAS On: 2025-03-19
+// Created by SUBHASISH BISWAS On: 2025-03-19
+// Updated by SUBHASISH BISWAS On: 2025-03-28
 //  ******************************************************************************/
 
 #endregion
@@ -35,13 +35,10 @@ namespace Alstom.Spectrail.TestFramework.API.Services;
 
 public class CustomColumnDataService(ApiClient client) : IApiService
 {
-    public async Task<List<CustomColumnRecords>?> GetDCUAsync(string? fileName = null)
+    public async Task<List<CustomColumnRecords>?> GetCustomColumnByEquipment(string fileName, string sheetName)
     {
-        var request = new RestRequest($"/DCU?fileName={fileName}");
+        var request = new RestRequest($"/GetCustomColumnByEquipment?fileName={fileName}&sheetName={sheetName}");
         var response = await client.ExecuteAsync(request);
-
-        //request = new RestRequest("/all");
-        //response = await client.ExecuteAsync(request);
 
         if (!response.IsSuccessful) throw new Exception($"❌ API Error: {response.ErrorMessage}");
 
