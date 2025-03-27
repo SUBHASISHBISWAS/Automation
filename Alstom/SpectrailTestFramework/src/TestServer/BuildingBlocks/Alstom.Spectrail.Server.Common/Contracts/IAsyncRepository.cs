@@ -17,14 +17,13 @@
 // FileName: IAsyncRepository.cs
 // ProjectName: Alstom.Spectrail.Server.Common
 // Created by SUBHASISH BISWAS On: 2025-03-04
-// Updated by SUBHASISH BISWAS On: 2025-03-27
+// Updated by SUBHASISH BISWAS On: 2025-03-28
 //  ******************************************************************************/
 
 #endregion
 
 #region
 
-using System.Linq.Expressions;
 using Alstom.Spectrail.Server.Common.Attributes;
 using Alstom.Spectrail.Server.Common.Entities;
 
@@ -34,23 +33,17 @@ namespace Alstom.Spectrail.Server.Common.Contracts;
 
 public interface IAsyncRepository
 {
-    [RepositoryOperation("GetAll")]
+    [RepositoryOperation("GetEntity")]
     Task<IEnumerable<EntityBase>> GetEntityAsync(string fileName, string sheetName);
 
-    [RepositoryOperation("GetById")]
-    Task<EntityBase> GetByIdAsync(string id);
-
-    [RepositoryOperation("GetByFilter")]
-    Task<IEnumerable<EntityBase>> GetByFilterAsync(Expression<Func<EntityBase, bool>> filter);
-
-    [RepositoryOperation("Add")]
-    Task AddAsync(EntityBase entity);
+    [RepositoryOperation("GetEntitiesByFile")]
+    Task<Dictionary<string, List<EntityBase>>> GetEntitiesByFileAsync(string fileName);
 
     [RepositoryOperation("Update")]
     Task<bool> UpdateAsync(string id, EntityBase entity);
 
     [RepositoryOperation("Delete")]
-    Task<bool> DeleteAsync(string id);
+    Task<bool> DeleteAsync(string collectionName);
 
     /// <summary>
     ///     ✅ Adds multiple records efficiently in batch.

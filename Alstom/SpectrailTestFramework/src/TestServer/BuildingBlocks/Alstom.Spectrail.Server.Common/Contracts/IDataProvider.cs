@@ -17,14 +17,13 @@
 // FileName: IDataProvider.cs
 // ProjectName: Alstom.Spectrail.Server.Common
 // Created by SUBHASISH BISWAS On: 2025-03-04
-// Updated by SUBHASISH BISWAS On: 2025-03-27
+// Updated by SUBHASISH BISWAS On: 2025-03-28
 //  ******************************************************************************/
 
 #endregion
 
 #region
 
-using System.Linq.Expressions;
 using Alstom.Spectrail.Server.Common.Entities;
 
 #endregion
@@ -34,11 +33,14 @@ namespace Alstom.Spectrail.Server.Common.Contracts;
 public interface IDataProvider
 {
     Task<IEnumerable<EntityBase>> GetEntityAsync(string fileName, string sheetName);
-    Task<EntityBase> GetByIdAsync(string id);
-    Task<IEnumerable<EntityBase>> GetByFilterAsync(Expression<Func<EntityBase, bool>> filter);
-    Task AddAsync(EntityBase entity);
+
+    Task<Dictionary<string, List<EntityBase>>> GetEntitiesByFileAsync(string fileName);
+
+    //Task<EntityBase> GetByIdAsync(string id);
+    //Task<IEnumerable<EntityBase>> GetByFilterAsync(Expression<Func<EntityBase, bool>> filter);
+    //Task AddAsync(EntityBase entity);
     Task<bool> UpdateAsync(string id, EntityBase entity);
-    Task<bool> DeleteAsync(string id);
+    Task<bool> DeleteAsync(string fileName);
 
     /// <summary>
     ///     ✅ Adds multiple records efficiently in batch.

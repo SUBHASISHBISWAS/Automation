@@ -17,7 +17,7 @@
 // FileName: RepositoryCommandHandler.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-12
-// Updated by SUBHASISH BISWAS On: 2025-03-21
+// Updated by SUBHASISH BISWAS On: 2025-03-28
 //  ******************************************************************************/
 
 #endregion
@@ -53,9 +53,8 @@ public class RepositoryCommandHandler(IAsyncRepository repository) : IRequestHan
                 throw new InvalidOperationException($"❌ Operation '{request.Operation}' not found in repository!");
             object?[] parameters = method.GetParameters().Length switch
             {
-                1 when request.Entity != null => [request.Entity],
                 1 when request.Entities != null => [request.Entities],
-                1 when request.Id != null => [request.Id],
+                1 when request.FileName != null => [request.FileName],
                 _ => []
             };
 

@@ -17,14 +17,13 @@
 // FileName: RepositoryBase.cs
 // ProjectName: Alstom.Spectrail.Server.Common
 // Created by SUBHASISH BISWAS On: 2025-03-04
-// Updated by SUBHASISH BISWAS On: 2025-03-27
+// Updated by SUBHASISH BISWAS On: 2025-03-28
 //  ******************************************************************************/
 
 #endregion
 
 #region
 
-using System.Linq.Expressions;
 using Alstom.Spectrail.Server.Common.Contracts;
 using Alstom.Spectrail.Server.Common.Entities;
 
@@ -35,22 +34,14 @@ namespace Alstom.Spectrail.Server.Common.Repository;
 public class RepositoryBase(IDataProvider dataProvider) : IAsyncRepository
 
 {
-    public async Task<bool> DeleteAsync(string id)
+    public async Task<bool> DeleteAsync(string collectionName)
     {
-        return await dataProvider.DeleteAsync(id);
+        return await dataProvider.DeleteAsync(collectionName);
     }
 
     public async Task<bool> DeleteAllAsync()
     {
         return await dataProvider.DeleteAllAsync();
-    }
-
-    /// <summary>
-    ///     ✅ Saves a new entity in MongoDB.
-    /// </summary>
-    public async Task AddAsync(EntityBase entity)
-    {
-        await dataProvider.AddAsync(entity);
     }
 
     public async Task<bool> UpdateAsync(string id, EntityBase entity)
@@ -69,18 +60,13 @@ public class RepositoryBase(IDataProvider dataProvider) : IAsyncRepository
         await dataProvider.SeedDataAsync(entities);
     }
 
-    public async Task<EntityBase> GetByIdAsync(string id)
-    {
-        return await dataProvider.GetByIdAsync(id);
-    }
-
-    public async Task<IEnumerable<EntityBase>> GetByFilterAsync(Expression<Func<EntityBase, bool>> filter)
-    {
-        return await dataProvider.GetByFilterAsync(filter);
-    }
-
     public async Task<IEnumerable<EntityBase>> GetEntityAsync(string fileName, string sheetName)
     {
         return await dataProvider.GetEntityAsync(fileName, sheetName);
+    }
+
+    public async Task<Dictionary<string, List<EntityBase>>> GetEntitiesByFileAsync(string fileName)
+    {
+        return await dataProvider.GetEntitiesByFileAsync(fileName);
     }
 }

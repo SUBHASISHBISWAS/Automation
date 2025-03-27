@@ -14,9 +14,9 @@
 //  /*******************************************************************************
 // AuthorName: SUBHASISH BISWAS
 // Email: subhasish.biswas@alstomgroup.com
-// FileName: RepositoryCommand.cs
+// FileName: GetEntitiesByFileCommand.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
-// Created by SUBHASISH BISWAS On: 2025-03-12
+// Created by SUBHASISH BISWAS On: 2025-03-28
 // Updated by SUBHASISH BISWAS On: 2025-03-28
 //  ******************************************************************************/
 
@@ -24,7 +24,6 @@
 
 #region
 
-using Alstom.Spectrail.ICD.Application.Enums;
 using Alstom.Spectrail.Server.Common.Entities;
 using MediatR;
 
@@ -32,14 +31,4 @@ using MediatR;
 
 namespace Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
 
-public class RepositoryCommand(
-    RepositoryOperation operation,
-    IEnumerable<EntityBase>? entities = null,
-    string? fileName = null)
-    : IRequest<bool>
-{
-    public string Operation { get; } = operation.ToString();
-    public IEnumerable<EntityBase>? Entities { get; } = entities;
-
-    public string? FileName { get; set; } = fileName;
-}
+public record GetEntitiesByFileCommand(string FileName) : IRequest<Dictionary<string, List<EntityBase>>>;

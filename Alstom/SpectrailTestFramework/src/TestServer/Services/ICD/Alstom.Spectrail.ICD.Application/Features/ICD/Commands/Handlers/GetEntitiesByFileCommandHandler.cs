@@ -14,9 +14,9 @@
 //  /*******************************************************************************
 // AuthorName: SUBHASISH BISWAS
 // Email: subhasish.biswas@alstomgroup.com
-// FileName: RepositoryCommand.cs
+// FileName: GetEntitiesByFileCommandHandler.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
-// Created by SUBHASISH BISWAS On: 2025-03-12
+// Created by SUBHASISH BISWAS On: 2025-03-28
 // Updated by SUBHASISH BISWAS On: 2025-03-28
 //  ******************************************************************************/
 
@@ -24,22 +24,29 @@
 
 #region
 
-using Alstom.Spectrail.ICD.Application.Enums;
+using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
+using Alstom.Spectrail.Server.Common.Contracts;
 using Alstom.Spectrail.Server.Common.Entities;
 using MediatR;
 
 #endregion
 
-namespace Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
+namespace Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Handlers;
 
-public class RepositoryCommand(
-    RepositoryOperation operation,
-    IEnumerable<EntityBase>? entities = null,
-    string? fileName = null)
-    : IRequest<bool>
+public class
+    GetEntitiesByFileCommandHandler(IAsyncRepository repository)
+    : IRequestHandler<GetEntitiesByFileCommand, Dictionary<string, List<EntityBase>>>
 {
-    public string Operation { get; } = operation.ToString();
-    public IEnumerable<EntityBase>? Entities { get; } = entities;
+    private readonly IAsyncRepository _repository = repository ?? throw new ArgumentNullException(nameof(repository));
 
-    public string? FileName { get; set; } = fileName;
+    public async Task<Dictionary<string, List<EntityBase>>> Handle(GetEntitiesByFileCommand request,
+        CancellationToken cancellationToken)
+    {
+        var fileName = request.FileName;
+
+        if (string.IsNullOrWhiteSpace(fileName))
+            throw new ArgumentException("❌ File name is required.", nameof(request.FileName));
+
+        return await repository.GetEntitiesByFileAsync(fileName);
+    }
 }

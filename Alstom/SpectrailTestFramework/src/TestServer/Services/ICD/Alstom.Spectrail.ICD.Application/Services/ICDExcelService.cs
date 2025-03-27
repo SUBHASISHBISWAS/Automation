@@ -17,7 +17,7 @@
 // FileName: ICDExcelService.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-22
-// Updated by SUBHASISH BISWAS On: 2025-03-26
+// Updated by SUBHASISH BISWAS On: 2025-03-28
 //  ******************************************************************************/
 
 #endregion
@@ -194,16 +194,7 @@ public class ICDExcelService(IMediator mediator, IServerConfigHelper configHelpe
     private async Task ExecuteRepositoryCommand<T>(bool isEagerLoading, List<T> newRecords) where T : EntityBase
     {
         if (isEagerLoading)
-        {
-            //mediator.SendRepositoryCommandAsync();
-            await mediator.Send(new RepositoryCommand(RepositoryOperation.DeleteAll));
-            await mediator.Send(new RepositoryCommand(RepositoryOperation.SeedData, entities: newRecords));
-        }
-        else
-        {
-            foreach (var record in newRecords)
-                await mediator.Send(new RepositoryCommand(RepositoryOperation.Add, record));
-        }
+            await mediator.Send(new RepositoryCommand(RepositoryOperation.SeedData, newRecords));
     }
 
     private static string ComputeChecksumFromProperties(object obj)

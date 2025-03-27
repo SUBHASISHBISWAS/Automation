@@ -17,14 +17,13 @@
 // FileName: MongoDataProvider.cs
 // ProjectName: Alstom.Spectrail.ICD.Infrastructure
 // Created by SUBHASISH BISWAS On: 2025-03-20
-// Updated by SUBHASISH BISWAS On: 2025-03-27
+// Updated by SUBHASISH BISWAS On: 2025-03-28
 //  ******************************************************************************/
 
 #endregion
 
 #region
 
-using System.Linq.Expressions;
 using Alstom.Spectrail.ICD.Application.Contracts;
 using Alstom.Spectrail.ICD.Application.Registry;
 using Alstom.Spectrail.Server.Common.Contracts;
@@ -45,23 +44,32 @@ public class MongoDataProvider(IICDDbContext icdDataContext) : IDataProvider
     /// <summary>
     ///     ✅ Deletes a record by ID.
     /// </summary>
-    public async Task<bool> DeleteAsync(string id)
+    public async Task<bool> DeleteAsync(string fileName)
     {
-        /*try
+        try
         {
-            Debug.Assert(_collection is not null, $"{nameof(_collection)} is null");
+            var collectionName = Path.GetFileNameWithoutExtension(fileName)?.Replace(" ", "_").ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(collectionName))
+            {
+                Console.WriteLine("⚠️ Invalid file name provided. Cannot resolve collection.");
+                return false;
+            }
 
-            var filter = Builders<T>.Filter.Eq("Id", id);
-            var result = await _collection.DeleteOneAsync(filter);
+            await _icdDatabase.DropCollectionAsync(collectionName);
+            Console.WriteLine($"🗑 Dropped collection: {collectionName}");
 
-            return result.IsAcknowledged && result.DeletedCount > 0;
+            return true;
+        }
+        catch (MongoCommandException ex) when (ex.CodeName == "NamespaceNotFound")
+        {
+            Console.WriteLine($"⚠️ Collection not found: {fileName}");
+            return false;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ Error deleting record with ID {id}: {ex.Message}");
-            throw new InvalidOperationException($"Error deleting record with ID {id}.", ex);
-        }*/
-        return false;
+            Console.WriteLine($"❌ Error dropping collection for file '{fileName}': {ex.Message}");
+            throw new InvalidOperationException($"Failed to drop MongoDB collection for file: {fileName}", ex);
+        }
     }
 
     /// <summary>
@@ -69,20 +77,33 @@ public class MongoDataProvider(IICDDbContext icdDataContext) : IDataProvider
     /// </summary>
     public async Task<bool> DeleteAllAsync()
     {
-        /*try
+        try
         {
-            Debug.Assert(_collection is not null, $"{nameof(_collection)} is null");
+            var collectionNames = await (await _icdDatabase.ListCollectionNamesAsync()).ToListAsync();
+            if (!collectionNames.Any())
+            {
+                Console.WriteLine("⚠️ No collections found to delete.");
+                return false;
+            }
 
-            var result = await _collection.DeleteManyAsync(_ => true);
-            return result.DeletedCount > 0;
+            foreach (var name in collectionNames)
+                try
+                {
+                    await _icdDatabase.DropCollectionAsync(name);
+                    Console.WriteLine($"🗑 Dropped collection: {name}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"❌ Failed to drop collection '{name}': {ex.Message}");
+                }
+
+            return true;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ Error deleting all records: {ex.Message}");
-            throw new InvalidOperationException("Error deleting all records from MongoDB.", ex);
-        }*/
-
-        return false;
+            Console.WriteLine($"❌ Error dropping all collections: {ex.Message}");
+            throw new InvalidOperationException("Error dropping all MongoDB collections.", ex);
+        }
     }
 
     public async Task<IEnumerable<EntityBase>> GetEntityAsync(string fileName, string sheetName)
@@ -136,44 +157,6 @@ public class MongoDataProvider(IICDDbContext icdDataContext) : IDataProvider
             Console.WriteLine($"❌ Error retrieving entities: {ex.Message}");
             throw new InvalidOperationException("An unexpected error occurred while retrieving entities.", ex);
         }
-    }
-
-
-    /// <summary>
-    ///     ✅ Retrieves a record by ID.
-    /// </summary>
-    public async Task<EntityBase> GetByIdAsync(string id)
-    {
-        /*try
-        {
-            Debug.Assert(_collection is not null, $"{nameof(_collection)} is null");
-            var filter = Builders<T>.Filter.Eq("_id", ObjectId.Parse(id)); // Use `_id`
-            return await _collection.Find(filter).FirstOrDefaultAsync();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"❌ Error fetching record with ID {id}: {ex.Message}");
-            throw new InvalidOperationException($"Error retrieving record with ID {id}.", ex);
-        }*/
-
-        return default!;
-    }
-
-    /// <summary>
-    ///     ✅ Adds a new record to MongoDB.
-    /// </summary>
-    public async Task AddAsync(EntityBase entity)
-    {
-        /*try
-        {
-            Debug.Assert(_collection is not null, $"{nameof(_collection)} is null");
-            await _collection.InsertOneAsync(entity);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"❌ Error inserting record: {ex.Message}");
-            throw new InvalidOperationException("Error adding record to MongoDB.", ex);
-        }*/
     }
 
     /// <summary>
@@ -288,24 +271,6 @@ public class MongoDataProvider(IICDDbContext icdDataContext) : IDataProvider
     }
 
     /// <summary>
-    ///     ✅ Retrieves records based on a filter.
-    /// </summary>
-    public async Task<IEnumerable<EntityBase>> GetByFilterAsync(Expression<Func<EntityBase, bool>> filter)
-    {
-        /*try
-        {
-            Debug.Assert(_collection is not null, $"{nameof(_collection)} is null");
-            return await _collection.Find(filter).ToListAsync();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"❌ Error fetching records with filter: {ex.Message}");
-            throw new InvalidOperationException("Error retrieving records based on the provided filter.", ex);
-        }*/
-        return new List<EntityBase>();
-    }
-
-    /// <summary>
     ///     ✅ Updates a record by ID.
     /// </summary>
     public async Task<bool> UpdateAsync(string id, EntityBase entity)
@@ -327,180 +292,72 @@ public class MongoDataProvider(IICDDbContext icdDataContext) : IDataProvider
         return false;
     }
 
-    private async Task<Dictionary<string, List<List<EntityBase>>>> GetStoredDataAsync(string? fileName = null)
+    public async Task<Dictionary<string, List<EntityBase>>> GetEntitiesByFileAsync(string fileName)
     {
+        var result = new Dictionary<string, List<EntityBase>>(StringComparer.OrdinalIgnoreCase);
+
         try
         {
-            var result = await GetAllEntityAsync(fileName);
+            if (string.IsNullOrWhiteSpace(fileName))
+                throw new ArgumentException("⚠️ File name cannot be null or empty.", nameof(fileName));
 
-            if (result is not List<EntityBase> allEntities || !allEntities.Any())
+            var mappings = await EntityRegistry.GetRegisteredEquipmentMappingsByFile(fileName);
+            if (mappings == null || !mappings.Any())
             {
-                Console.WriteLine("⚠️ No data found to convert.");
-                return new Dictionary<string, List<List<EntityBase>>>();
+                Console.WriteLine($"⚠️ No entity mappings found for file: {fileName}");
+                return result;
             }
 
-            // ✅ Group by file name (normalize to lowercase & remove extension)
-            var groupedByFile = allEntities
-                .Where(e => !string.IsNullOrWhiteSpace(e.FileName))
-                .GroupBy(e => Path.GetFileNameWithoutExtension(e.FileName!).ToLowerInvariant())
-                .ToDictionary(
-                    g => g.Key,
-                    g => g.ToList()
-                );
-
-            Dictionary<string, List<List<EntityBase>>> databaseResults = new();
-
-            foreach (var kvp in groupedByFile)
+            var collectionName = Path.GetFileNameWithoutExtension(fileName)?.ToLowerInvariant().Trim();
+            if (string.IsNullOrWhiteSpace(collectionName))
             {
-                var fileKey = kvp.Key;
-                var entities = kvp.Value;
-
-                // ✅ Group further by entity type inside the file (if needed)
-                var groupedByEntityType = entities
-                    .GroupBy(e => e.GetType().Name)
-                    .Select(g => g.ToList())
-                    .ToList();
-
-                databaseResults[fileKey] = groupedByEntityType;
-            }
-
-            Console.WriteLine("✅ Successfully grouped data by file name.");
-            return databaseResults;
-        }
-        catch (TypeLoadException ex)
-        {
-            Console.WriteLine($"❌ TypeLoadException: {ex.Message}");
-            throw new InvalidOperationException(
-                "Error loading dynamic type. Ensure the type was correctly created.",
-                ex);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"❌ Error converting data: {ex.Message}");
-            throw new InvalidOperationException("Error converting output to dictionary format.", ex);
-        }
-    }
-
-    private async Task<List<EntityBase>> GetAllEntityAsync(string? fileName = null)
-    {
-        try
-        {
-            List<EntityBase> allEntities = new();
-            List<string> collectionsToProcess;
-
-            if (string.IsNullOrEmpty(fileName))
-            {
-                Console.WriteLine("📌 Fetching all data from EntityRegistry...");
-                var allMappings = EntityRegistry.GetAllMappings();
-
-                if (!allMappings.Any())
-                {
-                    Console.WriteLine("⚠️ No entity mappings found in the registry.");
-                    return allEntities;
-                }
-
-                collectionsToProcess = allMappings
-                    .Select(m => Path.GetFileNameWithoutExtension(m.FileName).Replace(" ", "_").ToLower())
-                    .Distinct()
-                    .ToList();
-            }
-            else
-            {
-                collectionsToProcess = new List<string>
-                    { Path.GetFileNameWithoutExtension(fileName).Replace(" ", "_").ToLower() };
-            }
-
-            var availableCollections = (await _icdDatabase.ListCollectionNamesAsync()).ToList();
-            Console.WriteLine($"📌 Available collections in MongoDB: {string.Join(", ", availableCollections)}");
-
-            await ExtractEntitiesFromDocuments(collectionsToProcess, availableCollections, allEntities);
-
-            Console.WriteLine($"✅ Total entities retrieved: {allEntities.Count}");
-            return allEntities;
-        }
-        catch (MongoConnectionException ex)
-        {
-            Console.WriteLine($"❌ MongoDB connection error: {ex.Message}");
-            throw new InvalidOperationException("Error connecting to MongoDB.", ex);
-        }
-        catch (MongoCommandException ex)
-        {
-            Console.WriteLine($"❌ MongoDB command error: {ex.Message}");
-            throw new InvalidOperationException("Error executing command in MongoDB.", ex);
-        }
-        catch (KeyNotFoundException ex)
-        {
-            Console.WriteLine($"⚠️ Missing expected field: {ex.Message}");
-            return new List<EntityBase>();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"❌ Unexpected error: {ex.Message}");
-            throw new InvalidOperationException("An unexpected error occurred while retrieving data.", ex);
-        }
-    }
-
-    private async Task ExtractEntitiesFromDocuments(List<string> collectionsToProcess,
-        List<string> availableCollections, List<EntityBase> allEntities)
-    {
-        foreach (var collectionName in collectionsToProcess)
-        {
-            if (!availableCollections.Contains(collectionName))
-            {
-                Console.WriteLine($"⚠️ Collection '{collectionName}' does not exist.");
-                continue;
+                Console.WriteLine($"⚠️ Invalid collection name derived from file: {fileName}");
+                return result;
             }
 
             var collection = _icdDatabase.GetCollection<BsonDocument>(collectionName);
-            var documents = await collection.Find(new BsonDocument()).ToListAsync();
 
-            Console.WriteLine($"📌 Found {documents.Count} documents in '{collectionName}'");
-
-            if (!documents.Any())
+            foreach (var mapping in mappings)
             {
-                Console.WriteLine($"⚠️ No records found in '{collectionName}'");
-                continue;
+                var sheetName = mapping.SheetName;
+                var pascalName = char.ToUpper(sheetName[0]) + sheetName[1..].ToLowerInvariant();
+                var entityKey = $"{pascalName}Entity";
+
+                var entityType = EntityRegistry.GetEntityType(sheetName, fileName);
+                if (entityType == null)
+                {
+                    Console.WriteLine($"⚠️ Could not resolve type for '{entityKey}' in '{fileName}'");
+                    continue;
+                }
+
+                var filter = Builders<BsonDocument>.Filter.Eq("_t", entityKey);
+                var documents = await collection.Find(filter).ToListAsync();
+
+                var entities = new List<EntityBase>();
+                foreach (var doc in documents)
+                    try
+                    {
+                        var entity = (EntityBase)BsonSerializer.Deserialize(doc, entityType);
+                        entities.Add(entity);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"⚠️ Deserialization failed for '{entityKey}': {ex.Message}");
+                    }
+
+                result[sheetName] = entities;
+                Console.WriteLine($"✅ Retrieved {entities.Count} records for sheet '{sheetName}'");
             }
 
-            foreach (var doc in documents)
-            foreach (var element in doc.Elements)
-            {
-                if (element.Name == "_id") continue;
-
-                var entityTypeName = element.Name;
-                var correctEntityType = EntityRegistry.GetEntityType(entityTypeName);
-                if (correctEntityType == null)
-                {
-                    Console.WriteLine($"❌ Unable to resolve entity type for '{entityTypeName}'. Skipping...");
-                    continue;
-                }
-
-                Console.WriteLine($"✅ Using entity type: {correctEntityType.FullName}");
-
-                if (!doc.Contains(entityTypeName) || !doc[entityTypeName].IsBsonDocument)
-                {
-                    Console.WriteLine($"⚠️ Skipping '{entityTypeName}' as it is not a valid entity.");
-                    continue;
-                }
-
-                var entityDoc = doc[entityTypeName].AsBsonDocument;
-
-                if (!entityDoc.Contains("Entities") || !entityDoc["Entities"].IsBsonArray)
-                {
-                    Console.WriteLine($"⚠️ Skipping '{entityTypeName}' as it lacks a valid 'Entities' array.");
-                    continue;
-                }
-
-                var entities = entityDoc["Entities"]
-                    .AsBsonArray
-                    .Select(e => BsonSerializer.Deserialize(e.AsBsonDocument, correctEntityType))
-                    .OfType<EntityBase>()
-                    .ToList();
-
-                allEntities.AddRange(entities);
-            }
+            return result;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error retrieving entities for file '{fileName}': {ex.Message}");
+            throw new InvalidOperationException("An unexpected error occurred while retrieving entities by file.", ex);
         }
     }
+
 
     /// <summary>
     ///     ✅ Retrieves or initializes the collection dynamically based on `T` and `FileKey`

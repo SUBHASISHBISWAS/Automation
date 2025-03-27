@@ -29,7 +29,6 @@ using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Queries.Query;
 using Alstom.Spectrail.ICD.Application.Features.ResetServer.Commands.Command;
 using Alstom.Spectrail.ICD.Domain.DTO.ICD;
-using Alstom.Spectrail.Server.Common.Entities;
 using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -48,45 +47,91 @@ public class CustomColumnController(IMediator mediator, IMapper mapper) : Contro
     public async Task<ActionResult<List<CustomColumnDto>>> GetCustomColumnByEquipment([FromQuery] string fileName,
         [FromQuery] string sheetName)
     {
-        if (string.IsNullOrEmpty(fileName)) return BadRequest("❌ File name is required.");
-        if (string.IsNullOrEmpty(sheetName)) return BadRequest("❌ Sheet name is required.");
-
-        var data = await mediator.Send(new RepositoryQuery
+        try
         {
-            FileName = fileName,
-            SheetName = sheetName
-        });
+            if (string.IsNullOrEmpty(fileName)) return BadRequest("❌ File name is required.");
+            if (string.IsNullOrEmpty(sheetName)) return BadRequest("❌ Sheet name is required.");
 
-        if (!data.Any()) return NotFound($"⚠️ No records found for file: {fileName}");
-        return Ok(mapper.Map<List<CustomColumnDto>>(data));
+            var data = await mediator.Send(new RepositoryQuery
+            {
+                FileName = fileName,
+                SheetName = sheetName
+            });
+
+            if (!data.Any()) return NotFound($"⚠️ No records found for file: {fileName}");
+            return Ok(mapper.Map<List<CustomColumnDto>>(data));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error retrieving custom columns: {ex.Message}");
+            return StatusCode(500, "An unexpected error occurred while retrieving custom columns.");
+        }
     }
 
     [HttpGet("GetAllCustomColumns")]
     public async Task<IActionResult> GetAllCustomColumns([FromQuery] string fileName)
     {
         if (string.IsNullOrEmpty(fileName)) return BadRequest("❌ File name is required.");
+        try
+        {
+            var data = await mediator.Send(new GetEntitiesByFileCommand(fileName));
 
-        var data = await mediator.Send(new RepositoryQuery { FileName = fileName });
+            if (!data.Any()) return NotFound($"⚠️ No records found for file: {fileName}");
 
-        if (!data.Any()) return NotFound($"⚠️ No records found for file: {fileName}");
-
-        return Ok(data);
+            return Ok(data);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error retrieving custom columns: {ex.Message}");
+            return StatusCode(500, "An unexpected error occurred while retrieving custom columns.");
+        }
     }
 
     /// ✅ Add a single DCU record (Dynamically calls "AddAsync")
     [HttpPost("RegisterICDFile")]
     public async Task<IActionResult> RegisterICDFile([FromQuery] string filePath)
     {
-        var result = await mediator.Send(new RepositoryCommand(RepositoryOperation.Add, new EntityBase()));
-        return result ? Ok("✅ Record Added!") : BadRequest("❌ Failed to Add!");
+        try
+        {
+            var result = await mediator.Send(new RepositoryCommand(RepositoryOperation.Add, fileName: filePath));
+            return result ? Ok("✅ Record Added!") : BadRequest("❌ Failed to Add!");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error retrieving custom columns: {ex.Message}");
+            return StatusCode(500, "An unexpected error occurred while retrieving custom columns.");
+        }
     }
 
     /// ✅ Delete ICD Files
-    [HttpDelete("DeleteICDFile")]
-    public async Task<IActionResult> DeleteICDFile([FromQuery] string fileName)
+    [HttpDelete("DeleteICDRecord")]
+    public async Task<IActionResult> DeleteICDRecord([FromQuery] string fileName)
     {
-        var result = await mediator.Send(new RepositoryCommand(RepositoryOperation.DeleteAll));
-        return result ? Ok("✅ All Records Deleted!") : BadRequest("❌ Failed to Delete!");
+        try
+        {
+            var result = await mediator.Send(new RepositoryCommand(RepositoryOperation.Delete, fileName: fileName));
+            return result ? Ok("✅ All Records Deleted!") : BadRequest("❌ Failed to Delete!");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error retrieving custom columns: {ex.Message}");
+            return StatusCode(500, "An unexpected error occurred while retrieving custom columns.");
+        }
+    }
+
+    [HttpDelete("DeleteAllICDRecord")]
+    public async Task<IActionResult> DeleteAllICDRecord([FromQuery] string fileName)
+    {
+        try
+        {
+            var result = await mediator.Send(new RepositoryCommand(RepositoryOperation.DeleteAll));
+            return result ? Ok("✅ All Records Deleted!") : BadRequest("❌ Failed to Delete!");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error retrieving custom columns: {ex.Message}");
+            return StatusCode(500, "An unexpected error occurred while retrieving custom columns.");
+        }
     }
 
     [HttpPost("ResetServer")]
