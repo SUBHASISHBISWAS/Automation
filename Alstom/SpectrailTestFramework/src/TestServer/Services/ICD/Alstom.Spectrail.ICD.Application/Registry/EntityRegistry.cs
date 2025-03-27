@@ -66,7 +66,7 @@ public class EntityRegistry
     public static ConcurrentDictionary<string, List<IXLWorksheet>> RegisteredWorksheets { get; } =
         new(StringComparer.OrdinalIgnoreCase);
 
-    public static IMapperConfigurationExpression MapperConfig { get; private set; }
+    public static IMapperConfigurationExpression MapperConfig { get; private set; } = default!;
 
     public static Type? GetEntityType(string entityTypeName, string? fileName = null)
     {
@@ -118,10 +118,9 @@ public class EntityRegistry
     private static List<Type>?
         ProcessExcelAndRegisterEntities(string filePath)
     {
-        List<Type>? registeredAssemblyEntity = null;
+        List<Type>? compiledAndRegisteredEntities = null;
         var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(filePath);
-        //var allEquipmentEntity = new List<Type>();
-        var registeredEquipmentEntity = new List<Type>();
+        var dynamicEntities = new List<Type>();
         var (allEquipments, icdWorkSheets) = ExtractEquipmentInfo(filePath);
         var workSheets = icdWorkSheets[fileNameWithoutExtension];
 
@@ -162,20 +161,24 @@ public class EntityRegistry
 
                 Console.WriteLine($"📄 Processed sheet: {sheetName}, Registered: {isRegistered}");
 
-                if (isRegistered) registeredEquipmentEntity.Add(entityType);
+                if (isRegistered) dynamicEntities.Add(entityType);
             }
 
-            registeredAssemblyEntity = DynamicEntityCompiler.CompileAndLoadEntities(registeredEquipmentEntity,
-                fileNameWithoutExtension);
-            foreach (var entityType in registeredAssemblyEntity)
-                MapperConfig.CreateMap(entityType, typeof(CustomColumnDto)).ReverseMap();
+            //TODO: Check if the EquipmentName is not changed then skip the dll generationeration
+            DynamicEntityCompiler.CompileAndLoadEntities(dynamicEntities,
+                fileNameWithoutExtension, compiledEntities =>
+                {
+                    compiledAndRegisteredEntities = compiledEntities;
+                    foreach (var entityType in compiledEntities)
+                        MapperConfig.CreateMap(entityType, typeof(CustomColumnDto)).ReverseMap();
+                });
         }
         catch (Exception ex)
         {
             Console.WriteLine($"❌ Error processing file: {filePath}, Msg: {ex.Message}");
         }
 
-        return registeredAssemblyEntity;
+        return compiledAndRegisteredEntities;
     }
 
     public static List<Type> RegisterEntity(IEnumerable<string> icdFiles)

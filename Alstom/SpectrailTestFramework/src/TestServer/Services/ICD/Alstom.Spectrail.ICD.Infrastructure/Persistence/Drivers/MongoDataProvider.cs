@@ -111,16 +111,11 @@ public class MongoDataProvider(IICDDbContext icdDataContext) : IDataProvider
             }
 
             Console.WriteLine($"✅ Resolved entity type: {entityType.FullName}");
-
             var collectionName = Path.GetFileNameWithoutExtension(fileName).ToLowerInvariant().Trim();
             var collection = _icdDatabase.GetCollection<BsonDocument>(collectionName);
-
             var pascalName = char.ToUpper(sheetName[0]) + sheetName[1..].ToLowerInvariant();
             var entityKey = $"{pascalName}Entity";
-
-
             var documents = await collection.Find(Builders<BsonDocument>.Filter.Eq("_t", $"{entityKey}")).ToListAsync();
-
             foreach (var doc in documents)
                 try
                 {

@@ -17,7 +17,7 @@
 // FileName: DynamicEntityCompiler.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-25
-// Updated by SUBHASISH BISWAS On: 2025-03-26
+// Updated by SUBHASISH BISWAS On: 2025-03-27
 //  ******************************************************************************/
 
 #endregion
@@ -38,9 +38,6 @@ namespace Alstom.Spectrail.ICD.Application.Utility;
 
 public static class DynamicEntityCompiler
 {
-    private static readonly Dictionary<string, bool> _dynamicEquipmentTypesMap =
-        new(StringComparer.OrdinalIgnoreCase);
-
     private static string GetFriendlyTypeName(Type type)
     {
         if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
@@ -70,7 +67,8 @@ public static class DynamicEntityCompiler
         return type.Name;
     }
 
-    public static List<Type> CompileAndLoadEntities(IEnumerable<Type> entityTypes, string fileName)
+    public static void CompileAndLoadEntities(IEnumerable<Type> entityTypes, string fileName, Action<List<Type>>
+        compiledEntities)
     {
         var sb = new StringBuilder();
         sb.AppendLine("using System;");
@@ -142,10 +140,10 @@ public static class DynamicEntityCompiler
         fs.Flush(); // Ensure all bytes are written
         fs.Close(); // Important: avoid locked/incomplete files
         if (result.Success)
-            return Assembly.LoadFrom(outputFile)
+            compiledEntities?.Invoke(Assembly.LoadFrom(outputFile)
                 .GetTypes()
                 .Where(t => t is { IsClass: true, IsAbstract: false } && typeof(EntityBase).IsAssignableFrom(t))
-                .ToList();
+                .ToList());
 
         var errors = string.Join(Environment.NewLine, result.Diagnostics.Select(d => d.ToString()));
         throw new Exception($"❌ Roslyn compilation failed:\n{errors}");
