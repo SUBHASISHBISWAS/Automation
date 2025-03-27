@@ -87,4 +87,16 @@ public class CustomColumnController(IMediator mediator, IMapper mapper) : Contro
         var result = await mediator.Send(new RepositoryCommand(RepositoryOperation.DeleteAll));
         return result ? Ok("✅ All Records Deleted!") : BadRequest("❌ Failed to Delete!");
     }
+
+    /*[HttpGet("ResetServer")]
+    public async Task<IActionResult> ResetServer()
+    {
+        if (string.IsNullOrEmpty(fileName)) return BadRequest("❌ File name is required.");
+
+        var data = await mediator.Send(new RepositoryQuery { FileName = fileName });
+
+        if (!data.Any()) return NotFound($"⚠️ No records found for file: {fileName}");
+
+        return Ok(data);
+    }*/
 }

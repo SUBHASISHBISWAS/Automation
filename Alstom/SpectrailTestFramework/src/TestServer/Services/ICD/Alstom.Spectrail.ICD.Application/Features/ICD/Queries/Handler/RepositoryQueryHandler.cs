@@ -66,8 +66,6 @@ public class RepositoryQueryHandler(
             return new List<EntityBase> { (EntityBase)result! };
         }
 
-        if (request.Filter != null)
-            throw new NotSupportedException("⚠️ Filters not supported in dynamic query without generics.");
 
         method = repoInterfaceType.GetMethod("GetEntityAsync", [typeof(string), typeof(string)])!;
         result = await (dynamic)method.Invoke(repository, [request.FileName, request.SheetName])!;

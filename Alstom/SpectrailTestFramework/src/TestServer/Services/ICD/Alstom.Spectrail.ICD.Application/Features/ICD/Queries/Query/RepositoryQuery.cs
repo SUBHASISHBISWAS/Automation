@@ -17,14 +17,13 @@
 // FileName: RepositoryQuery.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-16
-// Updated by SUBHASISH BISWAS On: 2025-03-22
+// Updated by SUBHASISH BISWAS On: 2025-03-27
 //  ******************************************************************************/
 
 #endregion
 
 #region
 
-using System.Linq.Expressions;
 using Alstom.Spectrail.Server.Common.Entities;
 using MediatR;
 
@@ -37,9 +36,6 @@ public class RepositoryQuery
 
 {
     public string? Id { get; set; }
-
     public string? FileName { get; set; }
-    public Expression<Func<object, bool>>? Filter { get; set; }
-
     public string? SheetName { get; set; }
 }
