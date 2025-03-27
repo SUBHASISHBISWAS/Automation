@@ -163,8 +163,19 @@ public class DynamicEntityLoaderService : IDynamicEntityLoader
 
     private List<Type> RegisterAll(IEnumerable<string> filePaths)
     {
-        return filePaths.Any()
-            ? filePaths.SelectMany(f => EntityRegistry.RegisterEntity([f])).ToList()
-            : EntityRegistry.RegisterEntity(Directory.GetFiles(_dllDirectory, "*.dll"));
+        var registered = new List<Type>();
+        var files = filePaths.Any()
+            ? filePaths
+            : Directory.GetFiles(_dllDirectory, "*.dll");
+
+        foreach (var file in files)
+        {
+            var key = file.GetFileNameWithoutExtension().ToLowerInvariant();
+            var types = EntityRegistry.RegisterEntity([file]);
+            _cache[key] = types;
+            registered.AddRange(types);
+        }
+
+        return registered;
     }
 }

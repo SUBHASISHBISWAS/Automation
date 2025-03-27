@@ -17,7 +17,7 @@
 // FileName: MongoDataProvider.cs
 // ProjectName: Alstom.Spectrail.ICD.Infrastructure
 // Created by SUBHASISH BISWAS On: 2025-03-20
-// Updated by SUBHASISH BISWAS On: 2025-03-26
+// Updated by SUBHASISH BISWAS On: 2025-03-27
 //  ******************************************************************************/
 
 #endregion
@@ -27,7 +27,6 @@
 using System.Linq.Expressions;
 using Alstom.Spectrail.ICD.Application.Contracts;
 using Alstom.Spectrail.ICD.Application.Registry;
-using Alstom.Spectrail.ICD.Application.Utility;
 using Alstom.Spectrail.Server.Common.Contracts;
 using Alstom.Spectrail.Server.Common.Entities;
 using MongoDB.Bson;
@@ -95,46 +94,46 @@ public class MongoDataProvider(IICDDbContext icdDataContext) : IDataProvider
             Console.WriteLine("📌 Fetching Registered Entities from EntityRegistry...");
 
             var registeredMappings = await EntityRegistry.GetRegisteredEquipmentMappingsByFile(fileName);
-            var targetEntity = registeredMappings.FirstOrDefault(x =>
+            var targetMapping = registeredMappings.FirstOrDefault(x =>
                 x.SheetName.Equals(sheetName, StringComparison.OrdinalIgnoreCase));
 
-            if (targetEntity == null)
+            if (targetMapping == null)
             {
-                Console.WriteLine($"⚠️ No registered entity found for sheet '{sheetName}' in file '{fileName}'");
+                Console.WriteLine($"⚠️ No registered mapping found for sheet '{sheetName}' in file '{fileName}'");
                 return allEntities;
             }
 
             var entityType = EntityRegistry.GetEntityType(sheetName, fileName);
             if (entityType == null)
             {
-                Console.WriteLine($"❌ Entity type could not be resolved for sheet '{sheetName}'");
+                Console.WriteLine($"❌ Failed to resolve entity type for sheet '{sheetName}'");
                 return allEntities;
             }
 
             Console.WriteLine($"✅ Resolved entity type: {entityType.FullName}");
 
-            var collectionName = targetEntity.FileName.GetFileNameWithoutExtension().ToLower();
+            var collectionName = Path.GetFileNameWithoutExtension(fileName).ToLowerInvariant().Trim();
             var collection = _icdDatabase.GetCollection<BsonDocument>(collectionName);
 
-            var pascalName = char.ToUpper(sheetName[0]) + sheetName[1..].ToLower();
-            var pascalEntityName = $"{pascalName}Entity";
-            var filter = Builders<BsonDocument>.Filter.Exists(pascalEntityName);
-            var documents = await collection.Find(filter).ToListAsync();
+            var pascalName = char.ToUpper(sheetName[0]) + sheetName[1..].ToLowerInvariant();
+            var entityKey = $"{pascalName}Entity";
 
-            foreach (var entities in from doc in documents
-                     where doc.Contains(pascalEntityName)
-                     select doc[pascalEntityName].AsBsonDocument
-                     into sheetDoc
-                     where sheetDoc.Contains("Entities") && sheetDoc["Entities"].IsBsonArray
-                     select sheetDoc["Entities"].AsBsonArray
-                     into entityArray
-                     select entityArray
-                         .Select(e => BsonSerializer.Deserialize(e.AsBsonDocument, entityType))
-                         .OfType<EntityBase>()
-                         .ToList())
-                allEntities.AddRange(entities);
 
-            Console.WriteLine($"✅ Retrieved {allEntities.Count} entities from '{collectionName}'");
+            var documents = await collection.Find(Builders<BsonDocument>.Filter.Eq("_t", $"{entityKey}")).ToListAsync();
+
+            foreach (var doc in documents)
+                try
+                {
+                    var entity = (EntityBase)BsonSerializer.Deserialize(doc, entityType);
+                    allEntities.Add(entity);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"⚠️ Deserialization failed for document: {ex.Message}");
+                }
+
+            Console.WriteLine(
+                $"✅ Retrieved {allEntities.Count} entities from '{collectionName}' for sheet '{sheetName}'");
             return allEntities;
         }
         catch (Exception ex)
@@ -224,34 +223,51 @@ public class MongoDataProvider(IICDDbContext icdDataContext) : IDataProvider
             if (entities == null || !entities.Any())
                 throw new ArgumentNullException(nameof(entities), "⚠️ No entities to insert.");
 
-            // ✅ Group entities by FileKey (FileName_SheetName)
-            var groupedEntities = entities.GroupBy(e => e.FileName);
+            // ✅ Group entities by runtime type and FileName
+            var groupedEntities = entities
+                .GroupBy(e => (
+                    EntityType: e.GetType(),
+                    CollectionName: Path.GetFileNameWithoutExtension(e.FileName)?.Replace(" ", "_").ToLowerInvariant()
+                ));
 
             foreach (var group in groupedEntities)
             {
-                // ✅ Extract Collection Name
-                var collectionName = Path.GetFileNameWithoutExtension(group.Key)?.Replace(" ", "_").ToLower();
-                if (string.IsNullOrEmpty(collectionName))
+                var (entityType, collectionName) = group.Key;
+
+                if (string.IsNullOrWhiteSpace(collectionName))
                 {
-                    Console.WriteLine($"⚠️ Invalid collection name for FileKey: {group.Key}");
+                    Console.WriteLine($"⚠️ Skipping invalid collection name for type: {entityType.Name}");
                     continue;
                 }
 
-                // ✅ Get actual runtime type from first entity
-                var entityType = group.First().GetType();
-                var entityTypeName = entityType.Name;
-
-                Console.WriteLine($"📌 Storing {group.Count()} records in '{collectionName} -> {entityTypeName}'");
-
                 var collection = _icdDatabase.GetCollection<BsonDocument>(collectionName);
 
-                var filter = Builders<BsonDocument>.Filter.Exists(entityTypeName);
-                var update = Builders<BsonDocument>.Update
-                    .PushEach($"{entityTypeName}.Entities", group.Select(e => e.ToBsonDocument()).ToList());
+                var docs = group.Select(entity =>
+                {
+                    var bson = entity.ToBsonDocument();
+                    bson["_t"] = entityType.Name; // 🔧 ensure discriminator is correct
+                    return bson;
+                }).ToList();
 
-                var options = new UpdateOptions { IsUpsert = true };
+                Console.WriteLine(
+                    $"📌 Inserting {docs.Count} flat documents into '{collectionName}' as '{entityType.Name}'");
 
-                await collection.UpdateOneAsync(filter, update, options);
+                const int batchSize = 1000;
+                for (var i = 0; i < docs.Count; i += batchSize)
+                {
+                    var batch = docs.Skip(i).Take(batchSize).ToList();
+
+                    try
+                    {
+                        await collection.InsertManyAsync(batch);
+                    }
+                    catch (MongoBulkWriteException<BsonDocument> ex)
+                    {
+                        Console.WriteLine($"❌ Bulk write error in collection '{collectionName}': {ex.Message}");
+                        foreach (var err in ex.WriteErrors)
+                            Console.WriteLine($"   ↳ {err.Code} | {err.Message}");
+                    }
+                }
             }
         }
         catch (ArgumentNullException ex)
