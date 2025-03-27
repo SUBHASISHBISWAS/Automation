@@ -17,7 +17,7 @@
 // FileName: EntityRegistry.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-25
-// Updated by SUBHASISH BISWAS On: 2025-03-26
+// Updated by SUBHASISH BISWAS On: 2025-03-27
 //  ******************************************************************************/
 
 #endregion
@@ -34,14 +34,12 @@ using Alstom.Spectrail.ICD.Application.Models;
 using Alstom.Spectrail.ICD.Application.Utility;
 using Alstom.Spectrail.ICD.Domain.DTO.ICD;
 using Alstom.Spectrail.ICD.Domain.Entities.ICD;
-using Alstom.Spectrail.Server.Common.Configuration;
+using Alstom.Spectrail.Server.Common.Contracts;
 using Alstom.Spectrail.Server.Common.Entities;
 using AutoMapper;
 using ClosedXML.Excel;
-using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using StackExchange.Redis;
 using static MongoDB.Driver.Builders<Alstom.Spectrail.ICD.Application.Models.EntityMapping>;
 
 #endregion
@@ -51,27 +49,18 @@ namespace Alstom.Spectrail.ICD.Application.Registry;
 public class EntityRegistry
 {
     private static IMongoCollection<EntityMapping> _collection;
-    //private static IServerConfigHelper _configHelper;
-    //private static IDatabase _redis;
+    private static IDynamicEntityLoader _dynamicEntityLoader;
 
-
-    private static readonly Dictionary<string, List<Type>> _entityTypeCache = new(StringComparer.OrdinalIgnoreCase);
-
-
-    public EntityRegistry(IICDDbContext dbContext, IServerConfigHelper configHelper, IServiceCollection services,
-        IMapperConfigurationExpression mapperConfig, IConnectionMultiplexer redis)
+    public EntityRegistry(IICDDbContext dbContext, IDynamicEntityLoader dynamicEntityLoader,
+        IMapperConfigurationExpression mapperConfig)
     {
         ArgumentNullException.ThrowIfNull(dbContext, nameof(IMongoCollection<EntityMapping>));
-        ArgumentNullException.ThrowIfNull(configHelper, nameof(IServerConfigHelper));
-        ArgumentNullException.ThrowIfNull(services, nameof(IServiceCollection));
-        ArgumentNullException.ThrowIfNull(redis, nameof(IDatabase));
         ArgumentNullException.ThrowIfNull(mapperConfig, nameof(IMapperConfigurationExpression));
 
         Debug.Assert(dbContext.ICDEntityMapping != null);
         _collection = dbContext.ICDEntityMapping;
-        //_configHelper = configHelper;
+        _dynamicEntityLoader = dynamicEntityLoader;
         MapperConfig = mapperConfig;
-        //_redis = redis.GetDatabase();
     }
 
     public static ConcurrentDictionary<string, List<IXLWorksheet>> RegisteredWorksheets { get; } =
@@ -81,78 +70,7 @@ public class EntityRegistry
 
     public static Type? GetEntityType(string entityTypeName, string? fileName = null)
     {
-        return DynamicEntityManager.GetEntityType(entityTypeName, fileName);
-        /*if (string.IsNullOrWhiteSpace(entityTypeName))
-        {
-            Console.WriteLine("⚠️ Entity type name cannot be null or empty.");
-            return null;
-        }
-
-        var pascalName = char.ToUpper(entityTypeName[0]) + entityTypeName[1..].ToLower();
-        var fullTypeName = $"{SpectrailConstants.DynamicAssemblyName}.{pascalName}Entity";
-
-        var dynamicEntitiesPath = Path.Combine(AppContext.BaseDirectory, "DynamicEntities");
-        if (!Directory.Exists(dynamicEntitiesPath))
-        {
-            Console.WriteLine("❌ DynamicEntities directory not found.");
-            return null;
-        }
-
-        // 📛 Use "ALL" key if no file specified
-        var cacheKey = string.IsNullOrWhiteSpace(fileName)
-            ? "ALL"
-            : fileName.GetFileNameWithoutExtension().Replace(" ", "", StringComparison.OrdinalIgnoreCase).Trim();
-
-        // ✅ Return from cache if already loaded
-        if (_entityTypeCache.TryGetValue(cacheKey, out var cachedTypes))
-            return cachedTypes.FirstOrDefault(t => t.FullName == fullTypeName);
-
-        string[] dllFiles;
-
-        if (!string.IsNullOrWhiteSpace(fileName))
-        {
-            var normalizedFileName = cacheKey;
-
-            dllFiles = Directory.GetFiles(dynamicEntitiesPath, "*.dll", SearchOption.TopDirectoryOnly)
-                .Where(dll =>
-                {
-                    var segments = Path.GetFileNameWithoutExtension(dll)
-                        .Split('.', StringSplitOptions.RemoveEmptyEntries);
-
-                    var segmentToMatch = segments.Length >= 2 ? segments[^2] : segments[^1];
-
-                    return segmentToMatch.Replace(" ", "", StringComparison.OrdinalIgnoreCase)
-                        .Equals(normalizedFileName, StringComparison.OrdinalIgnoreCase);
-                })
-                .ToArray();
-        }
-        else
-        {
-            dllFiles = Directory.GetFiles(dynamicEntitiesPath, "*.dll", SearchOption.TopDirectoryOnly);
-        }
-
-        var loadedTypes = new List<Type>();
-
-        foreach (var dllPath in dllFiles)
-            try
-            {
-                var assembly = Assembly.LoadFrom(dllPath);
-                var types = assembly.GetTypes()
-                    .Where(t => t.IsClass && t.Namespace == SpectrailConstants.DynamicAssemblyName)
-                    .ToList();
-
-                loadedTypes.AddRange(types);
-                Console.WriteLine($"✅ Loaded {types.Count} types from {Path.GetFileName(dllPath)}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"⚠️ Error loading types from {dllPath}: {ex.Message}");
-            }
-
-        // 🧠 Cache loaded types
-        _entityTypeCache[cacheKey] = loadedTypes;
-
-        return loadedTypes.FirstOrDefault(t => t.FullName == fullTypeName);*/
+        return _dynamicEntityLoader.GetEntityType(entityTypeName, fileName);
     }
 
     private static (List<string> allEquipments,
@@ -260,7 +178,7 @@ public class EntityRegistry
         return registeredAssemblyEntity;
     }
 
-    public static List<Type> RegisterEntity(List<string> icdFiles)
+    public static List<Type> RegisterEntity(IEnumerable<string> icdFiles)
     {
         var registeredEntityTypes = new List<Type>();
         foreach (var filePath in icdFiles)

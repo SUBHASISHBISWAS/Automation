@@ -17,7 +17,7 @@
 // FileName: Program.cs
 // ProjectName: Alstom.Spectrail.ICD.API
 // Created by SUBHASISH BISWAS On: 2025-03-26
-// Updated by SUBHASISH BISWAS On: 2025-03-26
+// Updated by SUBHASISH BISWAS On: 2025-03-27
 //  ******************************************************************************/
 
 #endregion
@@ -28,9 +28,11 @@ using Alstom.Spectrail.ICD.API.Middleware;
 using Alstom.Spectrail.ICD.Application;
 using Alstom.Spectrail.ICD.Application.Models;
 using Alstom.Spectrail.ICD.Application.Registry;
+using Alstom.Spectrail.ICD.Application.Services;
 using Alstom.Spectrail.ICD.Infrastructure;
 using Alstom.Spectrail.ICD.Infrastructure.Persistence.Contexts.Mongo;
 using Alstom.Spectrail.Server.Common.Configuration;
+using Alstom.Spectrail.Server.Common.Contracts;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using AutoMapper;
@@ -74,12 +76,12 @@ services.AddSingleton<IConnectionMultiplexer>(_ =>
     return ConnectionMultiplexer.Connect(connString);
 });
 
+services.AddSingleton<IDynamicEntityLoader, DynamicEntityLoaderService>();
 services.AddSingleton<EntityRegistry>(sp =>
         new EntityRegistry(
             sp.GetRequiredService<ICDMongoDataContext>(),
-            sp.GetRequiredService<IServerConfigHelper>(),
-            services, mapperConfigExpression,
-            sp.GetRequiredService<IConnectionMultiplexer>()) // Passed for dynamic registration
+            sp.GetRequiredService<IDynamicEntityLoader>(),
+            mapperConfigExpression) // Passed for dynamic registration
 );
 
 

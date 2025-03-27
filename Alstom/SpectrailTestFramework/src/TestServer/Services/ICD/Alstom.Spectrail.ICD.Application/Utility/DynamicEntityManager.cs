@@ -25,7 +25,6 @@
 #region
 
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Reflection;
 using Alstom.Spectrail.ICD.Application.Registry;
 using Alstom.Spectrail.Server.Common.Entities;
@@ -40,73 +39,77 @@ public static class DynamicEntityManager
 
     public static async Task<List<Type>> LoadOrRegisterEntitiesAsync(IEnumerable<string> fileNames)
     {
-        var enumerable = fileNames as string[] ?? fileNames.ToArray();
-        var normalizedFiles = enumerable
-            .Select(f => f.GetFileNameWithoutExtension().ToLowerInvariant().Trim())
-            .Distinct()
-            .ToList();
-
+        var fileList = fileNames?.ToList() ?? [];
         var loadedTypes = new List<Type>();
         var dynamicEntitiesPath = Path.Combine(AppContext.BaseDirectory, "DynamicEntities");
 
-        var dllDirectoryExists = Directory.Exists(dynamicEntitiesPath);
+        Directory.CreateDirectory(dynamicEntitiesPath); // ensure folder exists
 
-        foreach (var file in normalizedFiles)
+        foreach (var fullPath in fileList)
         {
-            if (_entityTypeCache.TryGetValue(file, out var cachedTypes))
+            var fileKey = fullPath.GetFileNameWithoutExtension().ToLowerInvariant().Trim();
+
+            // Skip if already cached
+            if (_entityTypeCache.TryGetValue(fileKey, out var cached))
             {
-                loadedTypes.AddRange(cachedTypes);
+                loadedTypes.AddRange(cached);
                 continue;
             }
 
-            var filePath = enumerable.FirstOrDefault(x => x.Contains(file, StringComparison.OrdinalIgnoreCase));
-            if (!dllDirectoryExists)
-            {
-                Console.WriteLine("⚠️ DynamicEntities directory not found. Triggering fallback generation...");
-                Debug.Assert(filePath != null, nameof(filePath) + " != null");
-                var generated = EntityRegistry.RegisterEntity([filePath]);
-                _entityTypeCache[file] = generated;
-                loadedTypes.AddRange(generated);
-                continue;
-            }
-
+            // Try finding the DLL for this file
             var dllPath = Directory
-                .EnumerateFiles(dynamicEntitiesPath, "*.dll")
+                .EnumerateFiles(dynamicEntitiesPath, "*.dll", SearchOption.TopDirectoryOnly)
                 .FirstOrDefault(p =>
-                    p.GetFileNameWithoutExtension().Split('.', StringSplitOptions.RemoveEmptyEntries)
-                        .Reverse()
-                        .Skip(1)
-                        .FirstOrDefault()
-                        ?.Equals(file, StringComparison.OrdinalIgnoreCase) == true);
+                {
+                    var segments = Path.GetFileNameWithoutExtension(p)
+                        .Split('.', StringSplitOptions.RemoveEmptyEntries);
 
-            if (dllPath != null && File.Exists(dllPath))
+                    var nameSegment = segments.Length >= 2 ? segments[^2] : segments[^1];
+                    return nameSegment.Equals(fileKey, StringComparison.OrdinalIgnoreCase);
+                });
+
+            if (!string.IsNullOrWhiteSpace(dllPath) && File.Exists(dllPath))
                 try
                 {
-                    var assembly = Assembly.LoadFrom(dllPath);
-                    var allTypes = assembly.GetTypes()
-                        .Where(t => t is { IsClass: true, Namespace: SpectrailConstants.DynamicAssemblyName } &&
-                                    typeof(EntityBase).IsAssignableFrom(t))
-                        .ToList();
-
-                    var registeredMappings = await EntityRegistry.GetRegisteredEquipmentMappingsByFile($"{file}.XLSX");
+                    // 🔁 DLL found → just load from it
+                    var registeredMappings =
+                        await EntityRegistry.GetRegisteredEquipmentMappingsByFile($"{fileKey}.XLSX");
                     var registeredNames = registeredMappings
                         .Select(x => $"{char.ToUpper(x.SheetName[0])}{x.SheetName[1..]}Entity")
                         .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-                    var matchedTypes = allTypes.Where(t => registeredNames.Contains(t.Name)).ToList();
-                    _entityTypeCache[file] = matchedTypes;
-                    loadedTypes.AddRange(matchedTypes);
+                    var types = Assembly.LoadFrom(dllPath)
+                        .GetTypes()
+                        .Where(t =>
+                            t.IsClass &&
+                            t.Namespace == SpectrailConstants.DynamicAssemblyName &&
+                            registeredNames.Contains(t.Name) &&
+                            typeof(EntityBase).IsAssignableFrom(t))
+                        .ToList();
+
+                    _entityTypeCache[fileKey] = types;
+                    loadedTypes.AddRange(types);
+                    Console.WriteLine($"✅ Loaded {types.Count} types from DLL for {fileKey}");
                     continue;
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"⚠️ Error loading from {dllPath}: {ex.Message}");
+                    Console.WriteLine($"⚠️ Error loading DLL from {dllPath}: {ex.Message}");
+                    // Fallback to registration
                 }
 
-            // DLL not found or failed to load, fallback to generation
-            var fallbackGenerated = EntityRegistry.RegisterEntity([file]);
-            _entityTypeCache[file] = fallbackGenerated;
-            loadedTypes.AddRange(fallbackGenerated);
+            // ❌ No DLL found or error → register and generate
+            try
+            {
+                var registered = EntityRegistry.RegisterEntity([fullPath]);
+                _entityTypeCache[fileKey] = registered;
+                loadedTypes.AddRange(registered);
+                Console.WriteLine($"🛠️ Registered {registered.Count} new types for {fileKey}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Registration failed for {fileKey}: {ex.Message}");
+            }
         }
 
         return loadedTypes;

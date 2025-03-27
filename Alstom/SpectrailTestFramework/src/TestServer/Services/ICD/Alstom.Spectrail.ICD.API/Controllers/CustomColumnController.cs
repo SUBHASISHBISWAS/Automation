@@ -17,7 +17,7 @@
 // FileName: CustomColumnController.cs
 // ProjectName: Alstom.Spectrail.ICD.API
 // Created by SUBHASISH BISWAS On: 2025-03-21
-// Updated by SUBHASISH BISWAS On: 2025-03-22
+// Updated by SUBHASISH BISWAS On: 2025-03-27
 //  ******************************************************************************/
 
 #endregion
@@ -69,7 +69,7 @@ public class CustomColumnController : ControllerBase
         var data = await _mediator.Send(new RepositoryQuery
         {
             FileName = fileName,
-            SheetName = "bce"
+            SheetName = "dcu"
         });
 
         if (!data.Any()) return NotFound($"⚠️ No records found for file: {fileName}");
@@ -136,39 +136,4 @@ public class CustomColumnController : ControllerBase
         var result = await _mediator.Send(new RepositoryCommand(RepositoryOperation.DeleteAll));
         return result ? Ok("✅ All Records Deleted!") : BadRequest("❌ Failed to Delete!");
     }
-
-    /*private async Task<List<EntityBase>> FetchEntitiesDynamicallyAsync(string entityName, string fileName)
-    {
-        var entityType = EntityRegistry.GetEntityType(entityName);
-        if (entityType == null)
-            throw new InvalidOperationException($"❌ Entity type '{entityName}' could not be resolved.");
-
-        var queryType = typeof(RepositoryQuery<>).MakeGenericType(entityType);
-        var queryInstance = Activator.CreateInstance(queryType);
-        queryType.GetProperty("FileName")?.SetValue(queryInstance, fileName);
-
-        var sendMethod = typeof(IMediator)
-            .GetMethods(BindingFlags.Instance | BindingFlags.Public)
-            .Where(m => m.Name == "Send" && m.IsGenericMethod)
-            .Where(m =>
-            {
-                var parameters = m.GetParameters();
-                return parameters.Length == 2 &&
-                       parameters[0].ParameterType.GetGenericTypeDefinition() == typeof(IRequest<>) &&
-                       parameters[1].ParameterType == typeof(CancellationToken);
-            })
-            .FirstOrDefault();
-
-        if (sendMethod == null)
-            throw new InvalidOperationException("❌ Could not find a matching generic Send method on IMediator.");
-
-        var genericSend = sendMethod.MakeGenericMethod(typeof(List<EntityBase>));
-        var cancellationToken = CancellationToken.None;
-
-        var task = (Task)genericSend.Invoke(_mediator, new[] { queryInstance, cancellationToken });
-        await task.ConfigureAwait(false);
-
-        var result = task.GetType().GetProperty("Result")?.GetValue(task) as List<EntityBase>;
-        return result ?? new List<EntityBase>();
-    }*/
 }

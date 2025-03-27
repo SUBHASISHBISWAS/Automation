@@ -17,7 +17,7 @@
 // FileName: EntityRegistryOrchestrator.cs
 // ProjectName: Alstom.Spectrail.ICD.API
 // Created by SUBHASISH BISWAS On: 2025-03-21
-// Updated by SUBHASISH BISWAS On: 2025-03-26
+// Updated by SUBHASISH BISWAS On: 2025-03-27
 //  ******************************************************************************/
 
 #endregion
@@ -29,6 +29,7 @@ using Alstom.Spectrail.ICD.Application.Registry;
 using Alstom.Spectrail.ICD.Application.Utility;
 using Alstom.Spectrail.ICD.Domain.DTO.ICD;
 using Alstom.Spectrail.Server.Common.Configuration;
+using Alstom.Spectrail.Server.Common.Contracts;
 using Autofac;
 using MediatR;
 using StackExchange.Redis;
@@ -41,7 +42,8 @@ public class EntityRegistryOrchestrator(
     IMediator mediator,
     IConnectionMultiplexer redis,
     IServerConfigHelper configHelper,
-    ILifetimeScope rootScope)
+    ILifetimeScope rootScope,
+    IDynamicEntityLoader dynamicEntityLoader)
 {
     private const string RedisKeyEntityList = "RegisteredEntities";
 
@@ -95,74 +97,7 @@ public class EntityRegistryOrchestrator(
     private async Task<List<Type>>
         RegisterOrLoadExistingDynamicEntities(List<string> icdFiles)
     {
-        return await DynamicEntityManager.LoadOrRegisterEntitiesAsync(icdFiles);
-
-        /*var dynamicEntitiesPath = Path.Combine(AppContext.BaseDirectory, "DynamicEntities");
-
-        if (!Directory.Exists(dynamicEntitiesPath))
-        {
-            Console.WriteLine("❌ DynamicEntities directory not found.");
-            return EntityRegistry.RegisterEntity(icdFiles);
-        }
-
-        var dllFiles = Directory.GetFiles(dynamicEntitiesPath, "*.dll", SearchOption.TopDirectoryOnly);
-        var loadedTypes = new List<Type>();
-
-        foreach (var dllPath in dllFiles)
-        {
-            var fileNameWithoutExt = Path.GetFileNameWithoutExtension(dllPath);
-
-            var segments = fileNameWithoutExt
-                .Split('.', StringSplitOptions.RemoveEmptyEntries);
-
-            var normalizedFileName = segments.Length >= 2
-                ? segments[^2].Replace(" ", "", StringComparison.OrdinalIgnoreCase).Trim()
-                : fileNameWithoutExt.Replace(" ", "", StringComparison.OrdinalIgnoreCase).Trim();
-
-            var fileKey = $"{normalizedFileName}.XLSX";
-
-            try
-            {
-                var registeredMappings = await EntityRegistry.GetRegisteredEquipmentMappingsByFile(fileKey);
-                if (registeredMappings.Count == 0)
-                {
-                    Console.WriteLine($"⚠️ No registered entities found for: {fileKey}");
-                    continue;
-                }
-
-                var registeredSheetNames = registeredMappings
-                    .Select(x => $"{char.ToUpper(x.SheetName[0])}{x.SheetName[1..]}Entity")
-                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-                var assembly = Assembly.LoadFrom(dllPath);
-                var types = assembly.GetTypes()
-                    .Where(t =>
-                        t.IsClass &&
-                        t.Namespace == SpectrailConstants.DynamicAssemblyName &&
-                        registeredSheetNames.Contains(t.Name))
-                    .ToList();
-
-                // ⚠️ Mismatch in count
-                if (types.Count != registeredSheetNames.Count)
-                    Console.WriteLine(
-                        $"⚠️ Partial load: Only {types.Count}/{registeredSheetNames.Count} types loaded from {fileKey}");
-
-                loadedTypes.AddRange(types);
-                Console.WriteLine($"✅ Loaded {types.Count} registered types from {Path.GetFileName(dllPath)}");
-
-                if (!registeredMappings.Any(m =>
-                        m.FileName.GetFileNameWithoutExtension().Replace(" ", "", StringComparison.OrdinalIgnoreCase)
-                            .Trim()
-                            .Equals(normalizedFileName, StringComparison.OrdinalIgnoreCase)))
-                    loadedTypes.AddRange(EntityRegistry.RegisterEntity(icdFiles));
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"⚠️ Error loading types from {dllPath}: {ex.Message}");
-            }
-        }
-
-        return loadedTypes;*/
+        return await dynamicEntityLoader.LoadOrRegisterEntitiesAsync(icdFiles);
     }
 
     private async Task<bool> HasFolderChanged(string folderPath)

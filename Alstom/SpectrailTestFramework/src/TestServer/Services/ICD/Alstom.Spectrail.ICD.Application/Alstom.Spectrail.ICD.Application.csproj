@@ -30,4 +30,10 @@
     <ProjectReference Include="..\Alstom.Spectrail.ICD.Domain\Alstom.Spectrail.ICD.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="Utility\DynamicTypeFactory.cs"/>
+    <Compile Remove="Utility\MediatRExtensions.cs"/>
+    <Compile Remove="Utility\DynamicEntityManager.cs"/>
+  </ItemGroup>
+
 </Project>
