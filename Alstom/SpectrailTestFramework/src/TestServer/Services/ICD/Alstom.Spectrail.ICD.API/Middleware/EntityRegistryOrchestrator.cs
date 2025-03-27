@@ -43,9 +43,6 @@ public class EntityRegistryOrchestrator(
     ILifetimeScope rootScope,
     IDynamicEntityLoader dynamicEntityLoader) : IEntityRegistryOrchestrator
 {
-    private const string RedisKeyEntityList = "RegisteredEntities";
-
-    private const string RedisKeyRegistryCompleted = "EntityRegistryCompleted";
     private readonly IDatabase _redisDb = redis.GetDatabase();
 
     public async Task ExecuteAsync(bool force = false)
@@ -64,7 +61,8 @@ public class EntityRegistryOrchestrator(
             var seeded = await mediator.Send(new SeedICDDataCommand { ICDFiles = changedFiles });
             if (seeded)
             {
-                await _redisDb.StringSetAsync(RedisKeyRegistryCompleted, "true", TimeSpan.FromHours(12));
+                await _redisDb.StringSetAsync(SpectrailConstants.RedisKeyRegistryCompleted, "true",
+                    TimeSpan.FromHours(12));
                 Console.WriteLine("✅ MongoDB Seeding Completed!");
             }
             else

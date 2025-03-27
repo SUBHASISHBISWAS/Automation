@@ -38,6 +38,8 @@ public static class SpectrailConstants
 
     public const string RedisPrefix = "Spectrail";
 
+    public const string RedisKeyRegistryCompleted = $"{RedisPrefix}:ICD:EntityRegistry:EntityRegistryCompleted";
+
     public const string RedisKeyFolderHash = $"{RedisPrefix}:ICD:DataFolder:LastFolderHash";
 
     public const string RedisFileHashKey = $"{RedisPrefix}:ICD:Files:Hash:";
