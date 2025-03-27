@@ -59,6 +59,7 @@ public class EntityRegistryOrchestrator(
             async (key, value) => await _redisDb.StringSetAsync(key, value)
         );
         var loadedDynamicTypes = await RegisterOrLoadExistingDynamicEntities(changedFiles);
+        if (changedFiles.Count == 0) return;
         if (loadedDynamicTypes.Count > 0)
         {
             rootScope.BeginLifetimeScope(builder =>
@@ -69,14 +70,7 @@ public class EntityRegistryOrchestrator(
 
             if (hasFolderChanged)
             {
-                /*changedFiles = await configHelper.GetICDFiles().GetAndStoreChangedFilesFromRedis(
-                    async key => (await _redisDb.StringGetAsync(key)).ToString(),
-                    async (key, value) => await _redisDb.StringSetAsync(key, value)
-                );*/
-
-
                 var seeded = await mediator.Send(new SeedICDDataCommand { ICDFiles = changedFiles });
-
                 if (seeded)
                 {
                     await _redisDb.StringSetAsync(RedisKeyRegistryCompleted, "true", TimeSpan.FromHours(12));

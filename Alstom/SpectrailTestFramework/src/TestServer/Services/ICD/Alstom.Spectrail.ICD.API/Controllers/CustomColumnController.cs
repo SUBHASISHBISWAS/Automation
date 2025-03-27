@@ -16,7 +16,7 @@
 // Email: subhasish.biswas@alstomgroup.com
 // FileName: CustomColumnController.cs
 // ProjectName: Alstom.Spectrail.ICD.API
-// Created by SUBHASISH BISWAS On: 2025-03-21
+// Created by SUBHASISH BISWAS On: 2025-03-27
 // Updated by SUBHASISH BISWAS On: 2025-03-27
 //  ******************************************************************************/
 
@@ -50,26 +50,20 @@ public class CustomColumnController : ControllerBase
     {
         _mediator = mediator;
         _mapper = mapper;
-        if (configHelper.IsFeatureEnabled("EnableEagerLoading"))
-            Task.Run(async () =>
-            {
-                var success = await _mediator.Send(new SeedICDDataCommand());
-                return success
-                    ? Ok("✅ ICD Database Seeded Successfully!")
-                    : StatusCode(500, "⚠️ ICD Database Seeding Failed!");
-            });
     }
 
-    /// ✅ Fetch all DCU records
-    [HttpGet("DCU")]
-    public async Task<ActionResult<List<CustomColumnDto>>> GetDCU([FromQuery] string? fileName)
+    /// ✅ Fetch all Entity records
+    [HttpGet("ICD")]
+    public async Task<ActionResult<List<CustomColumnDto>>> GetEntityByFile([FromQuery] string fileName,
+        [FromQuery] string sheetName)
     {
         if (string.IsNullOrEmpty(fileName)) return BadRequest("❌ File name is required.");
+        if (string.IsNullOrEmpty(sheetName)) return BadRequest("❌ Sheet name is required.");
 
         var data = await _mediator.Send(new RepositoryQuery
         {
             FileName = fileName,
-            SheetName = "dcu"
+            SheetName = sheetName
         });
 
         if (!data.Any()) return NotFound($"⚠️ No records found for file: {fileName}");
