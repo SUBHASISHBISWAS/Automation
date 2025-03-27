@@ -45,7 +45,6 @@ public class DynamicEntityLoaderService(ILifetimeScope rootScope) : IDynamicEnti
     public async Task<List<Type>> LoadOrRegisterEntitiesAsync(IEnumerable<string> fileNames)
     {
         var files = fileNames.ToList();
-        var fileSet = files.Select(f => f.GetFileNameWithoutExtension().ToLowerInvariant()).ToHashSet();
         var results = new List<Type>();
         var dllExists = Directory.Exists(_dllDirectory);
 
