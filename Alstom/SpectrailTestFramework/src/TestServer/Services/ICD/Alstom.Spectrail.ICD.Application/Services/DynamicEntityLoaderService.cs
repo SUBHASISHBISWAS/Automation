@@ -28,18 +28,19 @@ using System.Collections.Concurrent;
 using System.Reflection;
 using Alstom.Spectrail.ICD.Application.Registry;
 using Alstom.Spectrail.ICD.Application.Utility;
+using Alstom.Spectrail.ICD.Domain.DTO.ICD;
 using Alstom.Spectrail.Server.Common.Contracts;
 using Alstom.Spectrail.Server.Common.Entities;
+using Autofac;
 
 #endregion
 
 namespace Alstom.Spectrail.ICD.Application.Services;
 
-public class DynamicEntityLoaderService : IDynamicEntityLoader
+public class DynamicEntityLoaderService(ILifetimeScope rootScope) : IDynamicEntityLoader
 {
     private readonly ConcurrentDictionary<string, List<Type>> _cache = new(StringComparer.OrdinalIgnoreCase);
     private readonly string _dllDirectory = Path.Combine(AppContext.BaseDirectory, "DynamicEntities");
-
 
     public async Task<List<Type>> LoadOrRegisterEntitiesAsync(IEnumerable<string> fileNames)
     {
@@ -83,15 +84,18 @@ public class DynamicEntityLoaderService : IDynamicEntityLoader
             var dllExistsForFile = dllFiles.Any(d =>
                 d.GetFileNameWithoutExtension().Contains($".{key}.", StringComparison.OrdinalIgnoreCase));
 
-            if (!dllExistsForFile)
-            {
-                Console.WriteLine($"🛠️ No DLL for changed file {key}, triggering registration...");
-                var generated = EntityRegistry.RegisterEntity([changedFile]);
-                _cache[key] = generated;
-                results.AddRange(generated);
-            }
+            if (dllExistsForFile) continue;
+            Console.WriteLine($"🛠️ No DLL for changed file {key}, triggering registration...");
+            var generated = EntityRegistry.RegisterEntity([changedFile]);
+            _cache[key] = generated;
+            results.AddRange(generated);
         }
 
+        rootScope.BeginLifetimeScope(builder =>
+            DynamicRepositoryRegistrar.RegisterRepositoryHandlers(builder, results));
+
+        foreach (var entityType in results)
+            EntityRegistry.MapperConfig.CreateMap(entityType, typeof(CustomColumnDto)).ReverseMap();
         return results;
     }
 
@@ -117,20 +121,6 @@ public class DynamicEntityLoaderService : IDynamicEntityLoader
 
         Console.WriteLine($"❌ Entity type '{fullTypeName}' not found in cache for key: {key}");
         return null;
-    }
-
-    private async Task<List<Type>> LoadAllFromDllAsync(string[] dllFiles)
-    {
-        var allTypes = new List<Type>();
-        foreach (var dll in dllFiles)
-        {
-            var nameKey = dll.GetFileNameWithoutExtension().Split('.').Reverse().Skip(1).FirstOrDefault()
-                ?.ToLowerInvariant();
-            if (nameKey != null)
-                allTypes.AddRange(await LoadFromDllAsync(dll, nameKey));
-        }
-
-        return allTypes;
     }
 
     private async Task<List<Type>> LoadFromDllAsync(string dllPath, string fileKey)

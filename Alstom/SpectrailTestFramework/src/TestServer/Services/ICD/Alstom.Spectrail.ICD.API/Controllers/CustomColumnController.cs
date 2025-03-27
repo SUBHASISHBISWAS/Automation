@@ -53,8 +53,8 @@ public class CustomColumnController : ControllerBase
     }
 
     /// ✅ Fetch all Entity records
-    [HttpGet("ICD")]
-    public async Task<ActionResult<List<CustomColumnDto>>> GetEntityByFile([FromQuery] string fileName,
+    [HttpGet("NETWORK-EQUIPMENT")]
+    public async Task<ActionResult<List<CustomColumnDto>>> GetEquipmentByFile([FromQuery] string fileName,
         [FromQuery] string sheetName)
     {
         if (string.IsNullOrEmpty(fileName)) return BadRequest("❌ File name is required.");

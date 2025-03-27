@@ -25,9 +25,7 @@
 #region
 
 using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
-using Alstom.Spectrail.ICD.Application.Registry;
 using Alstom.Spectrail.ICD.Application.Utility;
-using Alstom.Spectrail.ICD.Domain.DTO.ICD;
 using Alstom.Spectrail.Server.Common.Configuration;
 using Alstom.Spectrail.Server.Common.Contracts;
 using Autofac;
@@ -62,11 +60,11 @@ public class EntityRegistryOrchestrator(
         if (changedFiles.Count == 0) return;
         if (loadedDynamicTypes.Count > 0)
         {
-            rootScope.BeginLifetimeScope(builder =>
+            /*rootScope.BeginLifetimeScope(builder =>
                 DynamicRepositoryRegistrar.RegisterRepositoryHandlers(builder, loadedDynamicTypes));
 
             foreach (var entityType in loadedDynamicTypes)
-                EntityRegistry.MapperConfig.CreateMap(entityType, typeof(CustomColumnDto)).ReverseMap();
+                EntityRegistry.MapperConfig.CreateMap(entityType, typeof(CustomColumnDto)).ReverseMap();*/
 
             if (hasFolderChanged)
             {
