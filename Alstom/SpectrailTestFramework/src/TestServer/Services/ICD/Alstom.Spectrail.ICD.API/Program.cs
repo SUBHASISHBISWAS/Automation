@@ -26,7 +26,6 @@
 
 using Alstom.Spectrail.ICD.API.Middleware;
 using Alstom.Spectrail.ICD.Application;
-using Alstom.Spectrail.ICD.Application.Models;
 using Alstom.Spectrail.ICD.Application.Registry;
 using Alstom.Spectrail.ICD.Application.Services;
 using Alstom.Spectrail.ICD.Infrastructure;
@@ -58,7 +57,7 @@ builder.Host.ConfigureContainer<ContainerBuilder>(container =>
 
 services.AddSingleton<IServerConfigHelper, ServerConfigHelper>();
 
-services.Configure<SpectrailMongoDatabaseSettings>(
+services.Configure<SpectrailMongoDatabaseConfig>(
     builder.Configuration.GetSection("SpectrailMongoDatabaseSettings"));
 
 services.AddSingleton<ICDMongoDataContext>();

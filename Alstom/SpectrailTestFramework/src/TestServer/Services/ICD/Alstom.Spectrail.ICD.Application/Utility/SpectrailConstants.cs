@@ -17,7 +17,7 @@
 // FileName: SpectrailConstants.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
 // Created by SUBHASISH BISWAS On: 2025-03-22
-// Updated by SUBHASISH BISWAS On: 2025-03-25
+// Updated by SUBHASISH BISWAS On: 2025-03-28
 //  ******************************************************************************/
 
 #endregion
@@ -32,20 +32,23 @@ public static class SpectrailConstants
 
     public const string ICD_NetworkConfig = "network_config";
 
+    public const string DynamicEntitiesFolder = "DynamicEntities";
 
     #region Redis Keys
 
-    public const string RedisKeyFolderHash = "Spectrail:ICD:DataFolder:LastFolderHash";
+    public const string RedisPrefix = "Spectrail";
 
-    public const string RedisFileHashKey = "Spectrail:ICD:Files:Hash:";
+    public const string RedisKeyFolderHash = $"{RedisPrefix}:ICD:DataFolder:LastFolderHash";
 
-    public const string RedisEquipmentHashKey = "Spectrail:ICD:Files:Equipments:";
+    public const string RedisFileHashKey = $"{RedisPrefix}:ICD:Files:Hash:";
 
-    public const string RedisEntityListKey = "Spectrail:ICD:EntityRegistry:FileToEntityMapping";
+    public const string RedisEquipmentHashKey = $"{RedisPrefix}:ICD:Files:Equipments:";
 
-    public const string RedisDynamicType = "Spectrail:ICD:DynamicTypes:";
+    public const string RedisEntityListKey = $"{RedisPrefix}:ICD:EntityRegistry:FileToEntityMapping";
 
-    public const string RedisDynamicAssemblyCreated = "Spectrail:ICD:DynamicAssesmly:Status";
+    public const string RedisDynamicType = $"{RedisPrefix}:ICD:DynamicTypes:";
+
+    public const string RedisDynamicAssemblyCreated = $"{RedisPrefix}:ICD:DynamicAssesmly:Status";
 
     #endregion
 }

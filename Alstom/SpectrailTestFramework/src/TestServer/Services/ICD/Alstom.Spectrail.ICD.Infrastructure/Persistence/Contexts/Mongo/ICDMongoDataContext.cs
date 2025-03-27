@@ -17,7 +17,7 @@
 // FileName: ICDMongoDataContext.cs
 // ProjectName: Alstom.Spectrail.ICD.Infrastructure
 // Created by SUBHASISH BISWAS On: 2025-03-04
-// Updated by SUBHASISH BISWAS On: 2025-03-17
+// Updated by SUBHASISH BISWAS On: 2025-03-27
 //  ******************************************************************************/
 
 #endregion
@@ -25,7 +25,7 @@
 #region
 
 using Alstom.Spectrail.ICD.Application.Contracts;
-using Alstom.Spectrail.ICD.Application.Models;
+using Alstom.Spectrail.Server.Common.Configuration;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using EntityMapping = Alstom.Spectrail.ICD.Application.Models.EntityMapping;
@@ -37,15 +37,15 @@ namespace Alstom.Spectrail.ICD.Infrastructure.Persistence.Contexts.Mongo;
 public class ICDMongoDataContext
     : SpectrailMongoDbContext, IICDDbContext
 {
-    public ICDMongoDataContext(IOptions<SpectrailMongoDatabaseSettings> databaseSettings) : base(databaseSettings)
+    public ICDMongoDataContext(IOptions<SpectrailMongoDatabaseConfig> databaseSettings) : base(databaseSettings)
     {
         // Connect to the registry database
-        ICDEntityRegistry = Client.GetDatabase(SpectrailDatabaseSettings.ICDEntityRegistry);
+        ICDEntityRegistry = Client.GetDatabase(SpectrailMongoDbConfig.ICDEntityRegistry);
         ICDEntityMapping =
-            ICDEntityRegistry.GetCollection<EntityMapping>(SpectrailDatabaseSettings
+            ICDEntityRegistry.GetCollection<EntityMapping>(SpectrailMongoDbConfig
                 .ICDEntityMapping);
 
-        ICDDatabase = Client.GetDatabase(SpectrailDatabaseSettings.ICDDatabase);
+        ICDDatabase = Client.GetDatabase(SpectrailMongoDbConfig.ICDDatabase);
     }
 
     public IMongoDatabase ICDDatabase { get; init; }

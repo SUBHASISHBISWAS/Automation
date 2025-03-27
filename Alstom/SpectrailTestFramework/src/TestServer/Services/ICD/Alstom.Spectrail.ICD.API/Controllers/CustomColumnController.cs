@@ -17,7 +17,7 @@
 // FileName: CustomColumnController.cs
 // ProjectName: Alstom.Spectrail.ICD.API
 // Created by SUBHASISH BISWAS On: 2025-03-27
-// Updated by SUBHASISH BISWAS On: 2025-03-27
+// Updated by SUBHASISH BISWAS On: 2025-03-28
 //  ******************************************************************************/
 
 #endregion
@@ -27,6 +27,7 @@
 using Alstom.Spectrail.ICD.Application.Enums;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Queries.Query;
+using Alstom.Spectrail.ICD.Application.Features.ResetServer.Commands.Command;
 using Alstom.Spectrail.ICD.Domain.DTO.ICD;
 using Alstom.Spectrail.Server.Common.Entities;
 using AutoMapper;
@@ -88,15 +89,23 @@ public class CustomColumnController(IMediator mediator, IMapper mapper) : Contro
         return result ? Ok("✅ All Records Deleted!") : BadRequest("❌ Failed to Delete!");
     }
 
-    /*[HttpGet("ResetServer")]
+    [HttpPost("ResetServer")]
     public async Task<IActionResult> ResetServer()
     {
-        if (string.IsNullOrEmpty(fileName)) return BadRequest("❌ File name is required.");
+        try
+        {
+            ResetSpectrailServerCommand command = new();
 
-        var data = await mediator.Send(new RepositoryQuery { FileName = fileName });
+            var result = await mediator.Send(command);
 
-        if (!data.Any()) return NotFound($"⚠️ No records found for file: {fileName}");
-
-        return Ok(data);
-    }*/
+            return result
+                ? Ok("✅ Spectrail server has been successfully reset.")
+                : StatusCode(500, "❌ Failed to reset the Spectrail server.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Exception in ResetServer endpoint: {ex.Message}");
+            return StatusCode(500, $"❌ Internal server error: {ex.Message}");
+        }
+    }
 }

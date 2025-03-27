@@ -14,21 +14,20 @@
 //  /*******************************************************************************
 // AuthorName: SUBHASISH BISWAS
 // Email: subhasish.biswas@alstomgroup.com
-// FileName: SpectrailMongoDatabaseSettings.cs
+// FileName: ResetSpectrailServerCommand.cs
 // ProjectName: Alstom.Spectrail.ICD.Application
-// Created by SUBHASISH BISWAS On: 2025-03-04
-// Updated by SUBHASISH BISWAS On: 2025-03-16
+// Created by SUBHASISH BISWAS On: 2025-03-27
+// Updated by SUBHASISH BISWAS On: 2025-03-28
 //  ******************************************************************************/
 
 #endregion
 
-namespace Alstom.Spectrail.ICD.Application.Models;
+#region
 
-public class SpectrailMongoDatabaseSettings
-{
-    public string? ConnectionString { get; set; }
-    public string? ICDDatabase { get; set; }
-    public string? ICDEntityRegistry { get; set; }
+using MediatR;
 
-    public string? ICDEntityMapping { get; set; }
-}
+#endregion
+
+namespace Alstom.Spectrail.ICD.Application.Features.ResetServer.Commands.Command;
+
+public class ResetSpectrailServerCommand : IRequest<bool>;

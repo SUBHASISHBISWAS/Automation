@@ -17,7 +17,7 @@
 // FileName: ServerConfigHelper.cs
 // ProjectName: Alstom.Spectrail.Server.Common
 // Created by SUBHASISH BISWAS On: 2025-03-11
-// Updated by SUBHASISH BISWAS On: 2025-03-22
+// Updated by SUBHASISH BISWAS On: 2025-03-28
 //  ******************************************************************************/
 
 #endregion
@@ -40,7 +40,6 @@ public class ServerConfigHelper : IServerConfigHelper
 {
     private readonly IConfiguration _configuration;
     private readonly FeatureFlagsConfig _featureFlagsConfig;
-    private readonly ICDConfig _icdConfig;
 
     /// <summary>
     ///     ✅ Supports Dependency Injection (Pass IConfiguration)
@@ -50,21 +49,37 @@ public class ServerConfigHelper : IServerConfigHelper
         ArgumentNullException.ThrowIfNull(configuration);
         _configuration = configuration;
         // ✅ Bind the "Settings" section to `ICDConfig`
-        _icdConfig = configuration.GetSection("Settings").Get<ICDConfig>()
-                     ?? throw new Exception("❌ Missing `Settings` section in appsettings.json!");
+        ICDConfig = configuration.GetSection("Settings").Get<ICDConfig>()
+                    ?? throw new Exception("❌ Missing `Settings` section in appsettings.json!");
 
         // ✅ Bind the "FeatureFlags" section to `FeatureFlagsConfig`
         _featureFlagsConfig = configuration.GetSection("FeatureFlags").Get<FeatureFlagsConfig>()
                               ?? new FeatureFlagsConfig(); // Defaults to false if missing
+
+        // ✅ Bind the "FeatureFlags" section to `FeatureFlagsConfig`
+        SpectrailMongoConfig = configuration.GetSection("SpectrailMongoDatabaseSettings")
+                                   .Get<SpectrailMongoDatabaseConfig>()
+                               ?? new SpectrailMongoDatabaseConfig();
+
+        SpectrailRedisConfig = configuration.GetSection("RedisConfig")
+                                   .Get<SpectrailRedisConfiguration>()
+                               ?? new SpectrailRedisConfiguration(); // Defaults to false if missing
     }
+
+    public SpectrailRedisConfiguration SpectrailRedisConfig { get; }
+
+    public SpectrailMongoDatabaseConfig SpectrailMongoConfig { get; }
+
+    public ICDConfig ICDConfig { get; }
+
 
     /// <inheritdoc />
     public string GetICDFolderPath()
     {
-        if (string.IsNullOrEmpty(_icdConfig.ICD_FOLDER_PATH))
+        if (string.IsNullOrEmpty(ICDConfig.ICD_FOLDER_PATH))
             throw new Exception("❌ ICD_FOLDER_PATH is missing in appsettings.json!");
 
-        var resolvedPath = ResolvePath(_icdConfig.ICD_FOLDER_PATH);
+        var resolvedPath = ResolvePath(ICDConfig.ICD_FOLDER_PATH);
         if (!Directory.Exists(resolvedPath))
             throw new DirectoryNotFoundException($"❌ ICD folder not found: {resolvedPath}");
 
@@ -101,7 +116,7 @@ public class ServerConfigHelper : IServerConfigHelper
         {
             var setting = typeof(ICDConfig).GetProperty(key,
                 BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
-            return setting != null ? (T)setting.GetValue(_icdConfig) : default;
+            return setting != null ? (T)setting.GetValue(ICDConfig) : default;
         }
         catch (Exception ex)
         {

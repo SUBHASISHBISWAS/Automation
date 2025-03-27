@@ -14,35 +14,21 @@
 //  /*******************************************************************************
 // AuthorName: SUBHASISH BISWAS
 // Email: subhasish.biswas@alstomgroup.com
-// FileName: SpectrailMongoDbContext.cs
-// ProjectName: Alstom.Spectrail.ICD.Infrastructure
+// FileName: SpectrailMongoDatabaseConfig.cs
+// ProjectName: Alstom.Spectrail.Server.Common
 // Created by SUBHASISH BISWAS On: 2025-03-04
 // Updated by SUBHASISH BISWAS On: 2025-03-27
 //  ******************************************************************************/
 
 #endregion
 
-#region
+namespace Alstom.Spectrail.Server.Common.Configuration;
 
-using Alstom.Spectrail.ICD.Application.Contracts;
-using Alstom.Spectrail.Server.Common.Configuration;
-using Microsoft.Extensions.Options;
-using MongoDB.Driver;
-
-#endregion
-
-namespace Alstom.Spectrail.ICD.Infrastructure.Persistence.Contexts.Mongo;
-
-public abstract class SpectrailMongoDbContext : ISpectrailMongoDbContext
+public class SpectrailMongoDatabaseConfig
 {
-    protected SpectrailMongoDbContext(IOptions<SpectrailMongoDatabaseConfig> databaseSettings)
-    {
-        ArgumentNullException.ThrowIfNull(databaseSettings);
-        SpectrailMongoDbConfig = databaseSettings.Value;
-        Client = new MongoClient(SpectrailMongoDbConfig.ConnectionString);
-    }
+    public string? ConnectionString { get; set; }
+    public string? ICDDatabase { get; set; }
+    public string? ICDEntityRegistry { get; set; }
 
-    protected MongoClient Client { get; }
-
-    protected SpectrailMongoDatabaseConfig SpectrailMongoDbConfig { get; }
+    public string? ICDEntityMapping { get; set; }
 }
