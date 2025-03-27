@@ -165,7 +165,7 @@ public class EntityRegistry
             }
 
             //TODO: Check if the EquipmentName is not changed then skip the dll generationeration
-            DynamicEntityCompiler.CompileAndLoadEntities(dynamicEntities,
+            DynamicEntityCompiler.CompileAndSaveEntitiesToAssembly(dynamicEntities,
                 fileNameWithoutExtension, compiledEntities =>
                 {
                     compiledAndRegisteredEntities = compiledEntities;

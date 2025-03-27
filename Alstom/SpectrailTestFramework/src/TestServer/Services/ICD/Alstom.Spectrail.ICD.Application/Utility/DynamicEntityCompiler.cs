@@ -67,8 +67,9 @@ public static class DynamicEntityCompiler
         return type.Name;
     }
 
-    public static void CompileAndLoadEntities(IEnumerable<Type> entityTypes, string fileName, Action<List<Type>>
-        compiledEntities)
+    public static void CompileAndSaveEntitiesToAssembly(IEnumerable<Type> entityTypes, string fileName,
+        Action<List<Type>>
+            compiledEntities)
     {
         var sb = new StringBuilder();
         sb.AppendLine("using System;");
