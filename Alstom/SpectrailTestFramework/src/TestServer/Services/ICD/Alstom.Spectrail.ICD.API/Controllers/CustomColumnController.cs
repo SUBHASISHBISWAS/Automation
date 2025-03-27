@@ -124,7 +124,7 @@ public class CustomColumnController(IMediator mediator, IMapper mapper) : Contro
     }
 
     [HttpDelete("DeleteAllICDRecord")]
-    public async Task<IActionResult> DeleteAllICDRecord([FromQuery] string fileName)
+    public async Task<IActionResult> DeleteAllICDRecord()
     {
         try
         {
