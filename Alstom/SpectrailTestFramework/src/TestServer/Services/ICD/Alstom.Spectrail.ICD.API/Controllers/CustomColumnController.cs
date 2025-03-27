@@ -28,8 +28,7 @@ using Alstom.Spectrail.ICD.Application.Enums;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Commands.Command;
 using Alstom.Spectrail.ICD.Application.Features.ICD.Queries.Query;
 using Alstom.Spectrail.ICD.Domain.DTO.ICD;
-using Alstom.Spectrail.ICD.Domain.Entities.ICD;
-using Alstom.Spectrail.Server.Common.Configuration;
+using Alstom.Spectrail.Server.Common.Entities;
 using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -41,93 +40,51 @@ namespace Alstom.Spectrail.ICD.API.Controllers;
 
 [ApiController]
 [Route("api/v1/[Controller]")]
-public class CustomColumnController : ControllerBase
+public class CustomColumnController(IMediator mediator, IMapper mapper) : ControllerBase
 {
-    private readonly IMapper _mapper;
-    private readonly IMediator _mediator;
-
-    public CustomColumnController(IMediator mediator, IServerConfigHelper configHelper, IMapper mapper)
-    {
-        _mediator = mediator;
-        _mapper = mapper;
-    }
-
-    /// ✅ Fetch all Entity records
-    [HttpGet("NETWORK-EQUIPMENT")]
-    public async Task<ActionResult<List<CustomColumnDto>>> GetEquipmentByFile([FromQuery] string fileName,
+    /// ✅ Fetch GetCustomColumn By Equipment
+    [HttpGet("GetCustomColumnByEquipment")]
+    public async Task<ActionResult<List<CustomColumnDto>>> GetCustomColumnByEquipment([FromQuery] string fileName,
         [FromQuery] string sheetName)
     {
         if (string.IsNullOrEmpty(fileName)) return BadRequest("❌ File name is required.");
         if (string.IsNullOrEmpty(sheetName)) return BadRequest("❌ Sheet name is required.");
 
-        var data = await _mediator.Send(new RepositoryQuery
+        var data = await mediator.Send(new RepositoryQuery
         {
             FileName = fileName,
             SheetName = sheetName
         });
 
         if (!data.Any()) return NotFound($"⚠️ No records found for file: {fileName}");
-        return Ok(_mapper.Map<List<CustomColumnDto>>(data));
+        return Ok(mapper.Map<List<CustomColumnDto>>(data));
     }
 
-    [HttpGet("AllDCURecords")]
-    public async Task<IActionResult> GetAllDCURecords([FromQuery] string? fileName)
+    [HttpGet("GetAllCustomColumns")]
+    public async Task<IActionResult> GetAllCustomColumns([FromQuery] string fileName)
     {
         if (string.IsNullOrEmpty(fileName)) return BadRequest("❌ File name is required.");
 
-        var data = await _mediator.Send(new RepositoryQuery { FileName = fileName });
+        var data = await mediator.Send(new RepositoryQuery { FileName = fileName });
 
         if (!data.Any()) return NotFound($"⚠️ No records found for file: {fileName}");
 
         return Ok(data);
     }
 
-    /// ✅ Fetch a specific DCU record by ID
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetDCURecordById(string id)
-    {
-        var data = await _mediator.Send(new RepositoryQuery());
-        return Ok(data);
-    }
-
     /// ✅ Add a single DCU record (Dynamically calls "AddAsync")
-    [HttpPost("add")]
-    public async Task<IActionResult> AddDCURecord([FromBody] DCUEntity entity)
+    [HttpPost("RegisterICDFile")]
+    public async Task<IActionResult> RegisterICDFile([FromQuery] string filePath)
     {
-        var result = await _mediator.Send(new RepositoryCommand(RepositoryOperation.Add, entity));
+        var result = await mediator.Send(new RepositoryCommand(RepositoryOperation.Add, new EntityBase()));
         return result ? Ok("✅ Record Added!") : BadRequest("❌ Failed to Add!");
     }
 
-    /// ✅ Add multiple DCU records (Dynamically calls "InitializeAsync")
-    [HttpPost("add-many")]
-    public async Task<IActionResult> AddManyDCURecords([FromBody] List<DCUEntity> entities)
+    /// ✅ Delete ICD Files
+    [HttpDelete("DeleteICDFile")]
+    public async Task<IActionResult> DeleteICDFile([FromQuery] string fileName)
     {
-        var result =
-            await _mediator.Send(new RepositoryCommand(RepositoryOperation.AddMany, entities: entities));
-        return result ? Ok("✅ Records Added!") : BadRequest("❌ Failed to Add!");
-    }
-
-    /// ✅ Update a DCU record (Dynamically calls "UpdateAsync")
-    [HttpPut("update/{id}")]
-    public async Task<IActionResult> UpdateDCURecord(string id, [FromBody] DCUEntity entity)
-    {
-        var result = await _mediator.Send(new RepositoryCommand(RepositoryOperation.Update, entity, id: id));
-        return result ? Ok("✅ Record Updated!") : BadRequest("❌ Failed to Update!");
-    }
-
-    /// ✅ Delete a DCU record (Dynamically calls "DeleteAsync")
-    [HttpDelete("delete/{id}")]
-    public async Task<IActionResult> DeleteDCURecord(string id)
-    {
-        var result = await _mediator.Send(new RepositoryCommand(RepositoryOperation.Delete, id: id));
-        return result ? Ok("✅ Record Deleted!") : BadRequest("❌ Failed to Delete!");
-    }
-
-    /// ✅ Delete all DCU records (Dynamically calls "DeleteAllAsync")
-    [HttpDelete("delete-all")]
-    public async Task<IActionResult> DeleteAllDCURecords()
-    {
-        var result = await _mediator.Send(new RepositoryCommand(RepositoryOperation.DeleteAll));
+        var result = await mediator.Send(new RepositoryCommand(RepositoryOperation.DeleteAll));
         return result ? Ok("✅ All Records Deleted!") : BadRequest("❌ Failed to Delete!");
     }
 }
