@@ -17,7 +17,7 @@
 // FileName: Program.cs
 // ProjectName: Alstom.Spectrail.ICD.API
 // Created by SUBHASISH BISWAS On: 2025-03-26
-// Updated by SUBHASISH BISWAS On: 2025-03-27
+// Updated by SUBHASISH BISWAS On: 2025-03-28
 //  ******************************************************************************/
 
 #endregion
@@ -50,7 +50,7 @@ builder.Host.ConfigureContainer<ContainerBuilder>(container =>
 {
     // Autofac registration for orchestrator with ILifetimeScope support
     container.RegisterType<EntityRegistryOrchestrator>()
-        .AsSelf()
+        .As<IEntityRegistryOrchestrator>()
         .InstancePerLifetimeScope();
 });
 
@@ -105,7 +105,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     scope.ServiceProvider.GetRequiredService<EntityRegistry>();
-    var orchestrator = scope.ServiceProvider.GetRequiredService<EntityRegistryOrchestrator>();
+    var orchestrator = scope.ServiceProvider.GetRequiredService<IEntityRegistryOrchestrator>();
     await orchestrator.ExecuteAsync(true);
 }
 

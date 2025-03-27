@@ -17,7 +17,7 @@
 // FileName: EntityRegistryOrchestrator.cs
 // ProjectName: Alstom.Spectrail.ICD.API
 // Created by SUBHASISH BISWAS On: 2025-03-21
-// Updated by SUBHASISH BISWAS On: 2025-03-27
+// Updated by SUBHASISH BISWAS On: 2025-03-28
 //  ******************************************************************************/
 
 #endregion
@@ -41,7 +41,7 @@ public class EntityRegistryOrchestrator(
     IConnectionMultiplexer redis,
     IServerConfigHelper configHelper,
     ILifetimeScope rootScope,
-    IDynamicEntityLoader dynamicEntityLoader)
+    IDynamicEntityLoader dynamicEntityLoader) : IEntityRegistryOrchestrator
 {
     private const string RedisKeyEntityList = "RegisteredEntities";
 

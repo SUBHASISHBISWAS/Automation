@@ -69,7 +69,8 @@ public class CustomColumnController(IMediator mediator, IMapper mapper) : Contro
     }
 
     [HttpGet("GetAllCustomColumns")]
-    public async Task<IActionResult> GetAllCustomColumns([FromQuery] string fileName)
+    public async Task<ActionResult<Dictionary<string, List<CustomColumnDto>>>> GetAllCustomColumns(
+        [FromQuery] string fileName)
     {
         if (string.IsNullOrEmpty(fileName)) return BadRequest("❌ File name is required.");
         try
@@ -77,8 +78,11 @@ public class CustomColumnController(IMediator mediator, IMapper mapper) : Contro
             var data = await mediator.Send(new GetEntitiesByFileCommand(fileName));
 
             if (!data.Any()) return NotFound($"⚠️ No records found for file: {fileName}");
-
-            return Ok(data);
+            var mappedResult = data.ToDictionary(
+                kvp => kvp.Key,
+                kvp => mapper.Map<List<CustomColumnDto>>(kvp.Value)
+            );
+            return Ok(mappedResult);
         }
         catch (Exception ex)
         {
@@ -93,7 +97,7 @@ public class CustomColumnController(IMediator mediator, IMapper mapper) : Contro
     {
         try
         {
-            var result = await mediator.Send(new RepositoryCommand(RepositoryOperation.Add, fileName: filePath));
+            var result = await mediator.Send(new MoveAndRegisterEntityCommand(filePath));
             return result ? Ok("✅ Record Added!") : BadRequest("❌ Failed to Add!");
         }
         catch (Exception ex)
